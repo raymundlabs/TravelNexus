@@ -42,13 +42,9 @@ async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
-    // Check if we already have data
-    const hasData = await checkDataExists();
-    if (hasData) {
-      console.log("Database already has data. Skipping seeding operation.");
-      return;
-    }
-      
+    // Force clear and reseed with Puerto Galera data
+    console.log("Clearing existing data and adding Puerto Galera content...");
+    
     // Clear any existing data
     await clearData();
     

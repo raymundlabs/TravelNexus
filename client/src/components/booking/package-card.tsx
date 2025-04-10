@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { type Package } from '@shared/schema';
+import { formatPrice } from '@/lib/utils';
 
 interface PackageCardProps {
   pkg: Package;
@@ -62,10 +63,10 @@ export default function PackageCard({ pkg }: PackageCardProps) {
         <div className="flex justify-between items-center">
           <div>
             {discountedPrice && discountedPrice < price && (
-              <span className="text-neutral-500 line-through">${price}</span>
+              <span className="text-neutral-500 line-through">{formatPrice(price)}</span>
             )}
             <span className="font-bold text-primary text-2xl ml-2">
-              ${discountedPrice || price}
+              {formatPrice(discountedPrice || price)}
             </span>
             <span className="text-neutral-500 text-sm">/ person</span>
           </div>
