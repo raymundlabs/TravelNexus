@@ -501,19 +501,21 @@ async function seed() {
     const testUsers = [
       {
         username: "admin",
-        password: "admin123",
+        password: await hashPassword("admin123"),
         email: "admin@whitebeach.com",
         fullName: "System Administrator",
         roleId: 5, // SUPERADMIN
-        isActive: true
+        isActive: true,
+        isEmailVerified: true
       },
       {
         username: "testuser", 
-        password: "password123",
+        password: await hashPassword("password123"),
         email: "test@example.com",
         fullName: "Test User",
         roleId: 1, // CUSTOMER
-        isActive: true
+        isActive: true,
+        isEmailVerified: true
       }
     ];
     
