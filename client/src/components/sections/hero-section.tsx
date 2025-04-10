@@ -1,12 +1,13 @@
 import SearchWidget from '../booking/search-widget';
 import { SITE_DESCRIPTION, SITE_TAGLINE, SITE_OPERATOR, SITE_OPERATOR_SLOGAN } from '@/lib/constants';
+import whiteBeachImage from '@/assets/images/white-beach-puerto-galera-photo.svg';
 
 export default function HeroSection() {
   return (
     <section 
       className="h-[650px] flex items-center justify-center relative bg-cover bg-center"
       style={{
-        backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("https://images.unsplash.com/photo-1589394815804-964421bf9359?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")'
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${whiteBeachImage})`
       }}
     >
       <div className="container mx-auto px-4 text-center text-white">

@@ -1,0 +1,84 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sky gradient -->
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#64B5F6" />
+      <stop offset="100%" stop-color="#1E88E5" />
+    </linearGradient>
+    <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#26C6DA" />
+      <stop offset="100%" stop-color="#00ACC1" />
+    </linearGradient>
+    <linearGradient id="sandGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF9C4" />
+      <stop offset="100%" stop-color="#FFF176" />
+    </linearGradient>
+    <linearGradient id="mountainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8D6E63" />
+      <stop offset="100%" stop-color="#5D4037" />
+    </linearGradient>
+    <linearGradient id="palmGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#43A047" />
+      <stop offset="100%" stop-color="#2E7D32" />
+    </linearGradient>
+    <radialGradient id="sunGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#FFEB3B" />
+      <stop offset="100%" stop-color="#FBC02D" />
+    </radialGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="1920" height="700" fill="url(#skyGradient)" />
+
+  <!-- Sun -->
+  <circle cx="1520" cy="170" r="100" fill="url(#sunGradient)" />
+  
+  <!-- Mountains in background -->
+  <path d="M0,400 Q480,150 960,350 T1920,300 V700 H0 Z" fill="url(#mountainGradient)" opacity="0.6" />
+
+  <!-- Ocean -->
+  <path d="M0,700 Q960,620 1920,700 V1080 H0 Z" fill="url(#waterGradient)" />
+
+  <!-- Beach -->
+  <path d="M0,720 Q480,690 960,740 T1920,720 V1080 H0 Z" fill="url(#sandGradient)" />
+
+  <!-- Palm trees -->
+  <g transform="translate(300, 650) scale(0.7)">
+    <!-- Trunk -->
+    <path d="M40,0 C60,0 60,200 60,200 L20,200 C20,200 20,0 40,0 Z" fill="#795548" />
+    <!-- Leaves -->
+    <path d="M40,0 C0,-30 -50,-20 -100,-50 C-30,-30 -20,-10 0,0 Z" fill="url(#palmGradient)" />
+    <path d="M40,0 C0,-30 -40,-40 -80,-80 C-20,-40 -10,-10 0,0 Z" fill="url(#palmGradient)" />
+    <path d="M40,0 C40,-40 30,-60 0,-100 C20,-60 20,-20 40,0 Z" fill="url(#palmGradient)" />
+    <path d="M40,0 C80,-30 90,-40 120,-80 C90,-40 70,-10 40,0 Z" fill="url(#palmGradient)" />
+    <path d="M40,0 C90,-20 130,-20 180,-30 C120,-20 80,-10 40,0 Z" fill="url(#palmGradient)" />
+  </g>
+
+  <!-- Another palm tree -->
+  <g transform="translate(1600, 620) scale(0.8)">
+    <!-- Trunk -->
+    <path d="M40,0 C60,0 60,200 60,200 L20,200 C20,200 20,0 40,0 Z" fill="#795548" />
+    <!-- Leaves -->
+    <path d="M40,0 C0,-30 -50,-20 -100,-50 C-30,-30 -20,-10 0,0 Z" fill="url(#palmGradient)" />
+    <path d="M40,0 C0,-30 -40,-40 -80,-80 C-20,-40 -10,-10 0,0 Z" fill="url(#palmGradient)" />
+    <path d="M40,0 C40,-40 30,-60 0,-100 C20,-60 20,-20 40,0 Z" fill="url(#palmGradient)" />
+    <path d="M40,0 C80,-30 90,-40 120,-80 C90,-40 70,-10 40,0 Z" fill="url(#palmGradient)" />
+    <path d="M40,0 C90,-20 130,-20 180,-30 C120,-20 80,-10 40,0 Z" fill="url(#palmGradient)" />
+  </g>
+
+  <!-- Small boats on the water -->
+  <g transform="translate(800, 800) scale(0.5)">
+    <path d="M0,0 L120,0 L150,30 L-30,30 Z" fill="#FF6D00" />
+    <rect x="50" y="-30" width="10" height="30" fill="#A1887F" />
+    <path d="M50,-30 L80,-10 L80,0 L50,0 Z" fill="#ECEFF1" />
+  </g>
+
+  <g transform="translate(1200, 850) scale(0.4)">
+    <path d="M0,0 L120,0 L150,30 L-30,30 Z" fill="#29B6F6" />
+    <rect x="50" y="-30" width="10" height="30" fill="#A1887F" />
+    <path d="M50,-30 L80,-10 L80,0 L50,0 Z" fill="#ECEFF1" />
+  </g>
+
+  <!-- Text label -->
+  <text x="960" y="950" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#FFFFFF" text-anchor="middle" filter="drop-shadow(0px 1px 3px #000)">White Beach, Puerto Galera</text>
+</svg>
