@@ -1,69 +1,164 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { apiRequest } from '@/lib/queryClient';
+import { createContext, useContext, useEffect, ReactNode } from 'react';
+import {
+  useQuery,
+  useMutation,
+  UseMutationResult,
+} from '@tanstack/react-query';
+import { z } from 'zod';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { User } from '@shared/schema';
 
-interface ReplitUser {
-  id: string;
-  name: string;
-  bio: string;
-  url: string;
-  profileImage: string;
-  roles: string[];
-}
+// Form schemas
+const loginSchema = z.object({
+  username: z.string().min(3),
+  password: z.string().min(6),
+});
+
+const registerSchema = z.object({
+  username: z.string().min(3),
+  email: z.string().email(),
+  password: z.string().min(6),
+  fullName: z.string().min(3),
+});
+
+type LoginData = z.infer<typeof loginSchema>;
+type RegisterData = z.infer<typeof registerSchema>;
 
 interface AuthContextType {
-  user: ReplitUser | null;
+  user: User | null;
   isLoading: boolean;
-  error: string | null;
-  login: () => void;
+  error: Error | null;
+  loginMutation: UseMutationResult<User, Error, LoginData>;
+  registerMutation: UseMutationResult<User, Error, RegisterData>;
+  logoutMutation: UseMutationResult<void, Error, void>;
   isAuthenticated: boolean;
 }
 
-export const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isLoading: false,
-  error: null,
-  login: () => {},
-  isAuthenticated: false,
-});
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<ReplitUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const fetchUserInfo = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/auth/user');
-      if (!response.ok) {
-        throw new Error('Not authenticated');
+  // Query to get the current user
+  const {
+    data: user,
+    error,
+    isLoading,
+  } = useQuery<User | null, Error>({
+    queryKey: ['/api/auth/user'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/auth/user');
+        if (!response.ok) {
+          // Return null if not authenticated (401)
+          if (response.status === 401) {
+            return null;
+          }
+          throw new Error('Failed to fetch user information');
+        }
+        return await response.json();
+      } catch (error) {
+        // Return null on auth errors, throw for other errors
+        if (error instanceof Error && error.message === 'Failed to fetch user information') {
+          throw error;
+        }
+        return null;
       }
-      const userData = await response.json();
-      setUser(userData);
-      setError(null);
-    } catch (err) {
-      setUser(null);
-      setError('Not authenticated');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
+  });
 
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
+  // Login mutation
+  const loginMutation = useMutation<User, Error, LoginData>({
+    mutationFn: async (credentials) => {
+      const response = await apiRequest('POST', '/api/auth/login', credentials);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      // Refetch user data after successful login
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({
+        title: 'Welcome back!',
+        description: 'You have successfully logged in.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Login failed',
+        description: error.message || 'Failed to login. Please check your credentials.',
+        variant: 'destructive',
+      });
+    },
+  });
 
-  const login = () => {
-    window.location.href = `/api/auth/login?redirect=${window.location.pathname}`;
-  };
+  // Register mutation
+  const registerMutation = useMutation<User, Error, RegisterData>({
+    mutationFn: async (userData) => {
+      const response = await apiRequest('POST', '/api/auth/register', userData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      // Refetch user data after successful registration
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({
+        title: 'Registration successful!',
+        description: 'Your account has been created and you are now logged in.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Registration failed',
+        description: error.message || 'Failed to register. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Logout mutation
+  const logoutMutation = useMutation<void, Error>({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/auth/logout');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Logout failed');
+      }
+    },
+    onSuccess: () => {
+      // Clear user data after successful logout
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({
+        title: 'Logged out',
+        description: 'You have been successfully logged out.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Logout failed',
+        description: error.message || 'Failed to logout. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: user || null,
         isLoading,
-        error,
-        login,
+        error: error || null,
+        loginMutation,
+        registerMutation,
+        logoutMutation,
         isAuthenticated: !!user,
       }}
     >

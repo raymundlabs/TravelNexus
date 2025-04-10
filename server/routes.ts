@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { getUserInfo } from "@replit/repl-auth";
+import { setupAuth } from "./auth";
 import { 
   insertUserSchema, 
   insertBookingSchema 
@@ -330,29 +330,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Replit Auth endpoints
-  app.get("/api/auth/user", (req, res) => {
-    try {
-      const user = getUserInfo(req);
-      if (!user) {
-        return res.status(401).json({ error: "Not authenticated" });
-      }
-      res.json(user);
-    } catch (err) {
-      handleError(err, res);
-    }
-  });
-
-  app.get("/api/auth/login", (req, res) => {
-    const redirectUrl = req.query.redirect || "/";
-    res.redirect(`https://replit.com/auth_with_repl_site?domain=${process.env.REPL_SLUG}.replit.dev&path=${redirectUrl}`);
-  });
-
-  app.get("/api/auth/logout", (req, res) => {
-    const redirectUrl = req.query.redirect || "/";
-    res.clearCookie("REPLIT_AUTH");
-    res.redirect(redirectUrl as string);
-  });
+  // Set up authentication
+  setupAuth(app);
 
   const httpServer = createServer(app);
   return httpServer;

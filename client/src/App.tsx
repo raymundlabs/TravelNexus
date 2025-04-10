@@ -10,6 +10,7 @@ import Tours from "@/pages/tours";
 import TourDetail from "@/pages/tour-detail";
 import Packages from "@/pages/packages";
 import PackageDetail from "@/pages/package-detail";
+import AuthPage from "@/pages/auth-page";
 import Header from "./components/layout/header";
 import Footer from "./components/layout/footer";
 import { AuthProvider } from "./hooks/use-auth";
@@ -20,6 +21,7 @@ function Router() {
       <Header />
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/auth" component={AuthPage} />
         <Route path="/hotels" component={Hotels} />
         <Route path="/hotels/:id" component={HotelDetail} />
         <Route path="/tours" component={Tours} />

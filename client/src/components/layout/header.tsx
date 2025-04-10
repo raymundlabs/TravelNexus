@@ -3,13 +3,20 @@ import { Link, useLocation } from 'wouter';
 import { NAV_LINKS, SITE_NAME } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Globe, LogIn, LogOut, User } from 'lucide-react';
+import { 
+  Globe, 
+  LogIn, 
+  LogOut, 
+  User,
+  UserCircle,
+  Menu as MenuIcon
+} from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function Header() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isLoading, login, isAuthenticated } = useAuth();
+  const { user, isLoading, logoutMutation, isAuthenticated } = useAuth();
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -40,32 +47,33 @@ export default function Header() {
             {isAuthenticated ? (
               <div className="hidden md:flex items-center space-x-3">
                 <div className="flex items-center">
-                  <img 
-                    src={user?.profileImage} 
-                    alt={user?.name} 
-                    className="w-8 h-8 rounded-full mr-2" 
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.name || 'User');
-                    }}
-                  />
-                  <span className="font-medium">{user?.name}</span>
+                  <UserCircle className="h-8 w-8 text-primary mr-2" />
+                  <span className="font-medium">{user?.fullName || user?.username}</span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => window.location.href = '/api/auth/logout'}>
-                  <LogOut className="h-4 w-4 mr-1" /> Logout
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
+                >
+                  <LogOut className="h-4 w-4 mr-1" /> 
+                  {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
                 </Button>
               </div>
             ) : (
               <div className="hidden md:flex items-center space-x-3">
-                <Button onClick={login} className="flex items-center">
-                  <LogIn className="h-4 w-4 mr-1" /> Login with Replit
-                </Button>
+                <Link href="/auth">
+                  <Button className="flex items-center">
+                    <LogIn className="h-4 w-4 mr-1" /> Login
+                  </Button>
+                </Link>
               </div>
             )}
             
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="icon">
-                  <i className="fas fa-bars text-xl"></i>
+                  <MenuIcon className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right">
@@ -86,34 +94,30 @@ export default function Header() {
                     {isAuthenticated ? (
                       <>
                         <div className="flex items-center mb-3">
-                          <img 
-                            src={user?.profileImage} 
-                            alt={user?.name} 
-                            className="w-8 h-8 rounded-full mr-2"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.name || 'User');
-                            }}
-                          />
-                          <span className="font-medium">{user?.name}</span>
+                          <UserCircle className="h-8 w-8 text-primary mr-2" />
+                          <span className="font-medium">{user?.fullName || user?.username}</span>
                         </div>
                         <Button 
                           variant="outline" 
                           className="w-full flex items-center justify-center" 
-                          onClick={() => window.location.href = '/api/auth/logout'}
+                          onClick={() => {
+                            logoutMutation.mutate();
+                            setIsMenuOpen(false);
+                          }}
+                          disabled={logoutMutation.isPending}
                         >
-                          <LogOut className="h-4 w-4 mr-1" /> Logout
+                          <LogOut className="h-4 w-4 mr-1" /> 
+                          {logoutMutation.isPending ? 'Logging out...' : 'Logout'}
                         </Button>
                       </>
                     ) : (
-                      <Button
-                        className="w-full flex items-center justify-center"
-                        onClick={() => {
-                          login();
-                          setIsMenuOpen(false);
-                        }}
-                      >
-                        <LogIn className="h-4 w-4 mr-1" /> Login with Replit
-                      </Button>
+                      <Link href="/auth" onClick={() => setIsMenuOpen(false)}>
+                        <Button
+                          className="w-full flex items-center justify-center"
+                        >
+                          <LogIn className="h-4 w-4 mr-1" /> Login
+                        </Button>
+                      </Link>
                     )}
                   </div>
                 </div>
