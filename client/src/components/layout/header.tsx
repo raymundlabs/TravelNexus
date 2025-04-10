@@ -37,14 +37,30 @@ export default function Header() {
           </nav>
           
           <div className="flex items-center space-x-4">
-            <div className="hidden md:block">
-              <Link href="#" className="font-medium hover:text-primary transition-colors">
-                Sign In
-              </Link>
-            </div>
-            <Button>
-              Register
-            </Button>
+            {isAuthenticated ? (
+              <div className="hidden md:flex items-center space-x-3">
+                <div className="flex items-center">
+                  <img 
+                    src={user?.profileImage} 
+                    alt={user?.name} 
+                    className="w-8 h-8 rounded-full mr-2" 
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.name || 'User');
+                    }}
+                  />
+                  <span className="font-medium">{user?.name}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => window.location.href = '/api/auth/logout'}>
+                  <LogOut className="h-4 w-4 mr-1" /> Logout
+                </Button>
+              </div>
+            ) : (
+              <div className="hidden md:flex items-center space-x-3">
+                <Button onClick={login} className="flex items-center">
+                  <LogIn className="h-4 w-4 mr-1" /> Login with Replit
+                </Button>
+              </div>
+            )}
             
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild className="md:hidden">
@@ -67,13 +83,39 @@ export default function Header() {
                     </Link>
                   ))}
                   <div className="pt-4 border-t border-gray-200">
-                    <Link href="#" className="font-medium text-lg py-2 hover:text-primary transition-colors">
-                      Sign In
-                    </Link>
+                    {isAuthenticated ? (
+                      <>
+                        <div className="flex items-center mb-3">
+                          <img 
+                            src={user?.profileImage} 
+                            alt={user?.name} 
+                            className="w-8 h-8 rounded-full mr-2"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.name || 'User');
+                            }}
+                          />
+                          <span className="font-medium">{user?.name}</span>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          className="w-full flex items-center justify-center" 
+                          onClick={() => window.location.href = '/api/auth/logout'}
+                        >
+                          <LogOut className="h-4 w-4 mr-1" /> Logout
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        className="w-full flex items-center justify-center"
+                        onClick={() => {
+                          login();
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        <LogIn className="h-4 w-4 mr-1" /> Login with Replit
+                      </Button>
+                    )}
                   </div>
-                  <Button className="mt-2 w-full" onClick={() => setIsMenuOpen(false)}>
-                    Register
-                  </Button>
                 </div>
               </SheetContent>
             </Sheet>

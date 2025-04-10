@@ -4,11 +4,11 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { getUserInfo } from "@replit/repl-auth";
 import { 
   insertUserSchema, 
   insertBookingSchema 
 } from "@shared/schema";
-import { getUserInfo } from "@replit/repl-auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Error handler middleware
@@ -346,6 +346,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/login", (req, res) => {
     const redirectUrl = req.query.redirect || "/";
     res.redirect(`https://replit.com/auth_with_repl_site?domain=${process.env.REPL_SLUG}.replit.dev&path=${redirectUrl}`);
+  });
+
+  app.get("/api/auth/logout", (req, res) => {
+    const redirectUrl = req.query.redirect || "/";
+    res.clearCookie("REPLIT_AUTH");
+    res.redirect(redirectUrl as string);
   });
 
   const httpServer = createServer(app);

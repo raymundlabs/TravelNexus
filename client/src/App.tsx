@@ -12,6 +12,7 @@ import Packages from "@/pages/packages";
 import PackageDetail from "@/pages/package-detail";
 import Header from "./components/layout/header";
 import Footer from "./components/layout/footer";
+import { AuthProvider } from "./hooks/use-auth";
 
 function Router() {
   return (
@@ -35,8 +36,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
