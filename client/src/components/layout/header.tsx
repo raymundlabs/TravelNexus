@@ -4,6 +4,7 @@ import { NAV_LINKS, SITE_NAME } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { 
+  LayoutDashboard,
   Globe, 
   LogIn, 
   LogOut, 
@@ -50,6 +51,11 @@ export default function Header() {
                   <UserCircle className="h-8 w-8 text-primary mr-2" />
                   <span className="font-medium">{user?.fullName || user?.username}</span>
                 </div>
+                <Link href="/dashboard">
+                  <Button variant="outline" size="sm" className="flex items-center">
+                    <LayoutDashboard className="h-4 w-4 mr-1" /> Dashboard
+                  </Button>
+                </Link>
                 <Button 
                   variant="ghost" 
                   size="sm" 
