@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION } from '@/lib/constants';
 
 const loginSchema = z.object({
@@ -30,6 +31,7 @@ const registerSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   fullName: z.string().min(3, 'Full name must be at least 3 characters'),
+  roleId: z.string().optional().transform(val => val ? parseInt(val) : 1),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -55,6 +57,7 @@ export default function AuthPage() {
       email: '',
       password: '',
       fullName: '',
+      roleId: '1', // Default to regular user
     },
   });
 
@@ -297,6 +300,24 @@ export default function AuthPage() {
                           {registerForm.formState.errors.password.message}
                         </p>
                       )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="roleId">Account Type</Label>
+                      <Select onValueChange={(value) => registerForm.setValue('roleId', value)} defaultValue="1">
+                        <SelectTrigger id="roleId">
+                          <SelectValue placeholder="Select account type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Regular User</SelectItem>
+                          <SelectItem value="2">Hotel Owner/Manager</SelectItem>
+                          <SelectItem value="3">Travel Agent</SelectItem>
+                          <SelectItem value="4">Administrator</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Select your account type. Special account types require approval.
+                      </p>
                     </div>
                   </CardContent>
                   <CardFooter>

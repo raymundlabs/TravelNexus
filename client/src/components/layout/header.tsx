@@ -103,6 +103,11 @@ export default function Header() {
                           <UserCircle className="h-8 w-8 text-primary mr-2" />
                           <span className="font-medium">{user?.fullName || user?.username}</span>
                         </div>
+                        <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                          <Button variant="outline" className="w-full flex items-center justify-center mb-2">
+                            <LayoutDashboard className="h-4 w-4 mr-1" /> Dashboard
+                          </Button>
+                        </Link>
                         <Button 
                           variant="outline" 
                           className="w-full flex items-center justify-center" 

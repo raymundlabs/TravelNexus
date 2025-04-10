@@ -506,7 +506,17 @@ export class MemStorage implements IStorage {
       ...user, 
       id, 
       fullName: user.fullName ?? null,
-      createdAt: new Date() 
+      createdAt: new Date(),
+      phone: null,
+      roleId: user.roleId ?? 1, // Default to regular user if not specified
+      isActive: true,
+      isEmailVerified: false,
+      isPhoneVerified: false,
+      lastLogin: null,
+      resetToken: null,
+      resetTokenExpiry: null,
+      verificationToken: null,
+      profileImage: null
     };
     this.users.set(id, createdUser);
     return createdUser;
