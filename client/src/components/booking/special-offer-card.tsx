@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { type SpecialOffer } from '@shared/schema';
+import { formatPrice } from '@/lib/utils';
 
 interface SpecialOfferCardProps {
   offer: SpecialOffer;
@@ -37,8 +38,8 @@ export default function SpecialOfferCard({ offer }: SpecialOfferCardProps) {
         <p className="text-neutral-600 mb-4">{description}</p>
         <div className="flex justify-between items-center">
           <div>
-            <span className="text-neutral-500 line-through">${originalPrice}</span>
-            <span className="text-primary font-bold text-xl ml-2">${discountedPrice}</span>
+            <span className="text-neutral-500 line-through">{formatPrice(originalPrice)}</span>
+            <span className="text-primary font-bold text-xl ml-2">{formatPrice(discountedPrice)}</span>
             <span className="text-sm text-neutral-500">/ {priceUnit}</span>
           </div>
           <Button>

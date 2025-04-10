@@ -1,6 +1,7 @@
 import { Link } from 'wouter';
 import { Heart } from 'lucide-react';
 import { type Hotel } from '@shared/schema';
+import { formatPrice } from '@/lib/utils';
 
 interface HotelCardProps {
   hotel: Hotel;
@@ -34,7 +35,7 @@ export default function HotelCard({ hotel }: HotelCardProps) {
         </p>
         <div className="flex justify-between items-center mt-2">
           <div>
-            <span className="font-bold text-primary">${price}</span>
+            <span className="font-bold text-primary">{formatPrice(price)}</span>
             <span className="text-neutral-500 text-sm">/ night</span>
           </div>
           <Link href={`/hotels/${id}`} className="text-primary hover:text-primary-dark font-medium text-sm">

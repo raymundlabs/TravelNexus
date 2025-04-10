@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
 import { type Tour } from '@shared/schema';
+import { formatPrice } from '@/lib/utils';
 
 interface TourCardProps {
   tour: Tour;
@@ -33,7 +34,7 @@ export default function TourCard({ tour }: TourCardProps) {
         <p className="text-neutral-600 text-sm mb-3">{description}</p>
         <div className="flex justify-between items-center">
           <div>
-            <span className="font-bold text-primary text-lg">${price}</span>
+            <span className="font-bold text-primary text-lg">{formatPrice(price)}</span>
             <span className="text-neutral-500 text-sm">/ person</span>
           </div>
           <div className="flex items-center">

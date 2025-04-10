@@ -7,9 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Format a price value with Philippine Peso (₱) symbol
- * @param price - The price value to format
+ * @param price - The price value to format (can be null)
  * @returns Formatted price string with ₱ symbol
  */
-export function formatPrice(price: number): string {
+export function formatPrice(price: number | null): string {
+  if (price === null) return '₱0';
   return `₱${price.toLocaleString('en-PH')}`
 }
