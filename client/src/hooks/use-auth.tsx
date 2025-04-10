@@ -52,6 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         title: "Login successful",
         description: `Welcome back, ${user.username}!`,
       });
+      
+      // Redirect to the appropriate dashboard based on user role
+      const dashboardUrl = getDashboardUrl(user.roleId);
+      window.location.href = dashboardUrl;
     },
     onError: (error: Error) => {
       toast({
@@ -68,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/auth/user"], user);
+      queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Registration successful",
         description: "Your account has been created successfully!",
@@ -88,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/auth/user"], null);
+      queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logout successful",
         description: "You have been logged out successfully.",
