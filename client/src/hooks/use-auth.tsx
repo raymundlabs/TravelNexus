@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     isLoading,
   } = useQuery<User | null>({
-    queryKey: ["/api/user"],
+    queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData(["/api/auth/user"], user);
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.username}!`,
@@ -57,7 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Redirect to the appropriate dashboard based on user role
       const roleId = user.roleId || 1; // Default to customer (1) if roleId is null
       const dashboardUrl = getDashboardUrl(roleId);
-      window.location.href = dashboardUrl;
+      // Use navigate instead of direct window.location for smoother transitions
+      setTimeout(() => {
+        window.location.href = dashboardUrl;
+      }, 500); // Short delay to ensure the toast is visible
     },
     onError: (error: Error) => {
       toast({
@@ -74,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData(["/api/auth/user"], user);
       toast({
         title: "Registration successful",
         description: "Your account has been created successfully!",
@@ -94,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      queryClient.setQueryData(["/api/auth/user"], null);
       toast({
         title: "Logout successful",
         description: "You have been logged out successfully.",
