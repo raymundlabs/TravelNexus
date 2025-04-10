@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
@@ -8,6 +8,7 @@ import {
   insertUserSchema, 
   insertBookingSchema 
 } from "@shared/schema";
+import { getUserInfo } from "@replit/repl-auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Error handler middleware
@@ -327,6 +328,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (err) {
       handleError(err, res);
     }
+  });
+
+  // Replit Auth endpoints
+  app.get("/api/auth/user", (req, res) => {
+    try {
+      const user = getUserInfo(req);
+      if (!user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      res.json(user);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  app.get("/api/auth/login", (req, res) => {
+    const redirectUrl = req.query.redirect || "/";
+    res.redirect(`https://replit.com/auth_with_repl_site?domain=${process.env.REPL_SLUG}.replit.dev&path=${redirectUrl}`);
   });
 
   const httpServer = createServer(app);

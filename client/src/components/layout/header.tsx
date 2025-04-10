@@ -3,11 +3,13 @@ import { Link, useLocation } from 'wouter';
 import { NAV_LINKS, SITE_NAME } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Globe } from 'lucide-react';
+import { Globe, LogIn, LogOut, User } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function Header() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isLoading, login, isAuthenticated } = useAuth();
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
