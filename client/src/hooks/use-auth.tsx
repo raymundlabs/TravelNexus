@@ -55,7 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       // Redirect to the appropriate dashboard based on user role
-      const dashboardUrl = getDashboardUrl(user.roleId);
+      const roleId = user.roleId || 1; // Default to customer (1) if roleId is null
+      const dashboardUrl = getDashboardUrl(roleId);
       window.location.href = dashboardUrl;
     },
     onError: (error: Error) => {

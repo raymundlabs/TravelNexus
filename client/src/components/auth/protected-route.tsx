@@ -23,7 +23,7 @@ export function ProtectedRoute({
         </div>
       ) : !user ? (
         <Redirect to="/auth" />
-      ) : roles && roles.length > 0 && user.roleId && !roles.includes(user.roleId) ? (
+      ) : roles && roles.length > 0 && !(user.roleId && roles.includes(user.roleId)) ? (
         <Redirect to="/" />
       ) : (
         <Component />

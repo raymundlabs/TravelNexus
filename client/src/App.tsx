@@ -26,23 +26,31 @@ function Router() {
   return (
     <Switch>
       {/* Admin routes without header/footer */}
-      <Route path="/admin/dashboard">
-        <AdminDashboard />
-      </Route>
+      <ProtectedRoute 
+        path="/admin/dashboard" 
+        component={AdminDashboard} 
+        roles={[USER_ROLES.ADMIN, USER_ROLES.SUPERADMIN]} 
+      />
       
       {/* Provider routes without header/footer */}
-      <Route path="/provider/dashboard">
-        <ProviderDashboard />
-      </Route>
+      <ProtectedRoute 
+        path="/provider/dashboard" 
+        component={ProviderDashboard} 
+        roles={[USER_ROLES.HOTEL_PROVIDER]} 
+      />
       
       {/* Public and user routes with header/footer */}
-      <Route path="/account/dashboard">
-        <>
-          <Header />
-          <UserDashboard />
-          <Footer />
-        </>
-      </Route>
+      <ProtectedRoute 
+        path="/account/dashboard" 
+        component={() => (
+          <>
+            <Header />
+            <UserDashboard />
+            <Footer />
+          </>
+        )}
+        roles={[USER_ROLES.CUSTOMER, USER_ROLES.TRAVEL_AGENT]} 
+      />
       
       <Route path="/:rest*">
         <>

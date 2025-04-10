@@ -112,6 +112,23 @@ export default function AuthPage() {
                         required
                       />
                     </div>
+                    
+                    <div className="mt-6 p-3 bg-muted rounded-md border">
+                      <h4 className="text-sm font-medium mb-2">Demo Accounts:</h4>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="p-2 bg-background rounded border">
+                          <p className="font-medium text-primary">Admin</p>
+                          <p>Username: <span className="font-medium">admin</span></p>
+                          <p>Password: <span className="font-medium">admin123</span></p>
+                        </div>
+                        <div className="p-2 bg-background rounded border">
+                          <p className="font-medium text-primary">Regular User</p>
+                          <p>Username: <span className="font-medium">testuser</span></p>
+                          <p>Password: <span className="font-medium">password123</span></p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">Each role has access to a different dashboard experience.</p>
+                    </div>
                   </CardContent>
                   <CardFooter>
                     <Button 
