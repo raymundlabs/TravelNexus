@@ -2,6 +2,20 @@ import { pgTable, text, serial, integer, boolean, real, timestamp, jsonb } from 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// User roles
+export const userRoles = pgTable("user_roles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  permissions: jsonb("permissions").notNull().default({}),
+});
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).pick({
+  name: true,
+  description: true,
+  permissions: true,
+});
+
 // Users
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -9,6 +23,16 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   fullName: text("full_name"),
+  phone: text("phone"),
+  roleId: integer("role_id").default(1), // Default to customer role
+  isActive: boolean("is_active").default(true),
+  isEmailVerified: boolean("is_email_verified").default(false),
+  isPhoneVerified: boolean("is_phone_verified").default(false),
+  lastLogin: timestamp("last_login"),
+  resetToken: text("reset_token"),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
+  verificationToken: text("verification_token"),
+  profileImage: text("profile_image"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -17,6 +41,65 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   email: true,
   fullName: true,
+  phone: true,
+  roleId: true,
+  profileImage: true,
+});
+
+// Hotel Providers
+export const hotelProviders = pgTable("hotel_providers", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  companyName: text("company_name").notNull(),
+  companyAddress: text("company_address"),
+  companyPhone: text("company_phone"),
+  contactPerson: text("contact_person"),
+  companyEmail: text("company_email"),
+  website: text("website"),
+  logo: text("logo"),
+  isVerified: boolean("is_verified").default(false),
+  commission: real("commission").default(10), // Default 10% commission rate
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertHotelProviderSchema = createInsertSchema(hotelProviders).pick({
+  userId: true,
+  companyName: true,
+  companyAddress: true,
+  companyPhone: true,
+  contactPerson: true,
+  companyEmail: true,
+  website: true,
+  logo: true,
+  commission: true,
+});
+
+// Travel Agents
+export const travelAgents = pgTable("travel_agents", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  agencyName: text("agency_name").notNull(),
+  agencyAddress: text("agency_address"),
+  agencyPhone: text("agency_phone"),
+  contactPerson: text("contact_person"),
+  agencyEmail: text("agency_email"),
+  website: text("website"),
+  logo: text("logo"),
+  isVerified: boolean("is_verified").default(false),
+  commission: real("commission").default(8), // Default 8% commission rate
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTravelAgentSchema = createInsertSchema(travelAgents).pick({
+  userId: true,
+  agencyName: true,
+  agencyAddress: true,
+  agencyPhone: true,
+  contactPerson: true,
+  agencyEmail: true,
+  website: true,
+  logo: true,
+  commission: true,
 });
 
 // Destinations
@@ -175,6 +258,80 @@ export const insertTestimonialSchema = createInsertSchema(testimonials).pick({
   productName: true,
 });
 
+// Payment Methods
+export const paymentMethods = pgTable("payment_methods", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  isActive: boolean("is_active").default(true),
+  description: text("description"),
+  icon: text("icon"),
+  instructions: text("instructions"),
+  additionalFees: real("additional_fees").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).pick({
+  name: true,
+  isActive: true,
+  description: true,
+  icon: true,
+  instructions: true,
+  additionalFees: true,
+});
+
+// Payments
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull(),
+  userId: integer("user_id").notNull(),
+  amount: real("amount").notNull(),
+  paymentMethodId: integer("payment_method_id").notNull(),
+  paymentStatus: text("payment_status").default("pending"), // "pending", "completed", "failed", "refunded"
+  transactionId: text("transaction_id"),
+  receiptUrl: text("receipt_url"),
+  paymentDetails: jsonb("payment_details").default({}),
+  paymentDate: timestamp("payment_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).pick({
+  bookingId: true,
+  userId: true,
+  amount: true,
+  paymentMethodId: true,
+  paymentStatus: true,
+  transactionId: true,
+  receiptUrl: true,
+  paymentDetails: true,
+});
+
+// Bank Transfers
+export const bankTransfers = pgTable("bank_transfers", {
+  id: serial("id").primaryKey(),
+  paymentId: integer("payment_id").notNull().unique(),
+  bankName: text("bank_name").notNull(),
+  accountName: text("account_name").notNull(),
+  accountNumber: text("account_number").notNull(),
+  referenceNumber: text("reference_number"),
+  transferDate: timestamp("transfer_date"),
+  proofOfPaymentUrl: text("proof_of_payment_url"),
+  notes: text("notes"),
+  verifiedBy: integer("verified_by"),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertBankTransferSchema = createInsertSchema(bankTransfers).pick({
+  paymentId: true,
+  bankName: true,
+  accountName: true,
+  accountNumber: true,
+  referenceNumber: true,
+  transferDate: true,
+  proofOfPaymentUrl: true,
+  notes: true,
+});
+
 // Bookings
 export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
@@ -186,7 +343,17 @@ export const bookings = pgTable("bookings", {
   guests: integer("guests").notNull().default(1),
   totalPrice: real("total_price").notNull(),
   status: text("status").default("pending"), // "pending", "confirmed", "cancelled"
+  agentId: integer("agent_id"), // If booked through an agent
+  hotelProviderId: integer("hotel_provider_id"), // If it's a hotel booking
+  notes: text("notes"),
+  specialRequests: text("special_requests"),
+  bookingReference: text("booking_reference"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
+  confirmedAt: timestamp("confirmed_at"),
+  cancelledAt: timestamp("cancelled_at"),
+  cancelledBy: integer("cancelled_by"),
+  cancellationReason: text("cancellation_reason"),
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).pick({
@@ -198,11 +365,24 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   guests: true,
   totalPrice: true,
   status: true,
+  agentId: true,
+  hotelProviderId: true,
+  notes: true,
+  specialRequests: true,
 });
 
 // Export all types
+export type UserRole = typeof userRoles.$inferSelect;
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type HotelProvider = typeof hotelProviders.$inferSelect;
+export type InsertHotelProvider = z.infer<typeof insertHotelProviderSchema>;
+
+export type TravelAgent = typeof travelAgents.$inferSelect;
+export type InsertTravelAgent = z.infer<typeof insertTravelAgentSchema>;
 
 export type Destination = typeof destinations.$inferSelect;
 export type InsertDestination = z.infer<typeof insertDestinationSchema>;
@@ -221,6 +401,15 @@ export type InsertSpecialOffer = z.infer<typeof insertSpecialOfferSchema>;
 
 export type Testimonial = typeof testimonials.$inferSelect;
 export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
+
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
+
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+
+export type BankTransfer = typeof bankTransfers.$inferSelect;
+export type InsertBankTransfer = z.infer<typeof insertBankTransferSchema>;
 
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
