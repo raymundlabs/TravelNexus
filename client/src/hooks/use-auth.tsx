@@ -20,6 +20,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   fullName: z.string().min(3),
+  roleId: z.string(),
 });
 
 type LoginData = z.infer<typeof loginSchema>;

@@ -31,7 +31,7 @@ const registerSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   fullName: z.string().min(3, 'Full name must be at least 3 characters'),
-  roleId: z.string().optional().transform(val => val ? parseInt(val) : 1),
+  roleId: z.string(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -74,7 +74,13 @@ export default function AuthPage() {
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    registerMutation.mutate(data, {
+    // Convert roleId from string to number
+    const formattedData = {
+      ...data,
+      roleId: parseInt(data.roleId)
+    };
+    
+    registerMutation.mutate(formattedData as any, {
       onError: (error) => {
         toast({
           title: 'Registration failed',
@@ -304,7 +310,11 @@ export default function AuthPage() {
                     
                     <div className="space-y-2">
                       <Label htmlFor="roleId">Account Type</Label>
-                      <Select onValueChange={(value) => registerForm.setValue('roleId', value)} defaultValue="1">
+                      <Select 
+                        onValueChange={(value) => registerForm.setValue('roleId', value)} 
+                        defaultValue="1"
+                        {...registerForm.register('roleId')}
+                      >
                         <SelectTrigger id="roleId">
                           <SelectValue placeholder="Select account type" />
                         </SelectTrigger>
