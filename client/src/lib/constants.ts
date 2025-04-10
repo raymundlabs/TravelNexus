@@ -39,26 +39,34 @@ export const BOOKING_TABS: { label: string; value: BookingTabType; icon: string;
 export const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Hotels", href: "/hotels" },
-  { label: "Tours", href: "/tours" },
-  { label: "Packages", href: "/packages" },
-  { label: "Deals", href: "/deals" }
+  { label: "Tours & Activities", href: "/tours" },
+  { label: "Tour Packages", href: "/packages" },
+  { label: "Ferry Tickets", href: "/ferry" },
+  { label: "About White Beach", href: "/about" }
 ];
 
 // Footer link groups
 export const FOOTER_LINKS = {
   company: [
-    { label: "About Us", href: "#" },
-    { label: "Careers", href: "#" },
-    { label: "Blog", href: "#" },
-    { label: "Press", href: "#" },
-    { label: "Gift Cards", href: "#" }
+    { label: "About MATT TRAVEL", href: "#" },
+    { label: "Why Choose Us", href: "#" },
+    { label: "Travel Blog", href: "#" },
+    { label: "Puerto Galera Guide", href: "#" },
+    { label: "Partner With Us", href: "#" }
+  ],
+  destinations: [
+    { label: "White Beach", href: "#" },
+    { label: "Talipanan Beach", href: "#" },
+    { label: "Sabang Beach", href: "#" },
+    { label: "Coco Beach", href: "#" },
+    { label: "Tamaraw Falls", href: "#" }
   ],
   support: [
     { label: "Contact Us", href: "#" },
-    { label: "Help Center", href: "#" },
-    { label: "Safety Information", href: "#" },
+    { label: "Travel FAQs", href: "#" },
+    { label: "Safety Guidelines", href: "#" },
     { label: "Booking Information", href: "#" },
-    { label: "Cancellation Options", href: "#" }
+    { label: "Cancellation Policy", href: "#" }
   ],
   legal: [
     { label: "Terms & Conditions", href: "#" },
