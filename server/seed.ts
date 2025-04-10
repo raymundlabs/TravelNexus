@@ -9,17 +9,6 @@ import {
   testimonials,
 } from "@shared/schema";
 import { sql } from "drizzle-orm";
-import { scrypt, randomBytes } from "crypto";
-import { promisify } from "util";
-
-// Password hashing function copied from auth.ts
-const scryptAsync = promisify(scrypt);
-
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
 
 async function checkDataExists() {
   try {
@@ -497,32 +486,15 @@ async function seed() {
     console.log(`Added ${insertedTestimonials.length} testimonials`);
 
     // Add a test user
-    // Create test users with different roles
-    const testUsers = [
-      {
-        username: "admin",
-        password: await hashPassword("admin123"),
-        email: "admin@whitebeach.com",
-        fullName: "System Administrator",
-        roleId: 5, // SUPERADMIN
-        isActive: true,
-        isEmailVerified: true
-      },
-      {
-        username: "testuser", 
-        password: await hashPassword("password123"),
-        email: "test@example.com",
-        fullName: "Test User",
-        roleId: 1, // CUSTOMER
-        isActive: true,
-        isEmailVerified: true
-      }
-    ];
+    const testUser = {
+      username: "testuser",
+      password: "password123",
+      email: "test@example.com",
+      fullName: "Test User"
+    };
     
-    for (const user of testUsers) {
-      const [insertedUser] = await db.insert(users).values(user).returning();
-      console.log(`Added user: ${insertedUser.username} with role ${insertedUser.roleId}`);
-    }
+    const insertedUser = await db.insert(users).values(testUser).returning();
+    console.log(`Added test user: ${insertedUser[0].username}`);
 
     console.log("✅ Seeding completed successfully");
   } catch (error) {

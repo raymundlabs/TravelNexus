@@ -6,15 +6,6 @@ export const SITE_OPERATOR = "Operated by: MATT TRAVEL";
 export const SITE_OPERATOR_SLOGAN = "A Proud Local Travel Provider Since 2016";
 export const SITE_URL = "www.whitebeachpuertogaleratours.com";
 
-// User role constants - must match the backend USER_ROLES values
-export const USER_ROLES = {
-  CUSTOMER: 1,
-  HOTEL_PROVIDER: 2,
-  TRAVEL_AGENT: 3,
-  ADMIN: 4,
-  SUPERADMIN: 5
-};
-
 // Tab options for search widget
 export type BookingTabType = "hotels" | "tours" | "packages" | "ferry";
 export const BOOKING_TABS: { label: string; value: BookingTabType; icon: string; description?: string }[] = [

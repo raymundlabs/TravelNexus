@@ -15,29 +15,7 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  getUserByResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
-  updateUserLastLogin(id: number): Promise<void>;
-  updateUserResetToken(id: number, token: string, expiry: Date): Promise<void>;
-  updateUserPassword(id: number, password: string): Promise<void>;
-  deleteUser(id: number): Promise<void>;
-  
-  // Role operations
-  getUserRole(id: number): Promise<UserRole | undefined>;
-  
-  // Hotel provider operations
-  getHotelProvider(id: number): Promise<HotelProvider | undefined>;
-  getHotelProviderByUserId(userId: number): Promise<HotelProvider | undefined>;
-  createHotelProvider(provider: InsertHotelProvider): Promise<HotelProvider>;
-  updateHotelProvider(id: number, provider: Partial<InsertHotelProvider>): Promise<HotelProvider>;
-  
-  // Travel agent operations
-  getTravelAgent(id: number): Promise<TravelAgent | undefined>;
-  getTravelAgentByUserId(userId: number): Promise<TravelAgent | undefined>;
-  createTravelAgent(agent: InsertTravelAgent): Promise<TravelAgent>;
-  updateTravelAgent(id: number, agent: Partial<InsertTravelAgent>): Promise<TravelAgent>;
 
   // Destination operations
   getDestinations(): Promise<Destination[]>;
@@ -90,113 +68,9 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
-  }
-
-  async getUserByResetToken(token: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.resetToken, token));
-    return user;
-  }
-
   async createUser(user: InsertUser): Promise<User> {
     const [createdUser] = await db.insert(users).values(user).returning();
     return createdUser;
-  }
-
-  async updateUser(id: number, user: Partial<InsertUser>): Promise<User> {
-    const [updatedUser] = await db
-      .update(users)
-      .set(user)
-      .where(eq(users.id, id))
-      .returning();
-    return updatedUser;
-  }
-
-  async updateUserLastLogin(id: number): Promise<void> {
-    await db
-      .update(users)
-      .set({ lastLogin: new Date() })
-      .where(eq(users.id, id));
-  }
-
-  async updateUserResetToken(id: number, token: string, expiry: Date): Promise<void> {
-    await db
-      .update(users)
-      .set({ resetToken: token, resetTokenExpiry: expiry })
-      .where(eq(users.id, id));
-  }
-
-  async updateUserPassword(id: number, password: string): Promise<void> {
-    await db
-      .update(users)
-      .set({ 
-        password,
-        resetToken: null,
-        resetTokenExpiry: null
-      })
-      .where(eq(users.id, id));
-  }
-
-  async deleteUser(id: number): Promise<void> {
-    await db.delete(users).where(eq(users.id, id));
-  }
-  
-  // Role operations
-  async getUserRole(id: number): Promise<UserRole | undefined> {
-    const [role] = await db.select().from(userRoles).where(eq(userRoles.id, id));
-    return role;
-  }
-  
-  // Hotel provider operations
-  async getHotelProvider(id: number): Promise<HotelProvider | undefined> {
-    const [provider] = await db.select().from(hotelProviders).where(eq(hotelProviders.id, id));
-    return provider;
-  }
-  
-  async getHotelProviderByUserId(userId: number): Promise<HotelProvider | undefined> {
-    const [provider] = await db.select().from(hotelProviders).where(eq(hotelProviders.userId, userId));
-    return provider;
-  }
-  
-  async createHotelProvider(provider: InsertHotelProvider): Promise<HotelProvider> {
-    const [createdProvider] = await db.insert(hotelProviders).values(provider).returning();
-    return createdProvider;
-  }
-  
-  async updateHotelProvider(id: number, provider: Partial<InsertHotelProvider>): Promise<HotelProvider> {
-    const [updatedProvider] = await db
-      .update(hotelProviders)
-      .set(provider)
-      .where(eq(hotelProviders.id, id))
-      .returning();
-    return updatedProvider;
-  }
-  
-  // Travel agent operations
-  async getTravelAgent(id: number): Promise<TravelAgent | undefined> {
-    const [agent] = await db.select().from(travelAgents).where(eq(travelAgents.id, id));
-    return agent;
-  }
-  
-  async getTravelAgentByUserId(userId: number): Promise<TravelAgent | undefined> {
-    const [agent] = await db.select().from(travelAgents).where(eq(travelAgents.userId, userId));
-    return agent;
-  }
-  
-  async createTravelAgent(agent: InsertTravelAgent): Promise<TravelAgent> {
-    const [createdAgent] = await db.insert(travelAgents).values(agent).returning();
-    return createdAgent;
-  }
-  
-  async updateTravelAgent(id: number, agent: Partial<InsertTravelAgent>): Promise<TravelAgent> {
-    const [updatedAgent] = await db
-      .update(travelAgents)
-      .set(agent)
-      .where(eq(travelAgents.id, id))
-      .returning();
-    return updatedAgent;
   }
 
   // Destination operations

@@ -1,26 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { storage } from "./storage";
-
-// Extend Express Request type to include storage
-declare global {
-  namespace Express {
-    interface Request {
-      storage: typeof storage;
-    }
-  }
-}
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Add storage to request object
-app.use((req, res, next) => {
-  req.storage = storage;
-  next();
-});
 
 app.use((req, res, next) => {
   const start = Date.now();
