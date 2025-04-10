@@ -55,28 +55,44 @@ async function seed() {
     // Sample destinations
     const sampleDestinations = [
       {
-        name: 'Bali',
-        country: 'Indonesia',
-        description: 'Tropical paradise with beautiful beaches and rich culture',
-        imageUrl: 'https://images.unsplash.com/photo-1530841377377-3ff06c0ca713',
-        rating: 4.8,
-        reviewCount: 2456
-      },
-      {
-        name: 'Santorini',
-        country: 'Greece',
-        description: 'Stunning island with white buildings and blue domes',
-        imageUrl: 'https://images.unsplash.com/photo-1523531294919-4bcd7c65e216',
+        name: 'White Beach',
+        country: 'Philippines',
+        description: 'Beautiful white sand beach in Puerto Galera, Oriental Mindoro with crystal clear waters',
+        imageUrl: 'https://images.unsplash.com/photo-1589394815804-964421bf9359',
         rating: 4.9,
-        reviewCount: 3210
+        reviewCount: 1850
       },
       {
-        name: 'Kyoto',
-        country: 'Japan',
-        description: 'Ancient city with beautiful temples and traditional gardens',
-        imageUrl: 'https://images.unsplash.com/photo-1543249037-d517e66dab50',
+        name: 'Sabang Beach',
+        country: 'Philippines',
+        description: 'Popular diving spot in Puerto Galera known for vibrant coral reefs and nightlife',
+        imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5',
         rating: 4.7,
-        reviewCount: 1876
+        reviewCount: 1240
+      },
+      {
+        name: 'Talipanan Beach',
+        country: 'Philippines',
+        description: 'Quiet and secluded beach in Puerto Galera ideal for relaxation away from crowds',
+        imageUrl: 'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f',
+        rating: 4.6,
+        reviewCount: 875
+      },
+      {
+        name: 'Aninuan Beach',
+        country: 'Philippines',
+        description: 'Picturesque beach with mountain views and various water activities',
+        imageUrl: 'https://images.unsplash.com/photo-1468413253725-0d5181091126',
+        rating: 4.5,
+        reviewCount: 720
+      },
+      {
+        name: 'Puerto Galera Town',
+        country: 'Philippines',
+        description: 'Charming town center with local markets, restaurants and cultural experiences',
+        imageUrl: 'https://images.unsplash.com/photo-1552751753-d8be54aee3e0',
+        rating: 4.3,
+        reviewCount: 950
       }
     ];
     
@@ -86,51 +102,99 @@ async function seed() {
     // Sample hotels
     const sampleHotels = [
       {
-        name: 'The Grand Riviera',
+        name: 'White Beach Resort & Spa',
         destinationId: 1,
-        description: 'Luxury hotel with stunning ocean views',
-        address: '123 Beach Road, Monaco',
-        price: 420,
-        imageUrl: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa',
-        rating: 5.0,
-        reviewCount: 523,
-        amenities: ['Pool', 'Spa', 'WiFi', 'Restaurant'],
+        description: 'Luxury beachfront resort with stunning ocean views and direct access to White Beach',
+        address: 'White Beach, Puerto Galera, Oriental Mindoro',
+        price: 7500, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945',
+        rating: 4.8,
+        reviewCount: 432,
+        amenities: ['Pool', 'Spa', 'WiFi', 'Restaurant', 'Beach Access', 'Air Conditioning'],
         featured: true
       },
       {
-        name: 'Tropical Paradise Resort',
+        name: 'Sunset View Inn',
         destinationId: 1,
-        description: 'Beautiful resort surrounded by tropical gardens',
-        address: 'Paradise Beach, Maldives',
-        price: 380,
+        description: 'Affordable beachfront accommodation with incredible sunset views',
+        address: 'White Beach Central, Puerto Galera',
+        price: 3500, // in PHP
         imageUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4',
         rating: 4.5,
-        reviewCount: 412,
-        amenities: ['Pool', 'Private Beach', 'WiFi', 'Bar'],
+        reviewCount: 324,
+        amenities: ['WiFi', 'Restaurant', 'Beach Access', 'Air Conditioning'],
         featured: true
       },
       {
-        name: 'Mountain View Lodge',
-        destinationId: 3,
-        description: 'Cozy lodge with breathtaking mountain views',
-        address: 'Alpine Road, Swiss Alps',
-        price: 290,
-        imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
-        rating: 4.0,
+        name: 'Mindoro Beachside Hotel',
+        destinationId: 1,
+        description: 'Family-friendly hotel steps away from the shoreline with comfortable rooms',
+        address: 'White Beach Path, Puerto Galera',
+        price: 4200, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa',
+        rating: 4.3,
         reviewCount: 287,
-        amenities: ['Fireplace', 'Sauna', 'Restaurant'],
+        amenities: ['WiFi', 'Pool', 'Restaurant', 'Family Rooms', 'Air Conditioning'],
         featured: true
       },
       {
-        name: 'Urban Boutique Hotel',
-        destinationId: 2,
-        description: 'Stylish hotel in the heart of the city',
-        address: '42 Central Park, New York',
-        price: 350,
-        imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945',
+        name: 'White Sand Cottage Resort',
+        destinationId: 1,
+        description: 'Cozy cottages nestled in a tropical garden setting just minutes from the beach',
+        address: 'White Beach Road, Puerto Galera',
+        price: 2800, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
+        rating: 4.2,
+        reviewCount: 195,
+        amenities: ['Garden View', 'WiFi', 'Air Conditioning', 'Beach Shuttle'],
+        featured: true
+      },
+      {
+        name: 'Paradise Bay Resort',
+        destinationId: 1,
+        description: 'Upscale resort offering private balconies with sea views and premium amenities',
+        address: 'White Beach North, Puerto Galera',
+        price: 6500, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791',
+        rating: 4.7,
+        reviewCount: 356,
+        amenities: ['Pool', 'Spa', 'WiFi', 'Restaurant', 'Bar', 'Beach Access', 'Room Service'],
+        featured: true
+      },
+      {
+        name: 'Budget Beach Hostel',
+        destinationId: 1,
+        description: 'Affordable dormitory-style accommodation ideal for backpackers and solo travelers',
+        address: 'White Beach South, Puerto Galera',
+        price: 900, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5',
         rating: 4.0,
-        reviewCount: 345,
-        amenities: ['WiFi', 'Gym', 'Restaurant', 'Bar'],
+        reviewCount: 142,
+        amenities: ['WiFi', 'Shared Kitchen', 'Lockers', 'Common Area'],
+        featured: false
+      },
+      {
+        name: 'Talipanan Beach Resort',
+        destinationId: 3,
+        description: 'Peaceful resort on the quieter Talipanan Beach with spacious rooms',
+        address: 'Talipanan Beach, Puerto Galera',
+        price: 4800, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1540541338287-41700207dee6',
+        rating: 4.4,
+        reviewCount: 178,
+        amenities: ['Pool', 'WiFi', 'Restaurant', 'Beach Access', 'Air Conditioning'],
+        featured: true
+      },
+      {
+        name: 'Sabang Divers Resort',
+        destinationId: 2,
+        description: 'Specialist resort for diving enthusiasts with on-site dive center and equipment rental',
+        address: 'Sabang Beach, Puerto Galera',
+        price: 5200, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1582610116397-edb318620f90',
+        rating: 4.6,
+        reviewCount: 265,
+        amenities: ['Dive Center', 'Pool', 'WiFi', 'Restaurant', 'Equipment Rental'],
         featured: true
       }
     ];
@@ -141,43 +205,108 @@ async function seed() {
     // Sample tours
     const sampleTours = [
       {
-        name: 'Ancient Temples Guided Tour',
-        destinationId: 3,
-        description: 'Explore the ancient temples with an expert archaeologist guide. Includes transportation and lunch.',
-        duration: '8 hours',
-        price: 89,
-        imageUrl: 'https://images.unsplash.com/photo-1549221987-25a490f65d34',
-        rating: 4.5,
-        reviewCount: 124,
-        inclusions: ['Expert Guide', 'Transportation', 'Lunch', 'Entrance Fees'],
-        groupSize: 'Small group',
-        featured: true
-      },
-      {
-        name: 'Sunset Sailing Adventure',
+        name: 'Island Hopping Adventure',
         destinationId: 1,
-        description: 'Enjoy a beautiful sunset aboard a luxury catamaran with drinks, snacks, and swimming stops.',
-        duration: '3 hours',
-        price: 65,
-        imageUrl: 'https://images.unsplash.com/photo-1605908584126-8a581aed37b3',
-        rating: 5.0,
-        reviewCount: 98,
-        inclusions: ['Drinks', 'Snacks', 'Swimming', 'Professional Crew'],
+        description: 'Explore the beautiful islands around Puerto Galera including Coral Garden, Sand Bar, and Haligi Beach with snorkeling and lunch.',
+        duration: '8 hours',
+        price: 1500, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94',
+        rating: 4.8,
+        reviewCount: 324,
+        inclusions: ['Boat Transfers', 'Snorkeling Equipment', 'Lunch', 'Entrance Fees', 'Life Vests'],
         groupSize: 'Small group',
         featured: true
       },
       {
-        name: 'Culinary Walking Tour',
+        name: 'Scuba Diving for Beginners',
         destinationId: 2,
-        description: 'Sample local delicacies at hidden gems with a professional food guide. Includes all tastings.',
+        description: 'First-time diving experience with professional instructors at Sabang Beach, one of the top diving spots in the Philippines.',
         duration: '4 hours',
-        price: 75,
-        imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
-        rating: 4.0,
-        reviewCount: 56,
-        inclusions: ['Professional Guide', 'Food Tastings', 'Beverage Tastings'],
+        price: 2800, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5',
+        rating: 4.9,
+        reviewCount: 186,
+        inclusions: ['Professional Instructor', 'Complete Diving Equipment', 'Basic Training', 'Certificate'],
+        groupSize: 'Small group (max 4)',
+        featured: true
+      },
+      {
+        name: 'Banana Boat Ride',
+        destinationId: 1,
+        description: 'Experience the thrill of a banana boat ride along White Beach with friends and family. Great for all ages!',
+        duration: '30 minutes',
+        price: 350, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1544879444-18ecf34223dd',
+        rating: 4.4,
+        reviewCount: 210,
+        inclusions: ['Boat Ride', 'Safety Equipment', 'Professional Guide'],
+        groupSize: 'Small group (max 6)',
+        featured: true
+      },
+      {
+        name: 'Tukuran and Talipanan Falls Trekking Tour',
+        destinationId: 3,
+        description: 'Trek through the lush jungles of Puerto Galera to discover hidden waterfalls where you can swim in natural pools.',
+        duration: '6 hours',
+        price: 1200, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1559825481-12a05cc00344',
+        rating: 4.7,
+        reviewCount: 143,
+        inclusions: ['Experienced Guide', 'Packed Lunch', 'Water', 'First Aid Kit'],
         groupSize: 'Small group',
         featured: true
+      },
+      {
+        name: 'Sunset Sailing at White Beach',
+        destinationId: 1,
+        description: 'Watch the stunning Puerto Galera sunset from a traditional outrigger boat (banca) with drinks and snacks.',
+        duration: '2 hours',
+        price: 900, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1605908584126-8a581aed37b3',
+        rating: 4.9,
+        reviewCount: 98,
+        inclusions: ['Boat Ride', 'Drinks', 'Snacks', 'Professional Crew'],
+        groupSize: 'Small group',
+        featured: true
+      },
+      {
+        name: 'ATV Mountain Adventure',
+        destinationId: 4,
+        description: 'Ride all-terrain vehicles through scenic mountain trails with breathtaking views of Puerto Galera bay.',
+        duration: '3 hours',
+        price: 1800, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b',
+        rating: 4.6,
+        reviewCount: 87,
+        inclusions: ['ATV Rental', 'Safety Equipment', 'Guide', 'Refreshments'],
+        groupSize: 'Small group',
+        featured: true
+      },
+      {
+        name: 'Puerto Galera Cultural Tour',
+        destinationId: 5,
+        description: 'Visit local Mangyan villages, historical sites and the Puerto Galera Museum to learn about the rich cultural heritage.',
+        duration: '4 hours',
+        price: 850, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
+        rating: 4.3,
+        reviewCount: 56,
+        inclusions: ['Professional Guide', 'Museum Entrance', 'Transportation', 'Refreshments'],
+        groupSize: 'Small group',
+        featured: false
+      },
+      {
+        name: 'Mangrove Kayaking Eco-Tour',
+        destinationId: 5,
+        description: 'Paddle through pristine mangrove forests and learn about these important ecosystems from knowledgeable guides.',
+        duration: '3 hours',
+        price: 750, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1452421822248-d4c2b47f0c81',
+        rating: 4.7,
+        reviewCount: 92,
+        inclusions: ['Kayak Rental', 'Guide', 'Refreshments', 'Safety Equipment'],
+        groupSize: 'Small group',
+        featured: false
       }
     ];
     
@@ -187,35 +316,83 @@ async function seed() {
     // Sample packages
     const samplePackages = [
       {
-        name: 'Tropical Paradise Escape',
-        description: '7 days of tropical bliss with beachfront accommodation, island hopping tours, sunset cruise, and all meals included.',
+        name: 'White Beach Weekend Getaway',
+        description: '3-day escape with beachfront accommodation at White Beach Resort & Spa, island hopping tour, and sunset sailing adventure.',
         destinationId: 1,
-        duration: '7 days',
-        price: 2499,
-        discountedPrice: 1999,
-        imageUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4',
-        rating: 4.5,
-        reviewCount: 234,
-        highlights: ['5-star Resort', 'All-inclusive', '3 Tours'],
-        inclusions: ['Accommodation', 'All Meals', 'Tours', 'Airport Transfers'],
+        duration: '3 days / 2 nights',
+        price: 14500, // in PHP
+        discountedPrice: 12500, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1589394815804-964421bf9359',
+        rating: 4.8,
+        reviewCount: 165,
+        highlights: ['Beachfront Resort', 'Island Hopping', 'Sunset Cruise'],
+        inclusions: ['Resort Accommodation', 'Daily Breakfast', '2 Tours', 'Ferry Transfers'],
         isBestseller: true,
-        discountPercentage: 20,
+        discountPercentage: 14,
         featured: true
       },
       {
-        name: 'European City Explorer',
-        description: '10-day journey through 3 iconic European cities with boutique hotels, guided tours, and train transportation between destinations.',
+        name: 'Puerto Galera Adventure Package',
+        description: '5-day action-packed adventure with scuba diving, ATV mountain tour, and waterfall trekking. Includes hotel stay at Sabang Divers Resort.',
         destinationId: 2,
-        duration: '10 days',
-        price: 3299,
-        discountedPrice: 2969,
-        imageUrl: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b',
-        rating: 4.0,
-        reviewCount: 187,
-        highlights: ['Boutique Hotels', 'Guided Tours', 'Rail Passes'],
-        inclusions: ['Accommodation', 'Breakfast', 'Tours', 'Train Tickets'],
+        duration: '5 days / 4 nights',
+        price: 22500, // in PHP
+        discountedPrice: 18900, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5',
+        rating: 4.7,
+        reviewCount: 98,
+        highlights: ['Scuba Diving', 'ATV Adventure', 'Waterfall Trek'],
+        inclusions: ['Hotel Accommodation', 'Daily Breakfast', '3 Adventure Tours', 'Equipment Rental', 'Ferry Transfers'],
+        isBestseller: false,
+        discountPercentage: 16,
+        featured: true
+      },
+      {
+        name: 'Family Fun in Puerto Galera',
+        description: '4-day family vacation with kid-friendly activities including beach games, banana boat rides, and island hopping. Stays at family-friendly Mindoro Beachside Hotel.',
+        destinationId: 1,
+        duration: '4 days / 3 nights',
+        price: 18900, // in PHP
+        discountedPrice: 16500, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94',
+        rating: 4.6,
+        reviewCount: 123,
+        highlights: ['Family Room', 'Kid-Friendly Tours', 'Beach Activities'],
+        inclusions: ['Hotel Accommodation', 'Daily Breakfast', 'Banana Boat Ride', 'Island Hopping Tour', 'Ferry Transfers'],
+        isBestseller: true,
+        discountPercentage: 13,
+        featured: true
+      },
+      {
+        name: 'Romantic Puerto Galera Escape',
+        description: '3-day romantic getaway for couples with private sunset dinner, couple\'s massage, and exclusive beach cabana at Paradise Bay Resort.',
+        destinationId: 1,
+        duration: '3 days / 2 nights',
+        price: 16900, // in PHP
+        discountedPrice: 15200, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4',
+        rating: 4.9,
+        reviewCount: 87,
+        highlights: ['Luxury Resort', 'Couple\'s Massage', 'Private Dinner'],
+        inclusions: ['Resort Accommodation', 'Daily Breakfast', 'Spa Treatment', 'Romantic Dinner', 'Ferry Transfers'],
         isBestseller: false,
         discountPercentage: 10,
+        featured: true
+      },
+      {
+        name: 'Puerto Galera Diving Discovery',
+        description: '6-day comprehensive diving package with 10 dives at different sites around Puerto Galera, perfect for certified divers wanting to explore this world-class diving destination.',
+        destinationId: 2,
+        duration: '6 days / 5 nights',
+        price: 28500, // in PHP
+        discountedPrice: 24500, // in PHP
+        imageUrl: 'https://images.unsplash.com/photo-1586152483585-eb450ec9732a',
+        rating: 4.8,
+        reviewCount: 156,
+        highlights: ['10 Dive Package', 'Equipment Included', 'Dive Master'],
+        inclusions: ['Resort Accommodation', 'Daily Breakfast', 'All Diving Equipment', 'Boat Transfers', 'Certification'],
+        isBestseller: true,
+        discountPercentage: 14,
         featured: true
       }
     ];
@@ -226,34 +403,44 @@ async function seed() {
     // Sample special offers
     const sampleSpecialOffers = [
       {
-        title: '5-Night Luxury Beachfront Resort',
-        description: 'Enjoy a luxurious stay at our exclusive beachfront property with complimentary breakfast and spa access.',
+        title: 'White Beach Resort Summer Special',
+        description: '3-Night stay at White Beach Resort & Spa with complimentary breakfast, one spa treatment, and island hopping tour.',
         imageUrl: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461',
-        originalPrice: 1200,
-        discountedPrice: 960,
+        originalPrice: 22500, // in PHP
+        discountedPrice: 18000, // in PHP
         discountPercentage: 20,
         badge: '20% OFF',
-        priceUnit: 'person'
+        priceUnit: 'package'
       },
       {
-        title: 'Urban Explorer City Break Package',
-        description: '3-day city exploration with guided tours, luxury accommodations, and exclusive restaurant reservations.',
-        imageUrl: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9',
-        originalPrice: 850,
-        discountedPrice: 680,
+        title: 'Weekday Diving Discovery',
+        description: 'Monday to Thursday diving package with 6 dives, equipment rental, and accommodation at Sabang Divers Resort.',
+        imageUrl: 'https://images.unsplash.com/photo-1586152483585-eb450ec9732a',
+        originalPrice: 15000, // in PHP
+        discountedPrice: 12000, // in PHP
         discountPercentage: 20,
         badge: 'HOT DEAL',
         priceUnit: 'person'
       },
       {
-        title: 'All-Inclusive Safari Adventure',
-        description: '7-day safari experience with expert guides, luxury tented camps, and all meals and activities included.',
+        title: 'Couple\'s Island Retreat',
+        description: '2-night romantic getaway at Paradise Bay Resort with private candlelit dinner on the beach, couple\'s massage, and sunset cruise.',
         imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5',
-        originalPrice: 3200,
-        discountedPrice: 2720,
-        discountPercentage: 15,
-        badge: '15% OFF',
-        priceUnit: 'person'
+        originalPrice: 16500, // in PHP
+        discountedPrice: 13200, // in PHP
+        discountPercentage: 20,
+        badge: 'ROMANCE PACKAGE',
+        priceUnit: 'couple'
+      },
+      {
+        title: 'Family Beach Fun Package',
+        description: 'Family-friendly 3-night package at Mindoro Beachside Hotel with daily activities for kids, banana boat ride, and island picnic.',
+        imageUrl: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94',
+        originalPrice: 25000, // in PHP
+        discountedPrice: 20000, // in PHP
+        discountPercentage: 20,
+        badge: 'FAMILY SPECIAL',
+        priceUnit: 'family'
       }
     ];
     
@@ -263,25 +450,39 @@ async function seed() {
     // Sample testimonials
     const sampleTestimonials = [
       {
-        content: "The Bali package was absolutely amazing! Everything was well-organized, from the airport pickup to the tours. The hotel was beautiful and the staff was incredibly friendly. Would book again in a heartbeat!",
+        content: "The White Beach Weekend Getaway was perfect! Everything was well-organized from the ferry tickets to the tours. The resort was beautiful and right on the beach. The service was excellent and we loved the island hopping tour!",
         authorName: "Sarah Johnson",
         authorImage: "https://randomuser.me/api/portraits/women/12.jpg",
         rating: 5.0,
-        productName: "Tropical Paradise Escape"
+        productName: "White Beach Weekend Getaway"
       },
       {
-        content: "Our European City Explorer tour was a dream come true. The hotels were charming, the guides were knowledgeable, and the itinerary was perfect. Just the right balance of structured activities and free time.",
+        content: "Scuba diving in Puerto Galera was incredible! The instructor was very professional and patient with us beginners. The underwater world around Sabang Beach is breathtaking with so many colorful corals and fish.",
         authorName: "Michael Chen",
         authorImage: "https://randomuser.me/api/portraits/men/22.jpg",
         rating: 4.5,
-        productName: "European City Explorer"
+        productName: "Scuba Diving for Beginners"
       },
       {
-        content: "The sunset sailing tour was the highlight of our trip! The crew was fun and professional, and the views were breathtaking. The complimentary drinks and snacks were a nice touch. Highly recommend!",
+        content: "The sunset sailing tour at White Beach was truly magical! The outrigger boat ride was fun, and watching the sun set over the mountains was absolutely stunning. The crew was attentive and made our anniversary special.",
         authorName: "Emily Rodriguez",
         authorImage: "https://randomuser.me/api/portraits/women/42.jpg",
         rating: 5.0,
-        productName: "Sunset Sailing Adventure"
+        productName: "Sunset Sailing at White Beach"
+      },
+      {
+        content: "Our family had an amazing time at Mindoro Beachside Hotel! The kids loved the banana boat ride and beach activities. The staff was wonderful with children and the breakfast buffet had great Filipino options.",
+        authorName: "David Williams",
+        authorImage: "https://randomuser.me/api/portraits/men/32.jpg",
+        rating: 4.5,
+        productName: "Family Fun in Puerto Galera"
+      },
+      {
+        content: "Island hopping around Puerto Galera was the highlight of our trip! The beaches were pristine and snorkeling at Coral Garden was like swimming in an aquarium. Great value for the price and excellent guides.",
+        authorName: "Maria Santos",
+        authorImage: "https://randomuser.me/api/portraits/women/45.jpg",
+        rating: 5.0,
+        productName: "Island Hopping Adventure"
       }
     ];
     
