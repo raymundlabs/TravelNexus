@@ -17,30 +17,51 @@ import { AuthProvider } from "./hooks/use-auth";
 import { ProtectedRoute } from "./components/auth/protected-route";
 import { USER_ROLES } from "./lib/constants";
 
-// Admin pages will be added later
-// import AdminDashboard from "@/pages/admin/dashboard";
+// Admin and dashboard pages
+import AdminDashboard from "@/pages/admin/dashboard";
+import UserDashboard from "@/pages/account/dashboard";
+import ProviderDashboard from "@/pages/provider/dashboard";
 
 function Router() {
   return (
-    <>
-      <Header />
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/hotels" component={Hotels} />
-        <Route path="/hotels/:id" component={HotelDetail} />
-        <Route path="/tours" component={Tours} />
-        <Route path="/tours/:id" component={TourDetail} />
-        <Route path="/packages" component={Packages} />
-        <Route path="/packages/:id" component={PackageDetail} />
-        <Route path="/auth" component={Auth} />
-        
-        {/* Protected routes - will be implemented later */}
-        {/* <ProtectedRoute path="/admin" component={AdminDashboard} roles={[USER_ROLES.ADMIN, USER_ROLES.SUPERADMIN]} /> */}
-        
-        <Route component={NotFound} />
-      </Switch>
-      <Footer />
-    </>
+    <Switch>
+      {/* Admin routes without header/footer */}
+      <Route path="/admin/dashboard">
+        <AdminDashboard />
+      </Route>
+      
+      {/* Provider routes without header/footer */}
+      <Route path="/provider/dashboard">
+        <ProviderDashboard />
+      </Route>
+      
+      {/* Public and user routes with header/footer */}
+      <Route path="/account/dashboard">
+        <>
+          <Header />
+          <UserDashboard />
+          <Footer />
+        </>
+      </Route>
+      
+      <Route path="/:rest*">
+        <>
+          <Header />
+          <Switch>
+            <Route path="/" component={Home} />
+            <Route path="/hotels" component={Hotels} />
+            <Route path="/hotels/:id" component={HotelDetail} />
+            <Route path="/tours" component={Tours} />
+            <Route path="/tours/:id" component={TourDetail} />
+            <Route path="/packages" component={Packages} />
+            <Route path="/packages/:id" component={PackageDetail} />
+            <Route path="/auth" component={Auth} />
+            <Route component={NotFound} />
+          </Switch>
+          <Footer />
+        </>
+      </Route>
+    </Switch>
   );
 }
 
