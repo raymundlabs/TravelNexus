@@ -5,7 +5,7 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { z } from 'zod';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { apiRequest, queryClient, getQueryFn } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { User } from '@shared/schema';
 
@@ -47,25 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
   } = useQuery<User | null, Error>({
     queryKey: ['/api/auth/user'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/auth/user');
-        if (!response.ok) {
-          // Return null if not authenticated (401)
-          if (response.status === 401) {
-            return null;
-          }
-          throw new Error('Failed to fetch user information');
-        }
-        return await response.json();
-      } catch (error) {
-        // Return null on auth errors, throw for other errors
-        if (error instanceof Error && error.message === 'Failed to fetch user information') {
-          throw error;
-        }
-        return null;
-      }
-    },
+    queryFn: getQueryFn({ on401: "returnNull" }),
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
   });
@@ -73,12 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login mutation
   const loginMutation = useMutation<User, Error, LoginData>({
     mutationFn: async (credentials) => {
-      const response = await apiRequest('POST', '/api/auth/login', credentials);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Login failed');
+      try {
+        const response = await apiRequest('POST', '/api/auth/login', credentials);
+        return await response.json();
+      } catch (error) {
+        throw error instanceof Error ? error : new Error('Login failed');
       }
-      return await response.json();
     },
     onSuccess: () => {
       // Refetch user data after successful login
@@ -100,12 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Register mutation
   const registerMutation = useMutation<User, Error, RegisterData>({
     mutationFn: async (userData) => {
-      const response = await apiRequest('POST', '/api/auth/register', userData);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Registration failed');
+      try {
+        const response = await apiRequest('POST', '/api/auth/register', userData);
+        return await response.json();
+      } catch (error) {
+        throw error instanceof Error ? error : new Error('Registration failed');
       }
-      return await response.json();
     },
     onSuccess: () => {
       // Refetch user data after successful registration
@@ -127,10 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Logout mutation
   const logoutMutation = useMutation<void, Error>({
     mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/auth/logout');
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Logout failed');
+      try {
+        await apiRequest('POST', '/api/auth/logout');
+      } catch (error) {
+        throw error instanceof Error ? error : new Error('Logout failed');
       }
     },
     onSuccess: () => {
