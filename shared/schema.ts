@@ -2,6 +2,19 @@ import { pgTable, text, serial, integer, boolean, real, timestamp, jsonb } from 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Roles
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertRoleSchema = createInsertSchema(roles).pick({
+  name: true,
+  description: true,
+});
+
 // Users
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -10,13 +23,26 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   fullName: text("full_name"),
   createdAt: timestamp("created_at").defaultNow(),
+  phone: text("phone"),
+  roleId: integer("role_id").default(1), // Default to regular user
+  isActive: boolean("is_active").default(true),
+  isEmailVerified: boolean("is_email_verified").default(false),
+  isPhoneVerified: boolean("is_phone_verified").default(false),
+  lastLogin: timestamp("last_login"),
+  resetToken: text("reset_token"),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
+  verificationToken: text("verification_token"),
+  profileImage: text("profile_image"),
 });
+
+// We'll manually handle relations between users and roles through queries
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   email: true,
   fullName: true,
+  roleId: true,
 });
 
 // Destinations
@@ -201,6 +227,9 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
 });
 
 // Export all types
+export type Role = typeof roles.$inferSelect;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
