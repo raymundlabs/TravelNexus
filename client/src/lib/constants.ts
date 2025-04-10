@@ -1,14 +1,38 @@
 // Site constants
-export const SITE_NAME = "Wanderlust";
-export const SITE_DESCRIPTION = "Discover Your Perfect Getaway";
-export const SITE_TAGLINE = "Unforgettable experiences and adventures await with Wanderlust Travel";
+export const SITE_NAME = "White Beach Puerto Galera Tours";
+export const SITE_DESCRIPTION = "Puerto Galera's Most Trusted Tour Booking Site!";
+export const SITE_TAGLINE = "The No.1 Site for White Beach Puerto Galera Bookings!";
+export const SITE_OPERATOR = "Operated by: MATT TRAVEL";
+export const SITE_OPERATOR_SLOGAN = "A Proud Local Travel Provider Since 2016";
+export const SITE_URL = "www.whitebeachpuertogaleratours.com";
 
 // Tab options for search widget
-export type BookingTabType = "hotels" | "tours" | "packages";
-export const BOOKING_TABS: { label: string; value: BookingTabType; icon: string }[] = [
-  { label: "Hotels", value: "hotels", icon: "hotel" },
-  { label: "Tours", value: "tours", icon: "map-marked-alt" },
-  { label: "Packages", value: "packages", icon: "suitcase" }
+export type BookingTabType = "hotels" | "tours" | "packages" | "ferry";
+export const BOOKING_TABS: { label: string; value: BookingTabType; icon: string; description?: string }[] = [
+  { 
+    label: "Tour Packages", 
+    value: "packages", 
+    icon: "suitcase", 
+    description: "Island Hopping • Inland Tours • Waterfalls" 
+  },
+  { 
+    label: "Hotel Reservation", 
+    value: "hotels", 
+    icon: "bed", 
+    description: "Beachfront Hotels • Budget Rooms • Group Rates" 
+  },
+  { 
+    label: "Tours & Activities", 
+    value: "tours", 
+    icon: "umbrella-beach", 
+    description: "Snorkeling • Banana Boat • Diving • ATV" 
+  },
+  { 
+    label: "Ferry Tickets", 
+    value: "ferry", 
+    icon: "ship", 
+    description: "Batangas–Puerto Galera • Roundtrip • VIP & Regular" 
+  }
 ];
 
 // Navigation links

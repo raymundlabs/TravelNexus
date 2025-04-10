@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookingTabType, BOOKING_TABS } from '@/lib/constants';
+import { Building, Ship, Briefcase, Umbrella, Search, CalendarDays } from 'lucide-react';
 
 const guestOptions = ['1 Guest', '2 Guests', '3 Guests', '4+ Guests'];
 
@@ -37,20 +38,42 @@ export default function SearchWidget({ className = '' }: SearchWidgetProps) {
     setLocation(`${baseUrl}${queryString ? `?${queryString}` : ''}`);
   };
 
+  // Helper to get the appropriate icon
+  const getTabIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'suitcase':
+        return <Briefcase className="h-5 w-5 mr-2" />;
+      case 'bed':
+        return <Building className="h-5 w-5 mr-2" />;
+      case 'umbrella-beach':
+        return <Umbrella className="h-5 w-5 mr-2" />;
+      case 'ship':
+        return <Ship className="h-5 w-5 mr-2" />;
+      default:
+        return <Briefcase className="h-5 w-5 mr-2" />;
+    }
+  };
+
   return (
     <div className={`bg-white rounded-lg shadow-lg p-4 md:p-6 ${className}`}>
-      <div className="flex border-b mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {BOOKING_TABS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => handleTabClick(tab.value)}
-            className={`booking-tab flex-grow py-3 font-heading font-medium text-lg ${
+            className={`booking-tab flex flex-col items-center py-4 px-3 rounded-lg transition-colors ${
               activeTab === tab.value 
-                ? 'text-primary border-b-3 border-primary' 
-                : 'text-neutral-500'
+                ? 'bg-primary/10 text-primary border border-primary/30' 
+                : 'bg-gray-50 text-neutral-600 hover:bg-gray-100 border border-gray-200'
             }`}
           >
-            <i className={`fas fa-${tab.icon} mr-2`}></i> {tab.label}
+            <div className="flex items-center mb-1">
+              {getTabIcon(tab.icon)}
+              <span className="font-medium">{tab.label}</span>
+            </div>
+            {tab.description && (
+              <p className="text-xs text-center mt-1 text-neutral-500">{tab.description}</p>
+            )}
           </button>
         ))}
       </div>
@@ -59,10 +82,10 @@ export default function SearchWidget({ className = '' }: SearchWidgetProps) {
         <div className="md:col-span-4">
           <label className="block text-neutral-600 text-left mb-2 font-medium">Destination</label>
           <div className="relative">
-            <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-4 w-4" />
             <Input
               type="text"
-              placeholder="Where are you going?"
+              placeholder="Where are you going in White Beach, Puerto Galera?"
               className="w-full pl-10"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
@@ -73,7 +96,7 @@ export default function SearchWidget({ className = '' }: SearchWidgetProps) {
         <div className="md:col-span-3">
           <label className="block text-neutral-600 text-left mb-2 font-medium">Check In</label>
           <div className="relative">
-            <i className="far fa-calendar-alt absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+            <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-4 w-4" />
             <Input
               type="date"
               className="w-full pl-10"
@@ -86,7 +109,7 @@ export default function SearchWidget({ className = '' }: SearchWidgetProps) {
         <div className="md:col-span-3">
           <label className="block text-neutral-600 text-left mb-2 font-medium">Check Out</label>
           <div className="relative">
-            <i className="far fa-calendar-alt absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400"></i>
+            <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-4 w-4" />
             <Input
               type="date"
               className="w-full pl-10"
@@ -118,7 +141,7 @@ export default function SearchWidget({ className = '' }: SearchWidgetProps) {
           onClick={handleSearch}
           className="bg-secondary hover:bg-secondary-600 text-white py-3 px-8 text-lg"
         >
-          <i className="fas fa-search mr-2"></i> Search
+          <Search className="h-4 w-4 mr-2" /> Search White Beach
         </Button>
       </div>
     </div>

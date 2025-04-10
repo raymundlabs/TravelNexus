@@ -37,7 +37,7 @@ import {
   Coffee,
   Utensils,
   Dumbbell,
-  WavesLadder,
+  Waves,
   Globe
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -48,7 +48,7 @@ import { SITE_NAME } from '@/lib/constants';
 const getAmenityIcon = (amenity: string) => {
   const amenityMap: Record<string, any> = {
     'wifi': <Wifi className="h-4 w-4 mr-2" />,
-    'pool': <WavesLadder className="h-4 w-4 mr-2" />,
+    'pool': <Waves className="h-4 w-4 mr-2" />,
     'restaurant': <Utensils className="h-4 w-4 mr-2" />,
     'gym': <Dumbbell className="h-4 w-4 mr-2" />,
     'bar': <Coffee className="h-4 w-4 mr-2" />,
