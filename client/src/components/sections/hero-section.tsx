@@ -1,6 +1,6 @@
 import SearchWidget from '../booking/search-widget';
 import { SITE_DESCRIPTION, SITE_TAGLINE, SITE_OPERATOR, SITE_OPERATOR_SLOGAN } from '@/lib/constants';
-import whiteBeachImage from '@/assets/images/white-beach-puerto-galera-photo.svg';
+import whiteBeachImage from '@/assets/images/white-beach-puerto-galera-real.jpg';
 
 export default function HeroSection() {
   return (
