@@ -6,6 +6,7 @@ import {
 import { User } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getDashboardUrl } from "@/lib/utils";
 
 type AuthContextType = {
   user: User | null;
