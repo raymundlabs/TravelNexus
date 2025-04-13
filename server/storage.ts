@@ -13,8 +13,10 @@ import { eq, like, and, or } from "drizzle-orm";
 import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import createMemoryStore from "memorystore";
 
 const PostgresSessionStore = connectPg(session);
+const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
   // User operations
@@ -65,6 +67,16 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Session store for authentication
+  sessionStore: session.Store;
+  
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true
+    });
+  }
+
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -226,6 +238,9 @@ export class MemStorage implements IStorage {
   private testimonials: Map<number, Testimonial>;
   private bookings: Map<number, Booking>;
   
+  // Session store for authentication
+  sessionStore: session.Store;
+  
   private currentUserId = 1;
   private currentDestinationId = 1;
   private currentHotelId = 1;
@@ -244,6 +259,11 @@ export class MemStorage implements IStorage {
     this.specialOffers = new Map();
     this.testimonials = new Map();
     this.bookings = new Map();
+    
+    // Create an in-memory session store
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
     
     // Add sample data
     this.initializeSampleData();
