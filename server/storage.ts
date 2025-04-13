@@ -10,6 +10,11 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, or } from "drizzle-orm";
+import { pool } from "./db";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   // User operations
@@ -54,6 +59,9 @@ export interface IStorage {
   createBooking(booking: InsertBooking): Promise<Booking>;
   getUserBookings(userId: number): Promise<Booking[]>;
   updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
+  
+  // Session store for authentication
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
