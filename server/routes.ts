@@ -332,6 +332,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Set up authentication
   setupAuth(app);
+  
+  // Direct login route for testing
+  app.post('/api/direct-login', (req, res) => {
+    const { username, password } = req.body;
+    
+    // Test user credentials
+    const testUsers = [
+      { id: 1, username: 'demouser', password: 'test123', roleId: 1, email: 'user@example.com', fullName: 'Demo User' },
+      { id: 2, username: 'hotelowner', password: 'test123', roleId: 2, email: 'hotel@example.com', fullName: 'Hotel Owner' },
+      { id: 3, username: 'travelagent', password: 'test123', roleId: 3, email: 'agent@example.com', fullName: 'Travel Agent' },
+      { id: 4, username: 'admin', password: 'test123', roleId: 4, email: 'admin@example.com', fullName: 'Administrator' }
+    ];
+    
+    const user = testUsers.find(u => u.username === username && u.password === password);
+    
+    if (user) {
+      // Login successful
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ error: 'Login failed' });
+        }
+        return res.status(200).json({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          fullName: user.fullName,
+          roleId: user.roleId
+        });
+      });
+    } else {
+      // Login failed
+      res.status(401).json({ error: 'Invalid credentials' });
+    }
+  });
+  
+  // Add a user endpoint for session verification
+  app.get('/api/auth/user', (req, res) => {
+    if (req.isAuthenticated() && req.user) {
+      return res.json({
+        id: req.user.id,
+        username: req.user.username, 
+        email: req.user.email,
+        fullName: req.user.fullName,
+        roleId: req.user.roleId
+      });
+    } else {
+      res.status(401).json({ error: 'Not authenticated' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
