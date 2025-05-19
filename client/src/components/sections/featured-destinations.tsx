@@ -34,7 +34,7 @@ export default function FeaturedDestinations() {
             ))
           ) : destinations && destinations.length > 0 ? (
             // Destinations data
-            destinations.map((destination) => (
+            destinations.filter(destination => destination.name === "Puerto Galera").map((destination) => (
               <DestinationCard key={destination.id} destination={destination} />
             ))
           ) : (

@@ -1,31 +1,26 @@
 import { Helmet } from 'react-helmet';
-import HeroSection from '@/components/sections/hero-section';
-import FeaturedDestinations from '@/components/sections/featured-destinations';
-import SpecialOffers from '@/components/sections/special-offers';
-import PopularHotels from '@/components/sections/popular-hotels';
-import PopularTours from '@/components/sections/popular-tours';
-import VacationPackages from '@/components/sections/vacation-packages';
+// Remove other imports
+// import HeroSection from '@/components/sections/hero-section';
+// import FeaturedDestinations from '@/components/sections/featured-destinations';
+// import SpecialOffers from '@/components/sections/special-offers';
+// import PopularHotels from '@/components/sections/popular-hotels';
+// import PopularTours from '@/components/sections/popular-tours';
+// import VacationPackages from '@/components/sections/vacation-packages';
 import Testimonials from '@/components/sections/testimonials';
-import Newsletter from '@/components/sections/newsletter';
-import { SITE_NAME, SITE_DESCRIPTION } from '@/lib/constants';
+// import Newsletter from '@/components/sections/newsletter';
+import { SITE_NAME } from '@/lib/constants'; // Keep SITE_NAME
 
 export default function Home() {
   return (
     <>
       <Helmet>
-        <title>{SITE_NAME} | {SITE_DESCRIPTION}</title>
-        <meta name="description" content="Discover your perfect getaway with Wanderlust Travel. Book hotels, tours, and vacation packages worldwide. Unforgettable experiences await." />
+        <title>{`Traveler Reviews | ${SITE_NAME}`}</title>
+        <meta name="description" content="Read what our travelers are saying about their experiences." />
       </Helmet>
 
       <main>
-        <HeroSection />
-        <FeaturedDestinations />
-        <SpecialOffers />
-        <PopularHotels />
-        <PopularTours />
-        <VacationPackages />
+        {/* Only include Testimonials */}
         <Testimonials />
-        <Newsletter />
       </main>
     </>
   );

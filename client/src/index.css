@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+
+  --primary: 142 100% 33%;  /* TripAdvisor Green (#00aa6c) */
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 142 100% 33%;  /* TripAdvisor Green for focus rings */
+
+  --radius: 0.5rem;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -20,4 +52,59 @@ a[href="https://replit.com"] {
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;
+}
+
+/* TripAdvisor specific utilities */
+@layer utilities {
+  .text-tripadvisor {
+    color: #00aa6c;
+  }
+  
+  .bg-tripadvisor {
+    background-color: #00aa6c;
+  }
+  
+  .border-tripadvisor {
+    border-color: #00aa6c;
+  }
+  
+  .hover-tripadvisor:hover {
+    color: #00aa6c;
+  }
+  
+  .bg-hover-tripadvisor:hover {
+    background-color: #00aa6c;
+  }
+  
+  .rating-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+  }
+  
+  .rating-excellent {
+    background-color: #00aa6c;
+    color: white;
+  }
+  
+  .rating-very-good {
+    background-color: #5cb85c;
+    color: white;
+  }
+  
+  .rating-good {
+    background-color: #f0ad4e;
+    color: white;
+  }
+  
+  .rating-average {
+    background-color: #d9534f;
+    color: white;
+  }
+  
+  .rating-poor {
+    background-color: #d43f3a;
+    color: white;
+  }
 }

@@ -1,3 +1,12 @@
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Configure dotenv to load from the root directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -59,12 +68,27 @@ app.use((req, res, next) => {
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  const port = process.env.PORT ? parseInt(process.env.PORT) : 5000;
+  
+  const startServer = async (attemptPort = port) => {
+    try {
+      server.listen({
+        port: attemptPort,
+        host: "0.0.0.0",
+        reusePort: true,
+      }, () => {
+        log(`serving on port ${attemptPort}`);
+      });
+    } catch (error: any) {
+      if (error.code === 'EADDRINUSE') {
+        log(`Port ${attemptPort} is in use, trying ${attemptPort + 1}...`);
+        await startServer(attemptPort + 1);
+      } else {
+        log(`Error starting server: ${error.message}`);
+        throw error;
+      }
+    }
+  };
+  
+  await startServer();
 })();

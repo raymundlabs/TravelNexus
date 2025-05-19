@@ -7,14 +7,28 @@ import {
   packages,
   specialOffers,
   testimonials,
+  bookings,
+  payments,
+  agentPointTransactions,
+  agentRewardRedemptions,
+  agentRewardPoints,
+  hotelOwnership,
+  agentProfiles,
+  hotelOwnerProfiles,
+  roles,
 } from "@shared/schema";
 import { sql } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 async function checkDataExists() {
   try {
-    // Use raw SQL to count destinations
-    const result = await db.execute(sql`SELECT COUNT(*) FROM destinations`);
-    const count = parseInt(result.rows[0].count as string);
+    // Query to count destinations
+    const result = await db.select({
+      count: sql`count(*)`
+    }).from(destinations);
+    
+    // Get the count from the result
+    const count = parseInt(result[0]?.count as string || '0');
     return count > 0;
   } catch (error) {
     console.error("Error checking if data exists:", error);
@@ -24,17 +38,38 @@ async function checkDataExists() {
 
 async function clearData() {
   try {
-    // Clear all existing data
-    await db.delete(users);
-    await db.delete(destinations);
-    await db.delete(hotels);
-    await db.delete(tours);
-    await db.delete(packages);
-    await db.delete(specialOffers);
-    await db.delete(testimonials);
+    // Clear all existing data in the correct order to avoid foreign key constraints
+    console.log("Clearing existing data...");
+    // First delete data from tables with foreign keys
+    await db.delete(bookings).execute();
+    await db.delete(payments).execute();
+    await db.delete(testimonials).execute();
+    await db.delete(specialOffers).execute();
+    await db.delete(agentPointTransactions).execute();
+    await db.delete(agentRewardRedemptions).execute();
+    await db.delete(agentRewardPoints).execute();
+    await db.delete(hotelOwnership).execute();
+    
+    // Then delete main content
+    await db.delete(packages).execute();
+    await db.delete(tours).execute();
+    await db.delete(hotels).execute();
+    await db.delete(destinations).execute();
+    
+    // Then delete profiles
+    await db.delete(agentProfiles).execute();
+    await db.delete(hotelOwnerProfiles).execute();
+    
+    // Then delete users
+    await db.delete(users).execute();
+    
+    // Finally delete roles 
+    await db.delete(roles).execute();
+    
     console.log("Cleared existing data");
   } catch (error) {
     console.error("Error clearing data:", error);
+    throw error; // Re-throw to stop the seeding process if clearing fails
   }
 }
 
@@ -47,6 +82,38 @@ async function seed() {
     
     // Clear any existing data
     await clearData();
+    
+    // Setup variable to store role map
+    let roleMap;
+    
+    // Sample roles
+    const sampleRoles = [
+      {
+        name: 'customer',
+        description: 'Regular customer role with booking privileges'
+      },
+      {
+        name: 'hotel_owner',
+        description: 'Hotel owner role with property management privileges'
+      },
+      {
+        name: 'travel_agent',
+        description: 'Travel agent role with booking and commission privileges'
+      },
+      {
+        name: 'admin',
+        description: 'Administrator role with full system access'
+      }
+    ];
+    
+    const insertedRoles = await db.insert(roles).values(sampleRoles).returning();
+    console.log(`Added ${insertedRoles.length} roles`);
+    
+    // Create a map for roles by name for easy reference
+    roleMap = new Map();
+    insertedRoles.forEach(role => {
+      roleMap.set(role.name, role.id);
+    });
     
     // Sample destinations
     const sampleDestinations = [
@@ -95,11 +162,17 @@ async function seed() {
     const insertedDestinations = await db.insert(destinations).values(sampleDestinations).returning();
     console.log(`Added ${insertedDestinations.length} destinations`);
 
+    // Create a map for destinations by name for easy reference
+    const destinationMap = new Map();
+    insertedDestinations.forEach(dest => {
+      destinationMap.set(dest.name, dest.id);
+    });
+    
     // Sample hotels
     const sampleHotels = [
       {
         name: 'White Beach Resort & Spa',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         description: 'Luxury beachfront resort with stunning ocean views and direct access to White Beach',
         address: 'White Beach, Puerto Galera, Oriental Mindoro',
         price: 7500, // in PHP
@@ -111,7 +184,7 @@ async function seed() {
       },
       {
         name: 'Sunset View Inn',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         description: 'Affordable beachfront accommodation with incredible sunset views',
         address: 'White Beach Central, Puerto Galera',
         price: 3500, // in PHP
@@ -123,7 +196,7 @@ async function seed() {
       },
       {
         name: 'Mindoro Beachside Hotel',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         description: 'Family-friendly hotel steps away from the shoreline with comfortable rooms',
         address: 'White Beach Path, Puerto Galera',
         price: 4200, // in PHP
@@ -135,7 +208,7 @@ async function seed() {
       },
       {
         name: 'White Sand Cottage Resort',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         description: 'Cozy cottages nestled in a tropical garden setting just minutes from the beach',
         address: 'White Beach Road, Puerto Galera',
         price: 2800, // in PHP
@@ -147,7 +220,7 @@ async function seed() {
       },
       {
         name: 'Paradise Bay Resort',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         description: 'Upscale resort offering private balconies with sea views and premium amenities',
         address: 'White Beach North, Puerto Galera',
         price: 6500, // in PHP
@@ -159,7 +232,7 @@ async function seed() {
       },
       {
         name: 'Budget Beach Hostel',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         description: 'Affordable dormitory-style accommodation ideal for backpackers and solo travelers',
         address: 'White Beach South, Puerto Galera',
         price: 900, // in PHP
@@ -171,7 +244,7 @@ async function seed() {
       },
       {
         name: 'Talipanan Beach Resort',
-        destinationId: 3,
+        destinationId: destinationMap.get('Talipanan Beach'),
         description: 'Peaceful resort on the quieter Talipanan Beach with spacious rooms',
         address: 'Talipanan Beach, Puerto Galera',
         price: 4800, // in PHP
@@ -183,7 +256,7 @@ async function seed() {
       },
       {
         name: 'Sabang Divers Resort',
-        destinationId: 2,
+        destinationId: destinationMap.get('Sabang Beach'),
         description: 'Specialist resort for diving enthusiasts with on-site dive center and equipment rental',
         address: 'Sabang Beach, Puerto Galera',
         price: 5200, // in PHP
@@ -202,7 +275,7 @@ async function seed() {
     const sampleTours = [
       {
         name: 'Island Hopping Adventure',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         description: 'Explore the beautiful islands around Puerto Galera including Coral Garden, Sand Bar, and Haligi Beach with snorkeling and lunch.',
         duration: '8 hours',
         price: 1500, // in PHP
@@ -215,7 +288,7 @@ async function seed() {
       },
       {
         name: 'Scuba Diving for Beginners',
-        destinationId: 2,
+        destinationId: destinationMap.get('Sabang Beach'),
         description: 'First-time diving experience with professional instructors at Sabang Beach, one of the top diving spots in the Philippines.',
         duration: '4 hours',
         price: 2800, // in PHP
@@ -228,7 +301,7 @@ async function seed() {
       },
       {
         name: 'Banana Boat Ride',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         description: 'Experience the thrill of a banana boat ride along White Beach with friends and family. Great for all ages!',
         duration: '30 minutes',
         price: 350, // in PHP
@@ -241,7 +314,7 @@ async function seed() {
       },
       {
         name: 'Tukuran and Talipanan Falls Trekking Tour',
-        destinationId: 3,
+        destinationId: destinationMap.get('Talipanan Beach'),
         description: 'Trek through the lush jungles of Puerto Galera to discover hidden waterfalls where you can swim in natural pools.',
         duration: '6 hours',
         price: 1200, // in PHP
@@ -254,7 +327,7 @@ async function seed() {
       },
       {
         name: 'Sunset Sailing at White Beach',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         description: 'Watch the stunning Puerto Galera sunset from a traditional outrigger boat (banca) with drinks and snacks.',
         duration: '2 hours',
         price: 900, // in PHP
@@ -267,7 +340,7 @@ async function seed() {
       },
       {
         name: 'ATV Mountain Adventure',
-        destinationId: 4,
+        destinationId: destinationMap.get('Aninuan Beach'),
         description: 'Ride all-terrain vehicles through scenic mountain trails with breathtaking views of Puerto Galera bay.',
         duration: '3 hours',
         price: 1800, // in PHP
@@ -280,7 +353,7 @@ async function seed() {
       },
       {
         name: 'Puerto Galera Cultural Tour',
-        destinationId: 5,
+        destinationId: destinationMap.get('Puerto Galera Town'),
         description: 'Visit local Mangyan villages, historical sites and the Puerto Galera Museum to learn about the rich cultural heritage.',
         duration: '4 hours',
         price: 850, // in PHP
@@ -293,7 +366,7 @@ async function seed() {
       },
       {
         name: 'Mangrove Kayaking Eco-Tour',
-        destinationId: 5,
+        destinationId: destinationMap.get('Puerto Galera Town'),
         description: 'Paddle through pristine mangrove forests and learn about these important ecosystems from knowledgeable guides.',
         duration: '3 hours',
         price: 750, // in PHP
@@ -314,7 +387,7 @@ async function seed() {
       {
         name: 'White Beach Weekend Getaway',
         description: '3-day escape with beachfront accommodation at White Beach Resort & Spa, island hopping tour, and sunset sailing adventure.',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         duration: '3 days / 2 nights',
         price: 14500, // in PHP
         discountedPrice: 12500, // in PHP
@@ -330,7 +403,7 @@ async function seed() {
       {
         name: 'Puerto Galera Adventure Package',
         description: '5-day action-packed adventure with scuba diving, ATV mountain tour, and waterfall trekking. Includes hotel stay at Sabang Divers Resort.',
-        destinationId: 2,
+        destinationId: destinationMap.get('Sabang Beach'),
         duration: '5 days / 4 nights',
         price: 22500, // in PHP
         discountedPrice: 18900, // in PHP
@@ -346,7 +419,7 @@ async function seed() {
       {
         name: 'Family Fun in Puerto Galera',
         description: '4-day family vacation with kid-friendly activities including beach games, banana boat rides, and island hopping. Stays at family-friendly Mindoro Beachside Hotel.',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         duration: '4 days / 3 nights',
         price: 18900, // in PHP
         discountedPrice: 16500, // in PHP
@@ -362,7 +435,7 @@ async function seed() {
       {
         name: 'Romantic Puerto Galera Escape',
         description: '3-day romantic getaway for couples with private sunset dinner, couple\'s massage, and exclusive beach cabana at Paradise Bay Resort.',
-        destinationId: 1,
+        destinationId: destinationMap.get('White Beach'),
         duration: '3 days / 2 nights',
         price: 16900, // in PHP
         discountedPrice: 15200, // in PHP
@@ -378,7 +451,7 @@ async function seed() {
       {
         name: 'Puerto Galera Diving Discovery',
         description: '6-day comprehensive diving package with 10 dives at different sites around Puerto Galera, perfect for certified divers wanting to explore this world-class diving destination.',
-        destinationId: 2,
+        destinationId: destinationMap.get('Sabang Beach'),
         duration: '6 days / 5 nights',
         price: 28500, // in PHP
         discountedPrice: 24500, // in PHP
@@ -406,7 +479,9 @@ async function seed() {
         discountedPrice: 18000, // in PHP
         discountPercentage: 20,
         badge: '20% OFF',
-        priceUnit: 'package'
+        priceUnit: 'package',
+        validFrom: new Date(), // Start from today
+        validUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // Valid for 90 days
       },
       {
         title: 'Weekday Diving Discovery',
@@ -416,7 +491,9 @@ async function seed() {
         discountedPrice: 12000, // in PHP
         discountPercentage: 20,
         badge: 'HOT DEAL',
-        priceUnit: 'person'
+        priceUnit: 'person',
+        validFrom: new Date(), // Start from today
+        validUntil: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) // Valid for 60 days
       },
       {
         title: 'Couple\'s Island Retreat',
@@ -426,7 +503,9 @@ async function seed() {
         discountedPrice: 13200, // in PHP
         discountPercentage: 20,
         badge: 'ROMANCE PACKAGE',
-        priceUnit: 'couple'
+        priceUnit: 'couple',
+        validFrom: new Date(), // Start from today
+        validUntil: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000) // Valid for 120 days
       },
       {
         title: 'Family Beach Fun Package',
@@ -436,7 +515,9 @@ async function seed() {
         discountedPrice: 20000, // in PHP
         discountPercentage: 20,
         badge: 'FAMILY SPECIAL',
-        priceUnit: 'family'
+        priceUnit: 'family',
+        validFrom: new Date(), // Start from today
+        validUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // Valid for 90 days
       }
     ];
     
@@ -486,11 +567,20 @@ async function seed() {
     console.log(`Added ${insertedTestimonials.length} testimonials`);
 
     // Add a test user
+    const customerRoleId = roleMap.get('customer');
+    console.log("Customer role ID:", customerRoleId);
+    
+    if (!customerRoleId) {
+      throw new Error("Customer role not found in the database");
+    }
+    
+    const hashedPassword = await bcrypt.hash("password123", 10);
     const testUser = {
       username: "testuser",
-      password: "password123",
+      password: hashedPassword,
       email: "test@example.com",
-      fullName: "Test User"
+      fullName: "Test User",
+      roleId: customerRoleId
     };
     
     const insertedUser = await db.insert(users).values(testUser).returning();

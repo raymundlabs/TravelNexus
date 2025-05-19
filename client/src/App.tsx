@@ -1,9 +1,10 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
+import HomePage2 from "@/pages/homepage2";
 import Hotels from "@/pages/hotels";
 import HotelDetail from "@/pages/hotel-detail";
 import Tours from "@/pages/tours";
@@ -21,12 +22,15 @@ import { AuthProvider } from "./hooks/use-auth";
 import { RoleBasedRoute, DashboardRouter } from "./lib/role-based-route";
 
 function Router() {
+  const [location] = useLocation();
+
   return (
     <>
-      <Header />
+      {location !== '/reviews' && <Header />}
       <Switch>
         {/* Public Routes */}
-        <Route path="/" component={Home} />
+        <Route path="/" component={HomePage2} />
+        <Route path="/reviews" component={Home} />
         <Route path="/auth" component={AuthPage} />
         <Route path="/hotels" component={Hotels} />
         <Route path="/hotels/:id" component={HotelDetail} />
