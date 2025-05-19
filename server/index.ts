@@ -1,11 +1,15 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { setupEnvironment } from './setup-env';
 
 // Configure dotenv to load from the root directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// Ensure environment variables are properly set
+setupEnvironment();
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";

@@ -1,25 +1,25 @@
-import 'dotenv/config';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
 import * as schema from "@shared/schema";
-import { Pool } from 'pg';
+import { setupEnvironment } from './setup-env';
 
-// Use the Supabase PostgreSQL connection string from environment variables
-const SUPABASE_DB_URL = process.env.DATABASE_URL as string;
+// Make sure environment variables are set
+setupEnvironment();
 
-// Create postgres client with required SSL for Supabase
-const client = postgres(SUPABASE_DB_URL, {
-  ssl: true,
-  max: 10, // Connection pool size
+// Configure WebSocket for Supabase connection
+neonConfig.webSocketConstructor = ws;
+
+// Verify that we have a database URL
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL must be set in environment variables");
+}
+
+// Create a new PostgreSQL connection pool
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: true
 });
 
-// Initialize Drizzle ORM with our schema
-export const db = drizzle(client, { schema });
-
-// Create a pg Pool for session store and other libraries that expect it
-export const pool = new Pool({
-  connectionString: SUPABASE_DB_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+// Create a Drizzle ORM instance with our schema
+export const db = drizzle(pool, { schema });
