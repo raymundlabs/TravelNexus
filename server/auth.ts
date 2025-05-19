@@ -4,7 +4,7 @@ import { Express } from "express";
 import session from "express-session";
 import { compare, hash } from "bcryptjs";
 import connectPg from "connect-pg-simple";
-import { pool } from "./db";
+import { pool } from "./supabase-db"; // Updated to use Supabase connection
 import { storage } from "./storage";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";

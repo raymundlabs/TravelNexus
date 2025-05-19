@@ -8,9 +8,8 @@ import {
   testimonials, type Testimonial, type InsertTestimonial,
   bookings, type Booking, type InsertBooking
 } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./supabase-db"; // Updated to use Supabase connection
 import { eq, like, and, or } from "drizzle-orm";
-import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import createMemoryStore from "memorystore";
