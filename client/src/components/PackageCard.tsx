@@ -1,5 +1,6 @@
 import React from 'react';
 import { Globe, Clock, Sunrise } from 'lucide-react';
+import { Link } from "wouter";
 
 interface PackageCardProps {
   packageData: {
@@ -72,12 +73,12 @@ const PackageCard: React.FC<PackageCardProps> = ({ packageData, index }) => {
              <span className="text-sm text-gray-600 ml-1">per adult</span>
           </div>
           {/* Book Now Button */}
-          <a 
-            href={`/book/${packageData.id}`} // Example link, replace with actual booking page path
+          <Link
+            href={`/packages/${packageData.id}`}
             className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           >
             Book Now
-          </a>
+          </Link>
         </div>
       </div>
 

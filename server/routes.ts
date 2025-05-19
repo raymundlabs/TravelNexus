@@ -7,8 +7,25 @@ import { fromZodError } from "zod-validation-error";
 import { setupAuth } from "./auth";
 import { 
   insertUserSchema, 
-  insertBookingSchema 
+  insertBookingSchema,
+  insertPackageSchema
 } from "@shared/schema";
+
+// Authentication middleware
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  next();
+};
+
+// Admin role middleware
+const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated() || req.user.roleId !== 1) { // Assuming roleId 1 is admin
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Error handler middleware
@@ -325,6 +342,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(booking);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Package Management Routes (Admin only)
+  app.post("/api/admin/packages", requireAdmin, async (req, res) => {
+    try {
+      const packageData = insertPackageSchema.parse(req.body);
+      const newPackage = await storage.createPackage(packageData);
+      res.status(201).json(newPackage);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  app.put("/api/admin/packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const packageData = insertPackageSchema.parse(req.body);
+      const updatedPackage = await storage.updatePackage(id, packageData);
+      
+      if (!updatedPackage) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+      
+      res.json(updatedPackage);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  app.delete("/api/admin/packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deletePackage(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+      
+      res.status(204).send();
     } catch (err) {
       handleError(err, res);
     }

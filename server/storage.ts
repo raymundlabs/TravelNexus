@@ -50,6 +50,9 @@ export interface IStorage {
   getPackagesByDestination(destinationId: number): Promise<Package[]>;
   getFeaturedPackages(limit: number): Promise<Package[]>;
   searchPackages(query: string): Promise<Package[]>;
+  createPackage(packageData: InsertPackage): Promise<Package>;
+  updatePackage(id: number, packageData: InsertPackage): Promise<Package | undefined>;
+  deletePackage(id: number): Promise<boolean>;
 
   // Special offers operations
   getSpecialOffers(limit: number): Promise<SpecialOffer[]>;
@@ -224,6 +227,29 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookings.id, id))
       .returning();
     return updatedBooking;
+  }
+
+  // Package operations
+  async createPackage(packageData: InsertPackage): Promise<Package> {
+    const [createdPackage] = await db.insert(packages).values(packageData).returning();
+    return createdPackage;
+  }
+
+  async updatePackage(id: number, packageData: InsertPackage): Promise<Package | undefined> {
+    const [updatedPackage] = await db
+      .update(packages)
+      .set(packageData)
+      .where(eq(packages.id, id))
+      .returning();
+    return updatedPackage;
+  }
+
+  async deletePackage(id: number): Promise<boolean> {
+    const [deletedPackage] = await db
+      .delete(packages)
+      .where(eq(packages.id, id))
+      .returning();
+    return !!deletedPackage;
   }
 }
 
@@ -686,5 +712,6 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use DatabaseStorage for production database
-export const storage = new DatabaseStorage();
+// Use the appropriate storage based on the environment
+// export const storage = new MemStorage(); // Use for in-memory development
+export const storage = new DatabaseStorage(); // Use for database interaction
