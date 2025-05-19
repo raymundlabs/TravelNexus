@@ -62,14 +62,33 @@ export default function AuthPage() {
   });
 
   const onLoginSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data, {
-      onError: (error) => {
-        toast({
-          title: 'Login failed',
-          description: error.message || 'Failed to sign in. Please check your credentials.',
-          variant: 'destructive',
-        });
-      },
+    // Use the direct login endpoint for testing
+    fetch('/api/direct-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include'
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Login failed. Please check your credentials.');
+      }
+      return response.json();
+    })
+    .then(userData => {
+      // Update the user data in the auth context
+      queryClient.setQueryData(['/api/auth/user'], userData);
+      toast({
+        title: 'Welcome back!',
+        description: 'You have successfully logged in.',
+      });
+    })
+    .catch(error => {
+      toast({
+        title: 'Login failed',
+        description: error.message || 'Failed to sign in. Please check your credentials.',
+        variant: 'destructive',
+      });
     });
   };
 
