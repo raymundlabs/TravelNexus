@@ -56,7 +56,7 @@ export default function PackageDetail() {
     enabled: !!packageId,
   });
 
-  const handleBookPackage = () => {
+  const handleBookPackage = async () => {
     if (!startDate) {
       toast({
         title: "Date required",
@@ -66,11 +66,42 @@ export default function PackageDetail() {
       return;
     }
 
-    // Booking logic would go here
-    toast({
-      title: "Package booking received",
-      description: "Your package booking is being processed. You will receive a confirmation shortly.",
-    });
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          packageId: packageId,
+          startDate: startDate,
+          endDate: new Date(startDate.getTime() + (packageData?.duration || 0) * 24 * 60 * 60 * 1000),
+          personCount: parseInt(personCount),
+          totalAmount: (packageData?.discountedPrice || packageData?.price || 0) * parseInt(personCount) * 1.10,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to book package');
+      }
+
+      const data = await response.json();
+      
+      toast({
+        title: "Booking Successful",
+        description: "Your package has been booked successfully. You will receive a confirmation email shortly.",
+      });
+
+      // Redirect to booking confirmation page or show booking details
+      window.location.href = `/bookings/${data.bookingId}`;
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast({
+        title: "Booking Failed",
+        description: "There was an error processing your booking. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Helper function to get icon for inclusion

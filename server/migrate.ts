@@ -71,7 +71,9 @@ async function migrate() {
         description TEXT NOT NULL,
         image_url TEXT NOT NULL,
         rating REAL,
-        review_count INTEGER DEFAULT 0
+        review_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
     `);
 
@@ -88,7 +90,9 @@ async function migrate() {
         rating REAL,
         review_count INTEGER DEFAULT 0,
         amenities TEXT[],
-        featured BOOLEAN DEFAULT FALSE
+        featured BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
     `);
 
@@ -104,7 +108,9 @@ async function migrate() {
         image_url TEXT NOT NULL,
         rating REAL,
         review_count INTEGER DEFAULT 0,
-        featured BOOLEAN DEFAULT FALSE
+        featured BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
     `);
 
@@ -119,7 +125,9 @@ async function migrate() {
         duration INTEGER NOT NULL,
         rating REAL,
         review_count INTEGER DEFAULT 0,
-        featured BOOLEAN DEFAULT FALSE
+        featured BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       );
     `);
 

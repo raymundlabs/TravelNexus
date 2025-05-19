@@ -1,60 +1,55 @@
-import { Button } from '@/components/ui/button';
+import { useLocation } from 'wouter';
 import { type Package } from '@shared/schema';
-import { formatPrice } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Star } from 'lucide-react';
 
 interface PackageCardProps {
   pkg: Package;
 }
 
 export default function PackageCard({ pkg }: PackageCardProps) {
-  const { 
-    id,
-    name, 
-    description, 
-    imageUrl, 
-    price, 
-    discountedPrice, 
-    rating, 
-    reviewCount, 
-    highlights,
-    isBestseller,
-    discountPercentage
-  } = pkg;
+  const [, setLocation] = useLocation();
+
+  const handleBookNow = () => {
+    setLocation(`/packages/${pkg.id}`);
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row">
-      <div className="md:w-2/5 relative">
+    <Card className="overflow-hidden">
+      <div className="relative">
         <img 
-          src={imageUrl} 
-          alt={name} 
-          className="w-full h-full object-cover"
+          src={pkg.imageUrl || '/placeholder-image.jpg'} 
+          alt={pkg.name} 
+          className="w-full h-48 object-cover"
         />
-        {(isBestseller || discountPercentage) && (
-          <div className={`absolute top-4 left-4 ${
-            isBestseller ? 'bg-rose-500 text-white' : 'bg-amber-400 text-neutral-800'
-          } px-3 py-1 rounded-full font-bold text-sm`}>
-            {isBestseller ? 'BESTSELLER' : `${discountPercentage}% OFF`}
+        {pkg.discountedPrice && pkg.price && (
+          <div className="absolute top-2 right-2 bg-primary text-white px-2 py-1 rounded-md text-sm font-medium">
+            Save {Math.round((1 - pkg.discountedPrice / pkg.price) * 100)}%
           </div>
         )}
       </div>
-      <div className="md:w-3/5 p-6">
-        <h3 className="font-heading text-2xl font-bold mb-2">{name}</h3>
-        <div className="flex items-center mb-3">
-          <div className="flex text-amber-400 text-sm mr-2">
-            {[...Array(Math.floor(rating))].map((_, i) => (
-              <i key={i} className="fas fa-star"></i>
-            ))}
-            {rating % 1 >= 0.5 && <i className="fas fa-star-half-alt"></i>}
-          </div>
-          <span className="text-neutral-500 text-sm">({reviewCount} reviews)</span>
+      <CardContent className="p-4">
+        <h3 className="font-heading text-xl font-bold mb-2">{pkg.name}</h3>
+        <div className="flex items-center mb-2">
+          {pkg.rating && (
+            <div className="flex text-amber-400 mr-2">
+              {[...Array(Math.floor(pkg.rating))].map((_, i) => (
+                <Star key={i} className="h-4 w-4 fill-current" />
+              ))}
+            </div>
+          )}
+          <span className="text-sm text-neutral-600">
+            {pkg.rating?.toFixed(1)} ({pkg.reviewCount || 0} reviews)
+          </span>
         </div>
-        <p className="text-neutral-600 mb-4">{description}</p>
+        <p className="text-neutral-600 mb-4 line-clamp-2">{pkg.description}</p>
         
-        {highlights && highlights.length > 0 && (
+        {pkg.highlights && pkg.highlights.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {highlights.map((highlight, index) => (
-              <span key={index} className="bg-neutral-100 text-neutral-700 px-3 py-1 rounded-full text-sm">
-                <i className={`fas fa-${getIconForHighlight(highlight)} mr-1`}></i> {highlight}
+            {pkg.highlights.map((highlight: string, index: number) => (
+              <span key={index} className="bg-neutral-100 text-neutral-700 px-2 py-1 rounded-full text-xs">
+                {highlight}
               </span>
             ))}
           </div>
@@ -62,38 +57,19 @@ export default function PackageCard({ pkg }: PackageCardProps) {
         
         <div className="flex justify-between items-center">
           <div>
-            {discountedPrice && discountedPrice < price && (
-              <span className="text-neutral-500 line-through">{formatPrice(price)}</span>
+            {pkg.discountedPrice && pkg.price ? (
+              <div>
+                <span className="text-neutral-500 line-through mr-2">${pkg.price}</span>
+                <span className="text-xl font-bold text-primary">${pkg.discountedPrice}</span>
+              </div>
+            ) : (
+              <span className="text-xl font-bold text-primary">${pkg.price || 0}</span>
             )}
-            <span className="font-bold text-primary text-2xl ml-2">
-              {formatPrice(discountedPrice || price)}
-            </span>
-            <span className="text-neutral-500 text-sm">/ person</span>
+            <span className="text-sm text-neutral-500"> / person</span>
           </div>
-          <Button asChild>
-            <a href={`/packages/${id}`}>View Package</a>
-          </Button>
+          <Button onClick={handleBookNow}>Book Now</Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
-}
-
-// Helper function to choose appropriate icon for highlight
-function getIconForHighlight(highlight: string): string {
-  const lowercaseHighlight = highlight.toLowerCase();
-  
-  if (lowercaseHighlight.includes('hotel') || lowercaseHighlight.includes('resort') || lowercaseHighlight.includes('accommodation')) {
-    return 'hotel';
-  } else if (lowercaseHighlight.includes('tour') || lowercaseHighlight.includes('guide')) {
-    return 'map-marked-alt';
-  } else if (lowercaseHighlight.includes('meal') || lowercaseHighlight.includes('food') || lowercaseHighlight.includes('inclusive')) {
-    return 'utensils';
-  } else if (lowercaseHighlight.includes('train') || lowercaseHighlight.includes('rail')) {
-    return 'train';
-  } else if (lowercaseHighlight.includes('ship') || lowercaseHighlight.includes('cruise')) {
-    return 'ship';
-  }
-  
-  return 'check-circle';
 }

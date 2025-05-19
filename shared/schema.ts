@@ -159,10 +159,14 @@ export const packages = pgTable("packages", {
   destinationId: integer("destination_id").references(() => destinations.id).notNull(),
   duration: integer("duration"),
   price: doublePrecision("price"),
+  discountedPrice: doublePrecision("discounted_price"),
+  discountPercentage: doublePrecision("discount_percentage"),
   imageUrl: text("image_url"),
   rating: doublePrecision("rating"),
   reviewCount: integer("review_count").default(0),
   featured: boolean("featured").default(false),
+  isBestseller: boolean("is_bestseller").default(false),
+  highlights: text("highlights").array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -386,6 +390,10 @@ export const agentRewardRedemptions = pgTable("agent_reward_redemptions", {
 
 export type AgentRewardRedemption = InferSelectModel<typeof agentRewardRedemptions>; // Export inferred type
 export type InsertAgentRewardRedemption = InferInsertModel<typeof agentRewardRedemptions>; // Export inferred insert type
+
+export const insertBookingSchema = createInsertSchema(bookings);
+
+export const insertPackageSchema = createInsertSchema(packages);
 
 
 

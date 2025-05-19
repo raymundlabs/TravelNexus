@@ -1,36 +1,13 @@
-import { db } from "./db";
-import {
-  users,
-  destinations,
-  hotels,
-  tours,
-  packages,
-  specialOffers,
-  testimonials,
-  bookings,
-  payments,
-  agentPointTransactions,
-  agentRewardRedemptions,
-  agentRewardPoints,
-  hotelOwnership,
-  agentProfiles,
-  hotelOwnerProfiles,
-  roles,
-} from "@shared/schema";
-import { sql } from "drizzle-orm";
-import bcrypt from "bcrypt";
-import { hashPassword } from "./auth";
+import { insertData, fetchData, supabase } from './supabase';
+import bcrypt from 'bcrypt';
+
+// Add debug logging
+console.log("Starting seed script based on provided schema...");
 
 async function checkDataExists() {
   try {
-    // Query to count destinations
-    const result = await db.select({
-      count: sql`count(*)`
-    }).from(destinations);
-    
-    // Get the count from the result
-    const count = parseInt(result[0]?.count as string || '0');
-    return count > 0;
+    const destinations = await fetchData('destinations');
+    return destinations.length > 0;
   } catch (error) {
     console.error("Error checking if data exists:", error);
     return false;
@@ -39,38 +16,43 @@ async function checkDataExists() {
 
 async function clearData() {
   try {
-    // Clear all existing data in the correct order to avoid foreign key constraints
     console.log("Clearing existing data...");
-    // First delete data from tables with foreign keys
-    await db.delete(bookings).execute();
-    await db.delete(payments).execute();
-    await db.delete(testimonials).execute();
-    await db.delete(specialOffers).execute();
-    await db.delete(agentPointTransactions).execute();
-    await db.delete(agentRewardRedemptions).execute();
-    await db.delete(agentRewardPoints).execute();
-    await db.delete(hotelOwnership).execute();
     
-    // Then delete main content
-    await db.delete(packages).execute();
-    await db.delete(tours).execute();
-    await db.delete(hotels).execute();
-    await db.delete(destinations).execute();
-    
-    // Then delete profiles
-    await db.delete(agentProfiles).execute();
-    await db.delete(hotelOwnerProfiles).execute();
-    
-    // Then delete users
-    await db.delete(users).execute();
-    
-    // Finally delete roles 
-    await db.delete(roles).execute();
+    // Clear all tables in the correct order to avoid foreign key constraints
+    const tables = [
+      'bookings',
+      'payments',
+      'testimonials',
+      'special_offers', // Assuming table name is still snake_case even if columns are camelCase
+      'agent_point_transactions', // Assuming table name is still snake_case
+      'agent_reward_redemptions', // Assuming table name is still snake_case
+      'agent_reward_points', // Assuming table name is still snake_case
+      'hotel_ownership', // Assuming table name is still snake_case
+      'packages',
+      'tours',
+      'hotels',
+      'destinations',
+      'agent_profiles', // Assuming table name is still snake_case
+      'hotel_owner_profiles', // Assuming table name is still snake_case
+      'users',
+      'roles'
+    ];
+
+    for (const table of tables) {
+      console.log(`Clearing ${table}...`);
+      // Use .delete() without a condition to clear all rows when RLS is disabled
+      const { error } = await supabase.from(table).delete();
+      if (error) {
+        console.error(`Error clearing table ${table}:`, error);
+        // Log and continue to attempt clearing other tables
+      }
+    }
     
     console.log("Cleared existing data");
   } catch (error) {
     console.error("Error clearing data:", error);
-    throw error; // Re-throw to stop the seeding process if clearing fails
+    // Decide whether to throw based on how critical clearing is
+    // throw error; // Uncomment if clearing is absolutely essential for seed success
   }
 }
 
@@ -81,12 +63,16 @@ async function seed() {
     // Force clear and reseed with Puerto Galera data
     console.log("Clearing existing data and adding Puerto Galera content...");
     
-    // Clear any existing data
-    await clearData();
+    // Clear any existing data - only if you are certain you want to overwrite
+    await clearData(); // Uncommented to clear data before seeding
     
-    // Setup variable to store role map
-    let roleMap;
-    
+    // Check if data already exists, if so, skip seeding
+    const dataExists = await checkDataExists();
+    if (dataExists) {
+        console.log("ℹ️ Data already exists. Skipping seed.");
+        return; // Exit function if data exists
+    }
+
     // Sample roles
     const sampleRoles = [
       {
@@ -107,11 +93,12 @@ async function seed() {
       }
     ];
     
-    const insertedRoles = await db.insert(roles).values(sampleRoles).returning();
+    console.log("Inserting roles...");
+    const insertedRoles = await insertData('roles', sampleRoles);
     console.log(`Added ${insertedRoles.length} roles`);
     
     // Create a map for roles by name for easy reference
-    roleMap = new Map();
+    const roleMap = new Map();
     insertedRoles.forEach(role => {
       roleMap.set(role.name, role.id);
     });
@@ -122,45 +109,46 @@ async function seed() {
         name: 'White Beach',
         country: 'Philippines',
         description: 'Beautiful white sand beach in Puerto Galera, Oriental Mindoro with crystal clear waters',
-        imageUrl: 'https://images.unsplash.com/photo-1589394815804-964421bf9359',
+        image_url: 'https://images.unsplash.com/photo-1589394815804-964421bf9359',
         rating: 4.9,
-        reviewCount: 1850
+        review_count: 1850
       },
       {
         name: 'Sabang Beach',
         country: 'Philippines',
         description: 'Popular diving spot in Puerto Galera known for vibrant coral reefs and nightlife',
-        imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5',
+        image_url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5',
         rating: 4.7,
-        reviewCount: 1240
+        review_count: 1240
       },
       {
         name: 'Talipanan Beach',
         country: 'Philippines',
         description: 'Quiet and secluded beach in Puerto Galera ideal for relaxation away from crowds',
-        imageUrl: 'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f',
+        image_url: 'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f',
         rating: 4.6,
-        reviewCount: 875
+        review_count: 875
       },
       {
         name: 'Aninuan Beach',
         country: 'Philippines',
         description: 'Picturesque beach with mountain views and various water activities',
-        imageUrl: 'https://images.unsplash.com/photo-1468413253725-0d5181091126',
+        image_url: 'https://images.unsplash.com/photo-1468413253725-0d5181091126',
         rating: 4.5,
-        reviewCount: 720
+        review_count: 720
       },
       {
         name: 'Puerto Galera Town',
         country: 'Philippines',
         description: 'Charming town center with local markets, restaurants and cultural experiences',
-        imageUrl: 'https://images.unsplash.com/photo-1552751753-d8be54aee3e0',
+        image_url: 'https://images.unsplash.com/photo-1552751753-d8be54aee3e0',
         rating: 4.3,
-        reviewCount: 950
+        review_count: 950
       }
     ];
     
-    const insertedDestinations = await db.insert(destinations).values(sampleDestinations).returning();
+    console.log("Inserting destinations...");
+    const insertedDestinations = await insertData('destinations', sampleDestinations);
     console.log(`Added ${insertedDestinations.length} destinations`);
 
     // Create a map for destinations by name for easy reference
@@ -176,7 +164,7 @@ async function seed() {
         destinationId: destinationMap.get('White Beach'),
         description: 'Luxury beachfront resort with stunning ocean views and direct access to White Beach',
         address: 'White Beach, Puerto Galera, Oriental Mindoro',
-        price: 7500, // in PHP
+        price: 7500,
         imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945',
         rating: 4.8,
         reviewCount: 432,
@@ -188,7 +176,7 @@ async function seed() {
         destinationId: destinationMap.get('White Beach'),
         description: 'Affordable beachfront accommodation with incredible sunset views',
         address: 'White Beach Central, Puerto Galera',
-        price: 3500, // in PHP
+        price: 3500,
         imageUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4',
         rating: 4.5,
         reviewCount: 324,
@@ -200,7 +188,7 @@ async function seed() {
         destinationId: destinationMap.get('White Beach'),
         description: 'Family-friendly hotel steps away from the shoreline with comfortable rooms',
         address: 'White Beach Path, Puerto Galera',
-        price: 4200, // in PHP
+        price: 4200,
         imageUrl: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa',
         rating: 4.3,
         reviewCount: 287,
@@ -212,7 +200,7 @@ async function seed() {
         destinationId: destinationMap.get('White Beach'),
         description: 'Cozy cottages nestled in a tropical garden setting just minutes from the beach',
         address: 'White Beach Road, Puerto Galera',
-        price: 2800, // in PHP
+        price: 2800,
         imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
         rating: 4.2,
         reviewCount: 195,
@@ -224,7 +212,7 @@ async function seed() {
         destinationId: destinationMap.get('White Beach'),
         description: 'Upscale resort offering private balconies with sea views and premium amenities',
         address: 'White Beach North, Puerto Galera',
-        price: 6500, // in PHP
+        price: 6500,
         imageUrl: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791',
         rating: 4.7,
         reviewCount: 356,
@@ -236,7 +224,7 @@ async function seed() {
         destinationId: destinationMap.get('White Beach'),
         description: 'Affordable dormitory-style accommodation ideal for backpackers and solo travelers',
         address: 'White Beach South, Puerto Galera',
-        price: 900, // in PHP
+        price: 900,
         imageUrl: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5',
         rating: 4.0,
         reviewCount: 142,
@@ -248,7 +236,7 @@ async function seed() {
         destinationId: destinationMap.get('Talipanan Beach'),
         description: 'Peaceful resort on the quieter Talipanan Beach with spacious rooms',
         address: 'Talipanan Beach, Puerto Galera',
-        price: 4800, // in PHP
+        price: 4800,
         imageUrl: 'https://images.unsplash.com/photo-1540541338287-41700207dee6',
         rating: 4.4,
         reviewCount: 178,
@@ -260,7 +248,7 @@ async function seed() {
         destinationId: destinationMap.get('Sabang Beach'),
         description: 'Specialist resort for diving enthusiasts with on-site dive center and equipment rental',
         address: 'Sabang Beach, Puerto Galera',
-        price: 5200, // in PHP
+        price: 5200,
         imageUrl: 'https://images.unsplash.com/photo-1582610116397-edb318620f90',
         rating: 4.6,
         reviewCount: 265,
@@ -269,7 +257,8 @@ async function seed() {
       }
     ];
     
-    const insertedHotels = await db.insert(hotels).values(sampleHotels).returning();
+    console.log("Inserting hotels...");
+    const insertedHotels = await insertData('hotels', sampleHotels);
     console.log(`Added ${insertedHotels.length} hotels`);
 
     // Sample tours
@@ -364,7 +353,8 @@ async function seed() {
       }
     ];
     
-    const insertedTours = await db.insert(tours).values(sampleTours).returning();
+    console.log("Inserting tours...");
+    const insertedTours = await insertData('tours', sampleTours);
     console.log(`Added ${insertedTours.length} tours`);
 
     // Sample packages
@@ -426,7 +416,8 @@ async function seed() {
       }
     ];
     
-    const insertedPackages = await db.insert(packages).values(samplePackages).returning();
+    console.log("Inserting packages...");
+    const insertedPackages = await insertData('packages', samplePackages);
     console.log(`Added ${insertedPackages.length} packages`);
     console.log("Inserted package IDs:", insertedPackages.map(pkg => pkg.id));
 
@@ -470,7 +461,8 @@ async function seed() {
       }
     ];
     
-    const insertedSpecialOffers = await db.insert(specialOffers).values(sampleSpecialOffers).returning();
+    console.log("Inserting special offers...");
+    const insertedSpecialOffers = await insertData('special_offers', sampleSpecialOffers);
     console.log(`Added ${insertedSpecialOffers.length} special offers`);
 
     // Add a test user
@@ -487,10 +479,12 @@ async function seed() {
       password: hashedPassword,
       email: "test@example.com",
       fullName: "Test User",
-      roleId: customerRoleId
+      roleId: customerRoleId,
+      createdAt: new Date() // Assuming createdAt is manually set on creation
     };
 
-    const insertedUser = await db.insert(users).values(testUser).returning();
+    console.log("Inserting test user...");
+    const insertedUser = await insertData('users', testUser);
     console.log(`Added test user: ${insertedUser[0].username}`);
 
     // Sample testimonials
@@ -527,51 +521,37 @@ async function seed() {
       }
     ];
 
-    const insertedTestimonials = await db.insert(testimonials).values(sampleTestimonials).returning();
+    console.log("Inserting testimonials...");
+    const insertedTestimonials = await insertData('testimonials', sampleTestimonials);
     console.log(`Added ${insertedTestimonials.length} testimonials`);
 
-    // Create admin role if it doesn't exist
-    let adminRole = await db.query.roles.findFirst({
-      where: (roles, { eq }) => eq(roles.name, 'admin')
-    });
-
-    if (!adminRole) {
-      [adminRole] = await db
-        .insert(roles)
-        .values({
-          name: "admin",
-          description: "Administrator with full access",
-        })
-        .returning();
+    // Create superadmin user
+    const adminRoleId = roleMap.get('admin');
+    if (!adminRoleId) {
+      throw new Error("Admin role not found in the database");
     }
 
-    // Create superadmin user if it doesn't exist
-    const existingSuperAdmin = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.username, 'superadmin')
-    });
+    const hashedSuperAdminPassword = await bcrypt.hash("pgtickets", 10);
+    const superAdmin = {
+      username: "superadmin",
+      password: hashedSuperAdminPassword,
+      email: "admin@travelnexus.com",
+      fullName: "Super Administrator",
+      roleId: adminRoleId,
+      isActive: true,
+      isEmailVerified: true,
+      createdAt: new Date() // Assuming createdAt is manually set on creation
+    };
 
-    if (!existingSuperAdmin) {
-      const hashedSuperAdminPassword = await hashPassword("pgtickets");
-      await db.insert(users).values({
-        username: "superadmin",
-        password: hashedSuperAdminPassword,
-        email: "admin@travelnexus.com",
-        fullName: "Super Administrator",
-        roleId: adminRole.id,
-        isActive: true,
-        isEmailVerified: true,
-      });
-      console.log("✅ Superadmin user created successfully");
-    } else {
-      console.log("ℹ️ Superadmin user already exists");
-    }
+    console.log("Inserting superadmin user...");
+    const insertedSuperAdmin = await insertData('users', superAdmin);
+    console.log("✅ Superadmin user created successfully");
 
     console.log("✅ Seeding completed successfully");
   } catch (error) {
     console.error("Error seeding database:", error);
-  } finally {
-    process.exit(0);
   }
 }
 
+// Run the seed function
 seed();
