@@ -1,15 +1,25 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { DatabaseStorage } from "./storage";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { setupAuth } from "./auth";
+import { setupSupabaseAuth } from "./supabase-auth";
 import { 
   insertUserSchema, 
   insertBookingSchema,
-  insertPackageSchema
+  insertPackageSchema,
+  User
 } from "@shared/schema";
+
+declare module "express-serve-static-core" {
+  interface Request {
+    isAuthenticated?: () => boolean;
+    user?: User;
+  }
+}
+
+const storage = new DatabaseStorage();
 
 // Authentication middleware
 const requireAuth = (req: Request, res: Response, next: NextFunction) => {
@@ -28,6 +38,9 @@ const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // sets up /api/register, /api/login, /api/logout, /api/user with Supabase auth
+  setupSupabaseAuth(app);
+
   // Error handler middleware
   const handleError = (err: unknown, res: Response) => {
     if (err instanceof ZodError) {

@@ -1,43 +1,66 @@
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { SITE_NAME } from "@/lib/constants";
 import { 
-  BadgeDollarSign, 
-  BarChart4, 
   Building2, 
+  Bed, 
+  Star, 
   Calendar, 
-  Edit, 
-  Hotel,
-  ImagePlus,
-  ListFilter,
-  MessageSquare,
-  PlusCircle,
+  DollarSign,
+  Users,
   Settings,
-  Star,
-  TicketCheck,
-  Users
+  Plus,
+  Edit,
+  Wifi,
+  Car,
+  Utensils,
+  Waves,
+  Dumbbell,
+  Coffee,
+  Wind
 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 
 export default function HotelDashboard() {
   const { user, logoutMutation } = useAuth();
+
+  const { data: hotels } = useQuery({
+    queryKey: ['/api/hotels'],
+  });
+
+  // Filter hotels for this hotel owner (in real app, filter by owner ID)
+  const myHotels = hotels || [];
 
   const handleLogout = () => {
     logoutMutation.mutate();
   };
 
+  const amenityIcons = {
+    'Free WiFi': <Wifi className="h-4 w-4" />,
+    'Parking': <Car className="h-4 w-4" />,
+    'Restaurant': <Utensils className="h-4 w-4" />,
+    'Pool': <Waves className="h-4 w-4" />,
+    'Gym': <Dumbbell className="h-4 w-4" />,
+    'Breakfast': <Coffee className="h-4 w-4" />,
+    'Air Conditioning': <Wind className="h-4 w-4" />
+  };
+
   return (
     <div className="container mx-auto py-8">
       <Helmet>
-        <title>Hotel Manager Dashboard | {SITE_NAME}</title>
+        <title>Hotel Dashboard | {SITE_NAME}</title>
       </Helmet>
 
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Hotel Manager Dashboard</h1>
+          <h1 className="text-3xl font-bold">Hotel Management</h1>
           <p className="text-muted-foreground">Welcome back, {user?.fullName || user?.username}</p>
         </div>
         <Button variant="outline" onClick={handleLogout}>
@@ -48,306 +71,237 @@ export default function HotelDashboard() {
       <div className="grid md:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-            <CardDescription>Current month</CardDescription>
+            <CardTitle className="text-sm font-medium">My Hotels</CardTitle>
+            <CardDescription>Properties managed</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">+0% from last month</p>
+            <div className="text-2xl font-bold">{myHotels.length}</div>
+            <p className="text-xs text-muted-foreground">Active properties</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
+            <CardDescription>Guest reviews</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">4.5</div>
+            <p className="text-xs text-muted-foreground">Based on 127 reviews</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Bookings This Month</CardTitle>
+            <CardDescription>New reservations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">45</div>
+            <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-            <CardDescription>Current month</CardDescription>
+            <CardDescription>This month</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₱0</div>
-            <p className="text-xs text-muted-foreground">+0% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Listings</CardTitle>
-            <CardDescription>Rooms & Packages</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Total active listings</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Occupancy Rate</CardTitle>
-            <CardDescription>Current month</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0%</div>
-            <p className="text-xs text-muted-foreground">+0% from last month</p>
+            <div className="text-2xl font-bold">₱186,500</div>
+            <p className="text-xs text-muted-foreground">+18% from last month</p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="mb-8">
-        <TabsList className="mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="bookings">Bookings</TabsTrigger>
-          <TabsTrigger value="rooms">Room Management</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+      <Tabs defaultValue="properties" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="properties">My Properties</TabsTrigger>
+          <TabsTrigger value="amenities">Amenities Management</TabsTrigger>
+          <TabsTrigger value="pricing">Pricing & Availability</TabsTrigger>
+          <TabsTrigger value="reviews">Reviews & Ratings</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="overview">
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Bookings</CardTitle>
-                <CardDescription>Latest hotel reservation requests</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center p-4 border rounded-lg">
-                    <Calendar className="h-9 w-9 text-primary mr-4" />
-                    <div className="flex-1">
-                      <h3 className="font-medium">White Beach Weekend Package</h3>
-                      <div className="flex justify-between items-center">
-                        <p className="text-sm text-muted-foreground">May 15-17, 2025 • 2 Adults</p>
-                        <span className="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800 font-medium">Pending</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center p-4 border rounded-lg">
-                    <Calendar className="h-9 w-9 text-primary mr-4" />
-                    <div className="flex-1">
-                      <h3 className="font-medium">Deluxe Ocean View Room</h3>
-                      <div className="flex justify-between items-center">
-                        <p className="text-sm text-muted-foreground">June 1-3, 2025 • 2 Adults</p>
-                        <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 font-medium">Confirmed</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full mt-4">View All Bookings</Button>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Hotel Performance</CardTitle>
-                <CardDescription>Current metrics and ratings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium">Rating</span>
-                      <span className="text-sm font-medium flex items-center"><Star className="h-3 w-3 fill-current text-amber-500 mr-1" /> 4.8/5.0</span>
-                    </div>
-                    <Progress value={96} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium">Occupancy Rate</span>
-                      <span className="text-sm font-medium">72%</span>
-                    </div>
-                    <Progress value={72} className="h-2" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium">Reviews</span>
-                      <span className="text-sm font-medium">28 recent</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="flex items-center"><Star className="h-3 w-3 fill-current text-amber-500 mr-1" />5</span>
-                      <Progress value={78} className="h-2 w-32" />
-                      <span>78%</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="flex items-center"><Star className="h-3 w-3 fill-current text-amber-500 mr-1" />4</span>
-                      <Progress value={18} className="h-2 w-32" />
-                      <span>18%</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="flex items-center"><Star className="h-3 w-3 fill-current text-amber-500 mr-1" />3</span>
-                      <Progress value={4} className="h-2 w-32" />
-                      <span>4%</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <TabsContent value="properties" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">My Hotel Properties</h2>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Hotel
+            </Button>
           </div>
-
-          <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 gap-2">
-              <PlusCircle className="h-8 w-8" />
-              <span>Add Room</span>
-            </Button>
-            <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 gap-2">
-              <BadgeDollarSign className="h-8 w-8" />
-              <span>Update Pricing</span>
-            </Button>
-            <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 gap-2">
-              <ImagePlus className="h-8 w-8" />
-              <span>Upload Photos</span>
-            </Button>
-            <Button variant="outline" className="h-auto flex flex-col items-center justify-center p-4 gap-2">
-              <MessageSquare className="h-8 w-8" />
-              <span>Customer Messages</span>
-            </Button>
+          
+          <div className="grid gap-6">
+            {myHotels.map((hotel: any) => (
+              <Card key={hotel.id}>
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold">{hotel.name}</h3>
+                      <p className="text-gray-600 mt-1">{hotel.address}</p>
+                      <div className="flex items-center gap-4 mt-3">
+                        <Badge variant="secondary">₱{hotel.price?.toLocaleString()}/night</Badge>
+                        <Badge variant={hotel.featured ? "default" : "outline"}>
+                          {hotel.featured ? "Featured" : "Standard"}
+                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm">{hotel.rating}/5</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <h4 className="font-medium mb-3">Amenities</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {(hotel.amenities || []).map((amenity: string, index: number) => (
+                        <Badge key={index} variant="outline" className="flex items-center gap-1">
+                          {amenityIcons[amenity as keyof typeof amenityIcons] || <Star className="h-3 w-3" />}
+                          {amenity}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </TabsContent>
-        
-        <TabsContent value="bookings">
+
+        <TabsContent value="amenities" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Amenities Management</h2>
+          </div>
+          
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Reservations</CardTitle>
-                  <CardDescription>Manage all your hotel bookings</CardDescription>
-                </div>
+              <CardTitle>Available Amenities</CardTitle>
+              <CardDescription>Manage the amenities offered by your hotels</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(amenityIcons).map(([amenity, icon]) => (
+                  <div key={amenity} className="flex items-center space-x-2 p-3 border rounded-lg">
+                    {icon}
+                    <span className="font-medium">{amenity}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="font-medium">Add Custom Amenity</h4>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <ListFilter className="h-4 w-4 mr-2" />
-                    Filter
-                  </Button>
-                  <Button size="sm">
-                    <TicketCheck className="h-4 w-4 mr-2" />
-                    New Booking
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <div className="grid grid-cols-6 p-4 font-medium border-b">
-                  <div>Booking ID</div>
-                  <div>Guest</div>
-                  <div>Check-in/out</div>
-                  <div>Room</div>
-                  <div>Amount</div>
-                  <div>Status</div>
-                </div>
-                <div className="grid grid-cols-6 p-4 border-b items-center">
-                  <div className="text-sm font-medium">#BK-2025001</div>
-                  <div className="text-sm">John Santos</div>
-                  <div className="text-sm">May 15-17, 2025</div>
-                  <div className="text-sm">Deluxe Suite</div>
-                  <div className="text-sm font-medium">₱8,500</div>
-                  <div>
-                    <span className="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-800 font-medium">Pending</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-6 p-4 border-b items-center">
-                  <div className="text-sm font-medium">#BK-2025002</div>
-                  <div className="text-sm">Maria Garcia</div>
-                  <div className="text-sm">June 1-3, 2025</div>
-                  <div className="text-sm">Ocean View</div>
-                  <div className="text-sm font-medium">₱9,200</div>
-                  <div>
-                    <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 font-medium">Confirmed</span>
-                  </div>
+                  <Input placeholder="Enter amenity name" className="flex-1" />
+                  <Button>Add Amenity</Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
-        
-        <TabsContent value="rooms">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Room Inventory</CardTitle>
-                  <CardDescription>Manage rooms, availability, and pricing</CardDescription>
-                </div>
-                <Button>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add New Room
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <div className="grid grid-cols-6 p-4 font-medium border-b">
-                  <div>Room Type</div>
-                  <div>Capacity</div>
-                  <div>Price</div>
-                  <div>Available</div>
-                  <div>Features</div>
-                  <div>Actions</div>
-                </div>
-                <div className="grid grid-cols-6 p-4 border-b items-center">
-                  <div className="text-sm font-medium">Deluxe Suite</div>
-                  <div className="text-sm">2 Adults, 1 Child</div>
-                  <div className="text-sm">₱4,250/night</div>
-                  <div className="text-sm">3 rooms</div>
-                  <div className="text-sm">Ocean view, Mini bar</div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <ImagePlus className="h-4 w-4" />
-                    </Button>
+
+        <TabsContent value="pricing" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Pricing & Availability</h2>
+          </div>
+          
+          <div className="grid gap-6">
+            {myHotels.map((hotel: any) => (
+              <Card key={hotel.id}>
+                <CardHeader>
+                  <CardTitle>{hotel.name}</CardTitle>
+                  <CardDescription>Update pricing and availability settings</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="base-price">Base Price (per night)</Label>
+                      <div className="flex">
+                        <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">₱</span>
+                        <Input 
+                          id="base-price" 
+                          defaultValue={hotel.price} 
+                          className="rounded-l-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="weekend-price">Weekend Price (per night)</Label>
+                      <div className="flex">
+                        <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">₱</span>
+                        <Input 
+                          id="weekend-price" 
+                          defaultValue={Math.round(hotel.price * 1.2)} 
+                          className="rounded-l-none"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="grid grid-cols-6 p-4 border-b items-center">
-                  <div className="text-sm font-medium">Family Room</div>
-                  <div className="text-sm">4 Adults</div>
-                  <div className="text-sm">₱5,800/night</div>
-                  <div className="text-sm">2 rooms</div>
-                  <div className="text-sm">Balcony, Kitchen</div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <ImagePlus className="h-4 w-4" />
-                    </Button>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="special-offers">Special Offers / Discounts</Label>
+                    <Textarea 
+                      id="special-offers" 
+                      placeholder="Enter any special offers or discounts for this property"
+                      className="min-h-[80px]"
+                    />
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  
+                  <Button className="w-full">Update Pricing</Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
-        
-        <TabsContent value="settings">
+
+        <TabsContent value="reviews" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Reviews & Ratings</h2>
+          </div>
+          
           <Card>
             <CardHeader>
-              <CardTitle>Hotel Settings</CardTitle>
-              <CardDescription>Manage your hotel profile and preferences</CardDescription>
+              <CardTitle>Recent Guest Reviews</CardTitle>
+              <CardDescription>Monitor and respond to guest feedback</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div className="border p-4 rounded-lg space-y-2">
-                  <h3 className="font-medium flex items-center">
-                    <Building2 className="h-5 w-5 mr-2 text-primary" />
-                    Property Information
-                  </h3>
-                  <p className="text-sm text-muted-foreground">Update your hotel's basic information, contact details, and location.</p>
-                  <Button variant="outline" size="sm">Edit Property Details</Button>
+              <div className="space-y-4">
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        {[1,2,3,4,5].map((star) => (
+                          <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                      <span className="font-medium">Sarah Johnson</span>
+                    </div>
+                    <span className="text-sm text-gray-500">2 days ago</span>
+                  </div>
+                  <p className="text-gray-700 mb-3">
+                    "Amazing beachfront location with excellent service. The staff was incredibly helpful and the rooms were spotless. Highly recommend!"
+                  </p>
+                  <Button variant="outline" size="sm">Respond</Button>
                 </div>
                 
-                <div className="border p-4 rounded-lg space-y-2">
-                  <h3 className="font-medium flex items-center">
-                    <BadgeDollarSign className="h-5 w-5 mr-2 text-primary" />
-                    Payment Settings
-                  </h3>
-                  <p className="text-sm text-muted-foreground">Configure your payment methods, taxes, and cancellation policies.</p>
-                  <Button variant="outline" size="sm">Manage Payment Settings</Button>
-                </div>
-                
-                <div className="border p-4 rounded-lg space-y-2">
-                  <h3 className="font-medium flex items-center">
-                    <Settings className="h-5 w-5 mr-2 text-primary" />
-                    Account Settings
-                  </h3>
-                  <p className="text-sm text-muted-foreground">Update your account information, password, and notification preferences.</p>
-                  <Button variant="outline" size="sm">Manage Account</Button>
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        {[1,2,3,4].map((star) => (
+                          <Star key={star} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                        <Star className="h-4 w-4 text-gray-300" />
+                      </div>
+                      <span className="font-medium">Mike Chen</span>
+                    </div>
+                    <span className="text-sm text-gray-500">1 week ago</span>
+                  </div>
+                  <p className="text-gray-700 mb-3">
+                    "Great location and facilities. The pool area was fantastic. Only minor issue was the WiFi connection in some areas."
+                  </p>
+                  <Button variant="outline" size="sm">Respond</Button>
                 </div>
               </div>
             </CardContent>

@@ -1,11 +1,108 @@
 import { Express } from "express";
+<<<<<<< HEAD
 import { supabase } from "./supabase";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { insertUserSchema } from "@shared/schema";
+=======
+import session from "express-session";
+import bcrypt from "bcrypt";
+import connectPg from "connect-pg-simple";
+import { pool } from "./supabase-db"; // Updated to use Supabase connection
+import { storage } from "./storage";
+import { z } from "zod";
+import { fromZodError } from "zod-validation-error";
+import { User as SelectUser, insertUserSchema } from "@shared/schema";
+
+declare global {
+  namespace Express {
+    interface User extends SelectUser {}
+  }
+}
+
+// Create PostgreSQL session store
+const PostgresSessionStore = connectPg(session);
+
+// Password hashing configuration
+const SALT_ROUNDS = 10;
+
+export async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password, SALT_ROUNDS);
+}
+
+export async function comparePasswords(password: string, hashedPassword: string): Promise<boolean> {
+  return await bcrypt.compare(password, hashedPassword);
+}
+>>>>>>> 97b1b27826851d0aaaf0a2d90db3b20c29dc2310
 
 export function setupAuth(app: Express) {
 
+<<<<<<< HEAD
+=======
+  // Configure session
+  // Use basic in-memory session store while database connection is being fixed
+  app.use(
+    session({
+      secret: SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+      },
+    })
+  );
+
+  // Initialize passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Configure local strategy
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        // Get user from database
+        const user = await storage.getUserByUsername(username);
+        
+        if (!user) {
+          return done(null, false, { message: "Incorrect username" });
+        }
+        
+        const isPasswordValid = await comparePasswords(password, user.password);
+        
+        if (!isPasswordValid) {
+          return done(null, false, { message: "Incorrect password" });
+        }
+        
+        return done(null, user);
+      } catch (error) {
+        console.error("Authentication error:", error);
+        return done(error);
+      }
+    })
+  );
+
+  // Serialize user to the session
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  // Deserialize user from the session
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await storage.getUser(id);
+      if (!user) {
+        return done(null, false);
+      }
+      done(null, user);
+    } catch (error) {
+      done(error);
+    }
+  });
+
+  // Auth routes
+>>>>>>> 97b1b27826851d0aaaf0a2d90db3b20c29dc2310
   app.post("/api/auth/register", async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);

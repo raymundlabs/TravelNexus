@@ -6,14 +6,12 @@ function generateUuid(): string {
   return uuidv4();
 }
 
-export interface Storage {
-  // User operations (now primarily handled by Supabase Auth)
-  // getUser(id: string): Promise<User | undefined>; // Supabase Auth handles this
-  // createUser(user: InsertUser): Promise<User>; // Supabase Auth handles this
-  // getUserByUsername(username: string): Promise<User | undefined>; // Supabase Auth handles this with email
-  // getUserByEmail(email: string): Promise<User | undefined>; // Supabase Auth handles this
-  // updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined>; // Supabase Auth handles this
-  // deleteUser(id: string): Promise<boolean>; // Supabase Auth handles this
+export interface IStorage {
+  // User operations
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
 
   // Role operations
   getRoles(): Promise<Role[]>;
@@ -31,693 +29,503 @@ export interface Storage {
 
   // Package operations
   getPackages(): Promise<Package[]>;
-  getPackage(id: string): Promise<Package | undefined>;
-  createPackage(pack: InsertPackage): Promise<Package>;
-  updatePackage(id: string, updates: Partial<InsertPackage>): Promise<Package | undefined>;
-  deletePackage(id: string): Promise<boolean>;
+  getPackage(id: number): Promise<Package | undefined>;
+  getPackagesByDestination(destinationId: number): Promise<Package[]>;
+  getFeaturedPackages(limit: number): Promise<Package[]>;
+  searchPackages(query: string): Promise<Package[]>;
 
-  // Destination operations
-  getDestinations(): Promise<Destination[]>;
-  getDestination(id: string): Promise<Destination | undefined>;
-  createDestination(destination: InsertDestination): Promise<Destination>;
-  updateDestination(id: string, updates: Partial<InsertDestination>): Promise<Destination | undefined>;
-  deleteDestination(id: string): Promise<boolean>;
-
-  // Special Offer operations
-  getSpecialOffers(): Promise<SpecialOffer[]>;
-  getSpecialOffer(id: string): Promise<SpecialOffer | undefined>;
-  createSpecialOffer(specialOffer: InsertSpecialOffer): Promise<SpecialOffer>;
-  updateSpecialOffer(id: string, updates: Partial<InsertSpecialOffer>): Promise<SpecialOffer | undefined>;
-  deleteSpecialOffer(id: string): Promise<boolean>;
+  // Special offers operations
+  getSpecialOffers(limit: number): Promise<SpecialOffer[]>;
 
   // Testimonial operations
-  getTestimonials(): Promise<Testimonial[]>;
-  getTestimonial(id: string): Promise<Testimonial | undefined>;
-  createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
-  updateTestimonial(id: string, updates: Partial<InsertTestimonial>): Promise<Testimonial | undefined>;
-  deleteTestimonial(id: string): Promise<boolean>;
-
-  // Hotel operations
-  getHotels(): Promise<Hotel[]>;
-  getHotel(id: string): Promise<Hotel | undefined>;
-  createHotel(hotel: InsertHotel): Promise<Hotel>;
-  updateHotel(id: string, updates: Partial<InsertHotel>): Promise<Hotel | undefined>;
-  deleteHotel(id: string): Promise<boolean>;
-
-  // Tour operations
-  getTours(): Promise<Tour[]>;
-  getTour(id: string): Promise<Tour | undefined>;
-  createTour(tour: InsertTour): Promise<Tour>;
-  updateTour(id: string, updates: Partial<InsertTour>): Promise<Tour | undefined>;
-  deleteTour(id: string): Promise<boolean>;
-
-  // Comment operations
-  getComments(): Promise<Comment[]>;
-  getComment(id: string): Promise<Comment | undefined>;
-  createComment(comment: InsertComment): Promise<Comment>;
-  updateComment(id: string, updates: Partial<InsertComment>): Promise<Comment | undefined>;
-  deleteComment(id: string): Promise<boolean>;
-
-  // Reply operations
-  getReplies(): Promise<Reply[]>;
-  getReply(id: string): Promise<Reply | undefined>;
-  createReply(reply: InsertReply): Promise<Reply>;
-  updateReply(id: string, updates: Partial<InsertReply>): Promise<Reply | undefined>;
-  deleteReply(id: string): Promise<boolean>;
+  getTestimonials(limit: number): Promise<Testimonial[]>;
 
   // Booking operations
-  getBookings(): Promise<Booking[]>;
-  getBooking(id: string): Promise<Booking | undefined>;
   createBooking(booking: InsertBooking): Promise<Booking>;
-  updateBooking(id: string, updates: Partial<InsertBooking>): Promise<Booking | undefined>;
-  deleteBooking(id: string): Promise<boolean>;
-
-  // Payment operations
-  getPayments(): Promise<Payment[]>;
-  getPayment(id: string): Promise<Payment | undefined>;
-  createPayment(payment: InsertPayment): Promise<Payment>;
-  updatePayment(id: string, updates: Partial<InsertPayment>): Promise<Payment | undefined>;
-  deletePayment(id: string): Promise<boolean>;
-
-  // Hotel Owner Profile operations
-  getHotelOwnerProfiles(): Promise<HotelOwnerProfile[]>;
-  getHotelOwnerProfile(id: string): Promise<HotelOwnerProfile | undefined>;
-  createHotelOwnerProfile(hotelOwnerProfile: InsertHotelOwnerProfile): Promise<HotelOwnerProfile>;
-  updateHotelOwnerProfile(id: string, updates: Partial<InsertHotelOwnerProfile>): Promise<HotelOwnerProfile | undefined>;
-  deleteHotelOwnerProfile(id: string): Promise<boolean>;
-
-  // Hotel Ownership operations
-  getHotelOwnerships(): Promise<HotelOwnership[]>;
-  getHotelOwnership(id: string): Promise<HotelOwnership | undefined>;
-  createHotelOwnership(hotelOwnership: InsertHotelOwnership): Promise<HotelOwnership>;
-  updateHotelOwnership(id: string, updates: Partial<InsertHotelOwnership>): Promise<HotelOwnership | undefined>;
-  deleteHotelOwnership(id: string): Promise<boolean>;
-
-  // Agent Reward Point operations
-  getAgentRewardPoints(): Promise<AgentRewardPoint[]>;
-  getAgentRewardPoint(id: string): Promise<AgentRewardPoint | undefined>;
-  createAgentRewardPoint(agentRewardPoint: InsertAgentRewardPoint): Promise<AgentRewardPoint>;
-  updateAgentRewardPoint(id: string, updates: Partial<InsertAgentRewardPoint>): Promise<AgentRewardPoint | undefined>;
-  deleteAgentRewardPoint(id: string): Promise<boolean>;
-
-  // Agent Point Transaction operations
-  getAgentPointTransactions(): Promise<AgentPointTransaction[]>;
-  getAgentPointTransaction(id: string): Promise<AgentPointTransaction | undefined>;
-  createAgentPointTransaction(agentPointTransaction: InsertAgentPointTransaction): Promise<AgentPointTransaction>;
-  updateAgentPointTransaction(id: string, updates: Partial<InsertAgentPointTransaction>): Promise<AgentPointTransaction | undefined>;
-  deleteAgentPointTransaction(id: string): Promise<boolean>;
-
-  // Agent Reward Redemption operations
-  getAgentRewardRedemptions(): Promise<AgentRewardRedemption[]>;
-  getAgentRewardRedemption(id: string): Promise<AgentRewardRedemption | undefined>;
-  createAgentRewardRedemption(agentRewardRedemption: InsertAgentRewardRedemption): Promise<AgentRewardRedemption>;
-  updateAgentRewardRedemption(id: string, updates: Partial<InsertAgentRewardRedemption>): Promise<AgentRewardRedemption | undefined>;
-  deleteAgentRewardRedemption(id: string): Promise<boolean>;
+  getUserBookings(userId: number): Promise<Booking[]>;
+  updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
+  
+  // Session store for authentication
+  sessionStore: session.Store;
 }
 
-export class MemStorage implements Storage {
-  private roles: Map<string, Role>;
-  private agentProfiles: Map<string, AgentProfile>;
-  private packages: Map<string, Package>;
-  private destinations: Map<string, Destination>;
-  private specialOffers: Map<string, SpecialOffer>;
-  private testimonials: Map<string, Testimonial>;
-  private hotels: Map<string, Hotel>;
-  private tours: Map<string, Tour>;
-  private comments: Map<string, Comment>;
-  private replies: Map<string, Reply>;
-  private bookings: Map<string, Booking>;
-  private payments: Map<string, Payment>;
-  private hotelOwnerProfiles: Map<string, HotelOwnerProfile>;
-  private hotelOwnership: Map<string, HotelOwnership>;
-  private agentRewardPoints: Map<string, AgentRewardPoint>;
-  private agentPointTransactions: Map<string, AgentPointTransaction>;
-  private agentRewardRedemptions: Map<string, AgentRewardRedemption>;
-
+export class DatabaseStorage implements IStorage {
+  // Session store for authentication
+  sessionStore: session.Store;
+  
   constructor() {
-    this.roles = new Map();
-    this.agentProfiles = new Map();
-    this.packages = new Map();
-    this.destinations = new Map();
-    this.specialOffers = new Map();
-    this.testimonials = new Map();
-    this.hotels = new Map();
-    this.tours = new Map();
-    this.comments = new Map();
-    this.replies = new Map();
-    this.bookings = new Map();
-    this.payments = new Map();
-    this.hotelOwnerProfiles = new Map();
-    this.hotelOwnership = new Map();
-    this.agentRewardPoints = new Map();
-    this.agentPointTransactions = new Map();
-    this.agentRewardRedemptions = new Map();
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true
+    });
   }
 
-  // User operations are now handled by Supabase Auth, so we don't need a `getUser` method here.
-  async getUser(id: string): Promise<any> {
-    // This method is primarily for compatibility if other parts of the code expect a Storage.getUser
-    // However, for Supabase Auth, you'd typically get the user via supabase.auth.getUser() on the server.
-    console.warn("MemStorage.getUser is deprecated. Use supabase.auth.getUser() instead.");
-    return undefined; // Or throw an error if you want to enforce direct Supabase Auth usage
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
-  async getUserByUsername(username: string): Promise<any> {
-    console.warn("MemStorage.getUserByUsername is deprecated. Use supabase.auth.getUser() with email instead.");
-    return undefined;
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
-  async createUser(user: any): Promise<any> {
-    console.warn("MemStorage.createUser is deprecated. Use supabase.auth.signUp() instead.");
-    return undefined;
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const [createdUser] = await db.insert(users).values(user).returning();
+    return createdUser;
   }
 
   // Role operations
   async getRoles(): Promise<Role[]> {
-    return Array.from(this.roles.values());
+    const roles = await db.select().from(roles);
+    return roles.map((role) => ({ ...role, id: role.id.toString() }));
   }
 
   async getRole(id: string): Promise<Role | undefined> {
-    return this.roles.get(id);
+    const role = await db.select().from(roles).where(eq(roles.id, id)).limit(1);
+    return role.length > 0 ? role[0] : undefined;
   }
 
   async createRole(role: InsertRole): Promise<Role> {
-    const newRole = { ...role, id: generateUuid() };
-    this.roles = this.roles.set(newRole.id, newRole);
-    return newRole;
+    const [createdRole] = await db.insert(roles).values(role).returning();
+    return { ...createdRole, id: createdRole.id.toString() };
   }
 
   async updateRole(id: string, updates: Partial<InsertRole>): Promise<Role | undefined> {
-    let role = this.roles.get(id);
-    if (!role) {
-      return undefined;
-    }
-    role = { ...role, ...updates };
-    this.roles = this.roles.set(id, role);
-    return role;
+    const [updatedRole] = await db.update(roles).set(updates).where(eq(roles.id, id)).returning();
+    return updatedRole ? { ...updatedRole, id: updatedRole.id.toString() } : undefined;
   }
 
   async deleteRole(id: string): Promise<boolean> {
-    const initialSize = this.roles.size;
-    this.roles = this.roles.delete(id);
-    return this.roles.size < initialSize;
+    const result = await db.delete(roles).where(eq(roles.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Agent Profile operations
   async getAgentProfiles(): Promise<AgentProfile[]> {
-    return Array.from(this.agentProfiles.values());
+    const agentProfiles = await db.select().from(agentProfiles);
+    return agentProfiles.map((profile) => ({ ...profile, id: profile.id.toString() }));
   }
 
   async getAgentProfile(id: string): Promise<AgentProfile | undefined> {
-    return this.agentProfiles.get(id);
+    const profile = await db.select().from(agentProfiles).where(eq(agentProfiles.id, id)).limit(1);
+    return profile.length > 0 ? { ...profile[0], id: profile[0].id.toString() } : undefined;
   }
 
   async createAgentProfile(agentProfile: InsertAgentProfile): Promise<AgentProfile> {
-    const newAgentProfile = { ...agentProfile, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.agentProfiles = this.agentProfiles.set(newAgentProfile.id, newAgentProfile);
-    return newAgentProfile;
+    const [createdProfile] = await db.insert(agentProfiles).values(agentProfile).returning();
+    return { ...createdProfile, id: createdProfile.id.toString() };
   }
 
   async updateAgentProfile(id: string, updates: Partial<InsertAgentProfile>): Promise<AgentProfile | undefined> {
-    let agentProfile = this.agentProfiles.get(id);
-    if (!agentProfile) {
-      return undefined;
-    }
-    agentProfile = { ...agentProfile, ...updates, updated_at: new Date() };
-    this.agentProfiles = this.agentProfiles.set(id, agentProfile);
-    return agentProfile;
+    const [updatedProfile] = await db.update(agentProfiles).set(updates).where(eq(agentProfiles.id, id)).returning();
+    return updatedProfile ? { ...updatedProfile, id: updatedProfile.id.toString() } : undefined;
   }
 
   async deleteAgentProfile(id: string): Promise<boolean> {
-    const initialSize = this.agentProfiles.size;
-    this.agentProfiles = this.agentProfiles.delete(id);
-    return this.agentProfiles.size < initialSize;
+    const result = await db.delete(agentProfiles).where(eq(agentProfiles.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Package operations
   async getPackages(): Promise<Package[]> {
-    return Array.from(this.packages.values());
+    const packages = await db.select().from(packages);
+    return packages.map((pack) => ({ ...pack, id: pack.id.toString() }));
   }
 
-  async getPackage(id: string): Promise<Package | undefined> {
-    return this.packages.get(id);
+  async getPackage(id: number): Promise<Package | undefined> {
+    const pack = await db.select().from(packages).where(eq(packages.id, id)).limit(1);
+    return pack.length > 0 ? { ...pack[0], id: pack[0].id.toString() } : undefined;
   }
 
-  async createPackage(pack: InsertPackage): Promise<Package> {
-    const newPackage: Package = { ...pack, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.packages = this.packages.set(newPackage.id, newPackage);
-    return newPackage;
+  async getPackagesByDestination(destinationId: number): Promise<Package[]> {
+    const packages = await db.select().from(packages).where(eq(packages.destinationId, destinationId));
+    return packages.map((pack) => ({ ...pack, id: pack.id.toString() }));
   }
 
-  async updatePackage(id: string, updates: Partial<InsertPackage>): Promise<Package | undefined> {
-    let pack = this.packages.get(id);
-    if (!pack) {
-      return undefined;
-    }
-    pack = { ...pack, ...updates, updated_at: new Date() };
-    this.packages = this.packages.set(id, pack);
-    return pack;
+  async getFeaturedPackages(limit: number): Promise<Package[]> {
+    const packages = await db.select().from(packages).limit(limit);
+    return packages.map((pack) => ({ ...pack, id: pack.id.toString() }));
   }
 
-  async deletePackage(id: string): Promise<boolean> {
-    const initialSize = this.packages.size;
-    this.packages = this.packages.delete(id);
-    return this.packages.size < initialSize;
+  async searchPackages(query: string): Promise<Package[]> {
+    const packages = await db.select().from(packages).where(like(packages.name, `%${query}%`));
+    return packages.map((pack) => ({ ...pack, id: pack.id.toString() }));
   }
 
   // Destination operations
   async getDestinations(): Promise<Destination[]> {
-    return Array.from(this.destinations.values());
+    const destinations = await db.select().from(destinations);
+    return destinations.map((destination) => ({ ...destination, id: destination.id.toString() }));
   }
 
   async getDestination(id: string): Promise<Destination | undefined> {
-    return this.destinations.get(id);
+    const destination = await db.select().from(destinations).where(eq(destinations.id, id)).limit(1);
+    return destination.length > 0 ? { ...destination[0], id: destination[0].id.toString() } : undefined;
   }
 
   async createDestination(destination: InsertDestination): Promise<Destination> {
-    const newDestination: Destination = { ...destination, id: generateUuid(), created_at: new Date(), updated_at: new Date(), featured: destination.featured || false };
-    this.destinations = this.destinations.set(newDestination.id, newDestination);
-    return newDestination;
+    const [createdDestination] = await db.insert(destinations).values(destination).returning();
+    return { ...createdDestination, id: createdDestination.id.toString() };
   }
 
   async updateDestination(id: string, updates: Partial<InsertDestination>): Promise<Destination | undefined> {
-    let destination = this.destinations.get(id);
-    if (!destination) {
-      return undefined;
-    }
-    destination = { ...destination, ...updates, updated_at: new Date() };
-    this.destinations = this.destinations.set(id, destination);
-    return destination;
+    const [updatedDestination] = await db.update(destinations).set(updates).where(eq(destinations.id, id)).returning();
+    return updatedDestination ? { ...updatedDestination, id: updatedDestination.id.toString() } : undefined;
   }
 
   async deleteDestination(id: string): Promise<boolean> {
-    const initialSize = this.destinations.size;
-    this.destinations = this.destinations.delete(id);
-    return this.destinations.size < initialSize;
+    const result = await db.delete(destinations).where(eq(destinations.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Special Offer operations
-  async getSpecialOffers(): Promise<SpecialOffer[]> {
-    return Array.from(this.specialOffers.values());
+  async getSpecialOffers(limit: number): Promise<SpecialOffer[]> {
+    const specialOffers = await db.select().from(specialOffers).limit(limit);
+    return specialOffers.map((offer) => ({ ...offer, id: offer.id.toString() }));
   }
 
   async getSpecialOffer(id: string): Promise<SpecialOffer | undefined> {
-    return this.specialOffers.get(id);
+    const offer = await db.select().from(specialOffers).where(eq(specialOffers.id, id)).limit(1);
+    return offer.length > 0 ? { ...offer[0], id: offer[0].id.toString() } : undefined;
   }
 
   async createSpecialOffer(specialOffer: InsertSpecialOffer): Promise<SpecialOffer> {
-    const newSpecialOffer = { ...specialOffer, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.specialOffers = this.specialOffers.set(newSpecialOffer.id, newSpecialOffer);
-    return newSpecialOffer;
+    const [createdOffer] = await db.insert(specialOffers).values(specialOffer).returning();
+    return { ...createdOffer, id: createdOffer.id.toString() };
   }
 
   async updateSpecialOffer(id: string, updates: Partial<InsertSpecialOffer>): Promise<SpecialOffer | undefined> {
-    let specialOffer = this.specialOffers.get(id);
-    if (!specialOffer) {
-      return undefined;
-    }
-    specialOffer = { ...specialOffer, ...updates, updated_at: new Date() };
-    this.specialOffers = this.specialOffers.set(id, specialOffer);
-    return specialOffer;
+    const [updatedOffer] = await db.update(specialOffers).set(updates).where(eq(specialOffers.id, id)).returning();
+    return updatedOffer ? { ...updatedOffer, id: updatedOffer.id.toString() } : undefined;
   }
 
   async deleteSpecialOffer(id: string): Promise<boolean> {
-    const initialSize = this.specialOffers.size;
-    this.specialOffers = this.specialOffers.delete(id);
-    return this.specialOffers.size < initialSize;
+    const result = await db.delete(specialOffers).where(eq(specialOffers.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Testimonial operations
-  async getTestimonials(): Promise<Testimonial[]> {
-    return Array.from(this.testimonials.values());
+  async getTestimonials(limit: number): Promise<Testimonial[]> {
+    const testimonials = await db.select().from(testimonials).limit(limit);
+    return testimonials.map((testimonial) => ({ ...testimonial, id: testimonial.id.toString() }));
   }
 
   async getTestimonial(id: string): Promise<Testimonial | undefined> {
-    return this.testimonials.get(id);
+    const testimonial = await db.select().from(testimonials).where(eq(testimonials.id, id)).limit(1);
+    return testimonial.length > 0 ? { ...testimonial[0], id: testimonial[0].id.toString() } : undefined;
   }
 
   async createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial> {
-    const newTestimonial = { ...testimonial, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.testimonials = this.testimonials.set(newTestimonial.id, newTestimonial);
-    return newTestimonial;
+    const [createdTestimonial] = await db.insert(testimonials).values(testimonial).returning();
+    return { ...createdTestimonial, id: createdTestimonial.id.toString() };
   }
 
   async updateTestimonial(id: string, updates: Partial<InsertTestimonial>): Promise<Testimonial | undefined> {
-    let testimonial = this.testimonials.get(id);
-    if (!testimonial) {
-      return undefined;
-    }
-    testimonial = { ...testimonial, ...updates, updated_at: new Date() };
-    this.testimonials = this.testimonials.set(id, testimonial);
-    return testimonial;
+    const [updatedTestimonial] = await db.update(testimonials).set(updates).where(eq(testimonials.id, id)).returning();
+    return updatedTestimonial ? { ...updatedTestimonial, id: updatedTestimonial.id.toString() } : undefined;
   }
 
   async deleteTestimonial(id: string): Promise<boolean> {
-    const initialSize = this.testimonials.size;
-    this.testimonials = this.testimonials.delete(id);
-    return this.testimonials.size < initialSize;
+    const result = await db.delete(testimonials).where(eq(testimonials.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Hotel operations
   async getHotels(): Promise<Hotel[]> {
-    return Array.from(this.hotels.values());
+    const hotels = await db.select().from(hotels);
+    return hotels.map((hotel) => ({ ...hotel, id: hotel.id.toString() }));
   }
 
   async getHotel(id: string): Promise<Hotel | undefined> {
-    return this.hotels.get(id);
+    const hotel = await db.select().from(hotels).where(eq(hotels.id, id)).limit(1);
+    return hotel.length > 0 ? { ...hotel[0], id: hotel[0].id.toString() } : undefined;
   }
 
   async createHotel(hotel: InsertHotel): Promise<Hotel> {
-    const newHotel: Hotel = { ...hotel, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.hotels = this.hotels.set(newHotel.id, newHotel);
-    return newHotel;
+    const [createdHotel] = await db.insert(hotels).values(hotel).returning();
+    return { ...createdHotel, id: createdHotel.id.toString() };
   }
 
   async updateHotel(id: string, updates: Partial<InsertHotel>): Promise<Hotel | undefined> {
-    let hotel = this.hotels.get(id);
-    if (!hotel) {
-      return undefined;
-    }
-    hotel = { ...hotel, ...updates, updated_at: new Date() };
-    this.hotels = this.hotels.set(id, hotel);
-    return hotel;
+    const [updatedHotel] = await db.update(hotels).set(updates).where(eq(hotels.id, id)).returning();
+    return updatedHotel ? { ...updatedHotel, id: updatedHotel.id.toString() } : undefined;
   }
 
   async deleteHotel(id: string): Promise<boolean> {
-    const initialSize = this.hotels.size;
-    this.hotels = this.hotels.delete(id);
-    return this.hotels.size < initialSize;
+    const result = await db.delete(hotels).where(eq(hotels.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Tour operations
   async getTours(): Promise<Tour[]> {
-    return Array.from(this.tours.values());
+    const tours = await db.select().from(tours);
+    return tours.map((tour) => ({ ...tour, id: tour.id.toString() }));
   }
 
   async getTour(id: string): Promise<Tour | undefined> {
-    return this.tours.get(id);
+    const tour = await db.select().from(tours).where(eq(tours.id, id)).limit(1);
+    return tour.length > 0 ? { ...tour[0], id: tour[0].id.toString() } : undefined;
   }
 
   async createTour(tour: InsertTour): Promise<Tour> {
-    const newTour: Tour = { ...tour, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.tours = this.tours.set(newTour.id, newTour);
-    return newTour;
+    const [createdTour] = await db.insert(tours).values(tour).returning();
+    return { ...createdTour, id: createdTour.id.toString() };
   }
 
   async updateTour(id: string, updates: Partial<InsertTour>): Promise<Tour | undefined> {
-    let tour = this.tours.get(id);
-    if (!tour) {
-      return undefined;
-    }
-    tour = { ...tour, ...updates, updated_at: new Date() };
-    this.tours = this.tours.set(id, tour);
-    return tour;
+    const [updatedTour] = await db.update(tours).set(updates).where(eq(tours.id, id)).returning();
+    return updatedTour ? { ...updatedTour, id: updatedTour.id.toString() } : undefined;
   }
 
   async deleteTour(id: string): Promise<boolean> {
-    const initialSize = this.tours.size;
-    this.tours = this.tours.delete(id);
-    return this.tours.size < initialSize;
+    const result = await db.delete(tours).where(eq(tours.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Comment operations
   async getComments(): Promise<Comment[]> {
-    return Array.from(this.comments.values());
+    const comments = await db.select().from(comments);
+    return comments.map((comment) => ({ ...comment, id: comment.id.toString() }));
   }
 
   async getComment(id: string): Promise<Comment | undefined> {
-    return this.comments.get(id);
+    const comment = await db.select().from(comments).where(eq(comments.id, id)).limit(1);
+    return comment.length > 0 ? { ...comment[0], id: comment[0].id.toString() } : undefined;
   }
 
   async createComment(comment: InsertComment): Promise<Comment> {
-    const newComment = { ...comment, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.comments = this.comments.set(newComment.id, newComment);
-    return newComment;
+    const [createdComment] = await db.insert(comments).values(comment).returning();
+    return { ...createdComment, id: createdComment.id.toString() };
   }
 
   async updateComment(id: string, updates: Partial<InsertComment>): Promise<Comment | undefined> {
-    let comment = this.comments.get(id);
-    if (!comment) {
-      return undefined;
-    }
-    comment = { ...comment, ...updates, updated_at: new Date() };
-    this.comments = this.comments.set(id, comment);
-    return comment;
+    const [updatedComment] = await db.update(comments).set(updates).where(eq(comments.id, id)).returning();
+    return updatedComment ? { ...updatedComment, id: updatedComment.id.toString() } : undefined;
   }
 
   async deleteComment(id: string): Promise<boolean> {
-    const initialSize = this.comments.size;
-    this.comments = this.comments.delete(id);
-    return this.comments.size < initialSize;
+    const result = await db.delete(comments).where(eq(comments.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Reply operations
   async getReplies(): Promise<Reply[]> {
-    return Array.from(this.replies.values());
+    const replies = await db.select().from(replies);
+    return replies.map((reply) => ({ ...reply, id: reply.id.toString() }));
   }
 
   async getReply(id: string): Promise<Reply | undefined> {
-    return this.replies.get(id);
+    const reply = await db.select().from(replies).where(eq(replies.id, id)).limit(1);
+    return reply.length > 0 ? { ...reply[0], id: reply[0].id.toString() } : undefined;
   }
 
   async createReply(reply: InsertReply): Promise<Reply> {
-    const newReply = { ...reply, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.replies = this.replies.set(newReply.id, newReply);
-    return newReply;
+    const [createdReply] = await db.insert(replies).values(reply).returning();
+    return { ...createdReply, id: createdReply.id.toString() };
   }
 
   async updateReply(id: string, updates: Partial<InsertReply>): Promise<Reply | undefined> {
-    let reply = this.replies.get(id);
-    if (!reply) {
-      return undefined;
-    }
-    reply = { ...reply, ...updates, updated_at: new Date() };
-    this.replies = this.replies.set(id, reply);
-    return reply;
+    const [updatedReply] = await db.update(replies).set(updates).where(eq(replies.id, id)).returning();
+    return updatedReply ? { ...updatedReply, id: updatedReply.id.toString() } : undefined;
   }
 
   async deleteReply(id: string): Promise<boolean> {
-    const initialSize = this.replies.size;
-    this.replies = this.replies.delete(id);
-    return this.replies.size < initialSize;
+    const result = await db.delete(replies).where(eq(replies.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Booking operations
   async getBookings(): Promise<Booking[]> {
-    return Array.from(this.bookings.values());
+    const bookings = await db.select().from(bookings);
+    return bookings.map((booking) => ({ ...booking, id: booking.id.toString() }));
   }
 
   async getBooking(id: string): Promise<Booking | undefined> {
-    return this.bookings.get(id);
+    const booking = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+    return booking.length > 0 ? { ...booking[0], id: booking[0].id.toString() } : undefined;
   }
 
   async createBooking(booking: InsertBooking): Promise<Booking> {
-    const newBooking = { ...booking, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.bookings = this.bookings.set(newBooking.id, newBooking);
-    return newBooking;
+    const [createdBooking] = await db.insert(bookings).values(booking).returning();
+    return { ...createdBooking, id: createdBooking.id.toString() };
   }
 
   async updateBooking(id: string, updates: Partial<InsertBooking>): Promise<Booking | undefined> {
-    let booking = this.bookings.get(id);
-    if (!booking) {
-      return undefined;
-    }
-    booking = { ...booking, ...updates, updated_at: new Date() };
-    this.bookings = this.bookings.set(id, booking);
-    return booking;
+    const [updatedBooking] = await db.update(bookings).set(updates).where(eq(bookings.id, id)).returning();
+    return updatedBooking ? { ...updatedBooking, id: updatedBooking.id.toString() } : undefined;
   }
 
   async deleteBooking(id: string): Promise<boolean> {
-    const initialSize = this.bookings.size;
-    this.bookings = this.bookings.delete(id);
-    return this.bookings.size < initialSize;
+    const result = await db.delete(bookings).where(eq(bookings.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Payment operations
   async getPayments(): Promise<Payment[]> {
-    return Array.from(this.payments.values());
+    const payments = await db.select().from(payments);
+    return payments.map((payment) => ({ ...payment, id: payment.id.toString() }));
   }
 
   async getPayment(id: string): Promise<Payment | undefined> {
-    return this.payments.get(id);
+    const payment = await db.select().from(payments).where(eq(payments.id, id)).limit(1);
+    return payment.length > 0 ? { ...payment[0], id: payment[0].id.toString() } : undefined;
   }
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
-    const newPayment = { ...payment, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.payments = this.payments.set(newPayment.id, newPayment);
-    return newPayment;
+    const [createdPayment] = await db.insert(payments).values(payment).returning();
+    return { ...createdPayment, id: createdPayment.id.toString() };
   }
 
   async updatePayment(id: string, updates: Partial<InsertPayment>): Promise<Payment | undefined> {
-    let payment = this.payments.get(id);
-    if (!payment) {
-      return undefined;
-    }
-    payment = { ...payment, ...updates, updated_at: new Date() };
-    this.payments = this.payments.set(id, payment);
-    return payment;
+    const [updatedPayment] = await db.update(payments).set(updates).where(eq(payments.id, id)).returning();
+    return updatedPayment ? { ...updatedPayment, id: updatedPayment.id.toString() } : undefined;
   }
 
   async deletePayment(id: string): Promise<boolean> {
-    const initialSize = this.payments.size;
-    this.payments = this.payments.delete(id);
-    return this.payments.size < initialSize;
+    const result = await db.delete(payments).where(eq(payments.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Hotel Owner Profile operations
   async getHotelOwnerProfiles(): Promise<HotelOwnerProfile[]> {
-    return Array.from(this.hotelOwnerProfiles.values());
+    const hotelOwnerProfiles = await db.select().from(hotelOwnerProfiles);
+    return hotelOwnerProfiles.map((profile) => ({ ...profile, id: profile.id.toString() }));
   }
 
   async getHotelOwnerProfile(id: string): Promise<HotelOwnerProfile | undefined> {
-    return this.hotelOwnerProfiles.get(id);
+    const profile = await db.select().from(hotelOwnerProfiles).where(eq(hotelOwnerProfiles.id, id)).limit(1);
+    return profile.length > 0 ? { ...profile[0], id: profile[0].id.toString() } : undefined;
   }
 
   async createHotelOwnerProfile(hotelOwnerProfile: InsertHotelOwnerProfile): Promise<HotelOwnerProfile> {
-    const newHotelOwnerProfile = { ...hotelOwnerProfile, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.hotelOwnerProfiles = this.hotelOwnerProfiles.set(newHotelOwnerProfile.id, newHotelOwnerProfile);
-    return newHotelOwnerProfile;
+    const [createdProfile] = await db.insert(hotelOwnerProfiles).values(hotelOwnerProfile).returning();
+    return { ...createdProfile, id: createdProfile.id.toString() };
   }
 
   async updateHotelOwnerProfile(id: string, updates: Partial<InsertHotelOwnerProfile>): Promise<HotelOwnerProfile | undefined> {
-    let hotelOwnerProfile = this.hotelOwnerProfiles.get(id);
-    if (!hotelOwnerProfile) {
-      return undefined;
-    }
-    hotelOwnerProfile = { ...hotelOwnerProfile, ...updates, updated_at: new Date() };
-    this.hotelOwnerProfiles = this.hotelOwnerProfiles.set(id, hotelOwnerProfile);
-    return hotelOwnerProfile;
+    const [updatedProfile] = await db.update(hotelOwnerProfiles).set(updates).where(eq(hotelOwnerProfiles.id, id)).returning();
+    return updatedProfile ? { ...updatedProfile, id: updatedProfile.id.toString() } : undefined;
   }
 
   async deleteHotelOwnerProfile(id: string): Promise<boolean> {
-    const initialSize = this.hotelOwnerProfiles.size;
-    this.hotelOwnerProfiles = this.hotelOwnerProfiles.delete(id);
-    return this.hotelOwnerProfiles.size < initialSize;
+    const result = await db.delete(hotelOwnerProfiles).where(eq(hotelOwnerProfiles.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Hotel Ownership operations
   async getHotelOwnerships(): Promise<HotelOwnership[]> {
-    return Array.from(this.hotelOwnership.values());
+    const hotelOwnerships = await db.select().from(hotelOwnerships);
+    return hotelOwnerships.map((ownership) => ({ ...ownership, id: ownership.id.toString() }));
   }
 
   async getHotelOwnership(id: string): Promise<HotelOwnership | undefined> {
-    return this.hotelOwnership.get(id);
+    const ownership = await db.select().from(hotelOwnerships).where(eq(hotelOwnerships.id, id)).limit(1);
+    return ownership.length > 0 ? { ...ownership[0], id: ownership[0].id.toString() } : undefined;
   }
 
   async createHotelOwnership(hotelOwnership: InsertHotelOwnership): Promise<HotelOwnership> {
-    const newHotelOwnership = { ...hotelOwnership, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.hotelOwnership = this.hotelOwnership.set(newHotelOwnership.id, newHotelOwnership);
-    return newHotelOwnership;
+    const [createdOwnership] = await db.insert(hotelOwnerships).values(hotelOwnership).returning();
+    return { ...createdOwnership, id: createdOwnership.id.toString() };
   }
 
   async updateHotelOwnership(id: string, updates: Partial<InsertHotelOwnership>): Promise<HotelOwnership | undefined> {
-    let hotelOwnership = this.hotelOwnership.get(id);
-    if (!hotelOwnership) {
-      return undefined;
-    }
-    hotelOwnership = { ...hotelOwnership, ...updates, updated_at: new Date() };
-    this.hotelOwnership = this.hotelOwnership.set(id, hotelOwnership);
-    return hotelOwnership;
+    const [updatedOwnership] = await db.update(hotelOwnerships).set(updates).where(eq(hotelOwnerships.id, id)).returning();
+    return updatedOwnership ? { ...updatedOwnership, id: updatedOwnership.id.toString() } : undefined;
   }
 
   async deleteHotelOwnership(id: string): Promise<boolean> {
-    const initialSize = this.hotelOwnership.size;
-    this.hotelOwnership = this.hotelOwnership.delete(id);
-    return this.hotelOwnership.size < initialSize;
+    const result = await db.delete(hotelOwnerships).where(eq(hotelOwnerships.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Agent Reward Point operations
   async getAgentRewardPoints(): Promise<AgentRewardPoint[]> {
-    return Array.from(this.agentRewardPoints.values());
+    const agentRewardPoints = await db.select().from(agentRewardPoints);
+    return agentRewardPoints.map((point) => ({ ...point, id: point.id.toString() }));
   }
 
   async getAgentRewardPoint(id: string): Promise<AgentRewardPoint | undefined> {
-    return this.agentRewardPoints.get(id);
+    const point = await db.select().from(agentRewardPoints).where(eq(agentRewardPoints.id, id)).limit(1);
+    return point.length > 0 ? { ...point[0], id: point[0].id.toString() } : undefined;
   }
 
   async createAgentRewardPoint(agentRewardPoint: InsertAgentRewardPoint): Promise<AgentRewardPoint> {
-    const newAgentRewardPoint = { ...agentRewardPoint, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.agentRewardPoints = this.agentRewardPoints.set(newAgentRewardPoint.id, newAgentRewardPoint);
-    return newAgentRewardPoint;
+    const [createdPoint] = await db.insert(agentRewardPoints).values(agentRewardPoint).returning();
+    return { ...createdPoint, id: createdPoint.id.toString() };
   }
 
   async updateAgentRewardPoint(id: string, updates: Partial<InsertAgentRewardPoint>): Promise<AgentRewardPoint | undefined> {
-    let agentRewardPoint = this.agentRewardPoints.get(id);
-    if (!agentRewardPoint) {
-      return undefined;
-    }
-    agentRewardPoint = { ...agentRewardPoint, ...updates, updated_at: new Date() };
-    this.agentRewardPoints = this.agentRewardPoints.set(id, agentRewardPoint);
-    return agentRewardPoint;
+    const [updatedPoint] = await db.update(agentRewardPoints).set(updates).where(eq(agentRewardPoints.id, id)).returning();
+    return updatedPoint ? { ...updatedPoint, id: updatedPoint.id.toString() } : undefined;
   }
 
   async deleteAgentRewardPoint(id: string): Promise<boolean> {
-    const initialSize = this.agentRewardPoints.size;
-    this.agentRewardPoints = this.agentRewardPoints.delete(id);
-    return this.agentRewardPoints.size < initialSize;
+    const result = await db.delete(agentRewardPoints).where(eq(agentRewardPoints.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Agent Point Transaction operations
   async getAgentPointTransactions(): Promise<AgentPointTransaction[]> {
-    return Array.from(this.agentPointTransactions.values());
+    const agentPointTransactions = await db.select().from(agentPointTransactions);
+    return agentPointTransactions.map((transaction) => ({ ...transaction, id: transaction.id.toString() }));
   }
 
   async getAgentPointTransaction(id: string): Promise<AgentPointTransaction | undefined> {
-    return this.agentPointTransactions.get(id);
+    const transaction = await db.select().from(agentPointTransactions).where(eq(agentPointTransactions.id, id)).limit(1);
+    return transaction.length > 0 ? { ...transaction[0], id: transaction[0].id.toString() } : undefined;
   }
 
   async createAgentPointTransaction(agentPointTransaction: InsertAgentPointTransaction): Promise<AgentPointTransaction> {
-    const newAgentPointTransaction = { ...agentPointTransaction, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.agentPointTransactions = this.agentPointTransactions.set(newAgentPointTransaction.id, newAgentPointTransaction);
-    return newAgentPointTransaction;
+    const [createdTransaction] = await db.insert(agentPointTransactions).values(agentPointTransaction).returning();
+    return { ...createdTransaction, id: createdTransaction.id.toString() };
   }
 
   async updateAgentPointTransaction(id: string, updates: Partial<InsertAgentPointTransaction>): Promise<AgentPointTransaction | undefined> {
-    let agentPointTransaction = this.agentPointTransactions.get(id);
-    if (!agentPointTransaction) {
-      return undefined;
-    }
-    agentPointTransaction = { ...agentPointTransaction, ...updates, updated_at: new Date() };
-    this.agentPointTransactions = this.agentPointTransactions.set(id, agentPointTransaction);
-    return agentPointTransaction;
+    const [updatedTransaction] = await db.update(agentPointTransactions).set(updates).where(eq(agentPointTransactions.id, id)).returning();
+    return updatedTransaction ? { ...updatedTransaction, id: updatedTransaction.id.toString() } : undefined;
   }
 
   async deleteAgentPointTransaction(id: string): Promise<boolean> {
-    const initialSize = this.agentPointTransactions.size;
-    this.agentPointTransactions = this.agentPointTransactions.delete(id);
-    return this.agentPointTransactions.size < initialSize;
+    const result = await db.delete(agentPointTransactions).where(eq(agentPointTransactions.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 
   // Agent Reward Redemption operations
   async getAgentRewardRedemptions(): Promise<AgentRewardRedemption[]> {
-    return Array.from(this.agentRewardRedemptions.values());
+    const agentRewardRedemptions = await db.select().from(agentRewardRedemptions);
+    return agentRewardRedemptions.map((redemption) => ({ ...redemption, id: redemption.id.toString() }));
   }
 
   async getAgentRewardRedemption(id: string): Promise<AgentRewardRedemption | undefined> {
-    return this.agentRewardRedemptions.get(id);
+    const redemption = await db.select().from(agentRewardRedemptions).where(eq(agentRewardRedemptions.id, id)).limit(1);
+    return redemption.length > 0 ? { ...redemption[0], id: redemption[0].id.toString() } : undefined;
   }
 
   async createAgentRewardRedemption(agentRewardRedemption: InsertAgentRewardRedemption): Promise<AgentRewardRedemption> {
-    const newAgentRewardRedemption = { ...agentRewardRedemption, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
-    this.agentRewardRedemptions = this.agentRewardRedemptions.set(newAgentRewardRedemption.id, newAgentRewardRedemption);
-    return newAgentRewardRedemption;
+    const [createdRedemption] = await db.insert(agentRewardRedemptions).values(agentRewardRedemption).returning();
+    return { ...createdRedemption, id: createdRedemption.id.toString() };
   }
 
   async updateAgentRewardRedemption(id: string, updates: Partial<InsertAgentRewardRedemption>): Promise<AgentRewardRedemption | undefined> {
-    let agentRewardRedemption = this.agentRewardRedemptions.get(id);
-    if (!agentRewardRedemption) {
-      return undefined;
-    }
-    agentRewardRedemption = { ...agentRewardRedemption, ...updates, updated_at: new Date() };
-    this.agentRewardRedemptions = this.agentRewardRedemptions.set(id, agentRewardRedemption);
-    return agentRewardRedemption;
+    const [updatedRedemption] = await db.update(agentRewardRedemptions).set(updates).where(eq(agentRewardRedemptions.id, id)).returning();
+    return updatedRedemption ? { ...updatedRedemption, id: updatedRedemption.id.toString() } : undefined;
   }
 
   async deleteAgentRewardRedemption(id: string): Promise<boolean> {
-    const initialSize = this.agentRewardRedemptions.size;
-    this.agentRewardRedemptions = this.agentRewardRedemptions.delete(id);
-    return this.agentRewardRedemptions.size < initialSize;
+    const result = await db.delete(agentRewardRedemptions).where(eq(agentRewardRedemptions.id, id)).returning({ count: sql<number>`count(*)` });
+    return result[0].count > 0;
   }
 }
 
-export const storage = new MemStorage(); 
+export { DatabaseStorage };
+
+// Use DatabaseStorage for production database
+// Use in-memory storage for now while we troubleshoot database connection
+export const storage = new MemStorage();
