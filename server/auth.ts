@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { compare, hash } from "bcryptjs";
+import bcrypt from "bcrypt";
 import connectPg from "connect-pg-simple";
 import { pool } from "./supabase-db"; // Updated to use Supabase connection
 import { storage } from "./storage";
@@ -23,11 +23,11 @@ const PostgresSessionStore = connectPg(session);
 const SALT_ROUNDS = 10;
 
 export async function hashPassword(password: string): Promise<string> {
-  return await hash(password, SALT_ROUNDS);
+  return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
 export async function comparePasswords(password: string, hashedPassword: string): Promise<boolean> {
-  return await compare(password, hashedPassword);
+  return await bcrypt.compare(password, hashedPassword);
 }
 
 export function setupAuth(app: Express) {
