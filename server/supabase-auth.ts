@@ -106,32 +106,46 @@ export function setupSupabaseAuth(app: Express) {
     }
   });
 
-  // Login endpoint - signs in with Supabase auth
+  // Login endpoint - signs in with database user
   app.post("/api/login", async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { username, password } = req.body;
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      // Find user by username (support email as username too)
+      let user = await storage.getUserByUsername(username);
+      if (!user && username.includes('@')) {
+        user = await storage.getUserByEmail(username);
       }
+
+      if (!user) {
+        return res.status(400).json({ error: 'Invalid username or password' });
+      }
+
+      // Verify password
+      const bcrypt = require('bcryptjs');
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      
+      if (!isValidPassword) {
+        return res.status(400).json({ error: 'Invalid username or password' });
+      }
+
+      // Determine role based on roleId
+      const roleMap = { 1: 'admin', 2: 'hotel', 3: 'agent', 4: 'user' };
+      const userRole = roleMap[user.roleId as keyof typeof roleMap] || 'user';
 
       // Store session
       req.session.user = {
-        id: data.user.id,
-        email: data.user.email!,
-        role: data.user.user_metadata?.role || 'user'
+        id: user.id.toString(),
+        email: user.email,
+        role: userRole
       };
 
       res.status(200).json({
-        id: data.user.id,
-        email: data.user.email,
-        username: data.user.user_metadata?.username || data.user.email,
-        role: data.user.user_metadata?.role || 'user'
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        fullName: user.fullName,
+        role: userRole
       });
     } catch (error) {
       console.error('Login error:', error);
