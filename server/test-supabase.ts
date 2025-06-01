@@ -1,81 +1,89 @@
 import { insertData, fetchData, updateData, deleteData } from './supabase';
+import { db } from "./db";
+import { roles } from '../shared/schema';
+import bcrypt from 'bcrypt';
+import { eq } from 'drizzle-orm';
 
 async function testSupabase() {
   try {
-    console.log('Testing Supabase CRUD operations with provided schema...');
+    console.log('Testing Supabase CRUD operations with user schema...');
 
-    // Test inserting data
-    // Using column names from the provided schema image
+    // Fetch an existing role ID (e.g., 'customer' or 'admin')
+    const customerRole = await db.select().from(roles).where(db.eq(roles.name, 'customer'));
+    if (!customerRole || customerRole.length === 0) {
+      throw new Error("Customer role not found. Please ensure roles are seeded.");
+    }
+    const roleId = customerRole[0].id;
+
+    // Hash a password for the test user
+    const hashedPassword = await bcrypt.hash("testpassword", 10);
+
+    // Test inserting data into users table
     const testData = {
-      name: 'Test Destination',
-      country: 'Philippines',
-      description: 'A test destination',
-      image_url: 'https://example.com/image.jpg', // Corrected to image_url
-      rating: 4.5,
-      review_count: 0 // Corrected to review_count
+      username: 'testuser_crud',
+      password: hashedPassword,
+      email: 'test_crud@example.com',
+      full_name: 'Test User CRUD',
+      role_id: roleId,
+      is_active: true,
+      is_email_verified: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
-    console.log('\n1. Testing INSERT...');
-    // Explicitly type insertedData to resolve 'unknown' error
-    const insertedData: Array<{ id: string | number | undefined }> = await insertData('destinations', testData);
-    console.log('Inserted data:', insertedData);
+    console.log('\n1. Testing INSERT into users...');
+    const insertedData: Array<{ id: string | undefined }> = await insertData('users', testData);
+    console.log('Inserted user data:', insertedData);
 
-    // Get the ID of the inserted record
-    // Assuming 'id' is still the primary key column name
-    let insertedId = insertedData[0]?.id;
+    let insertedId: string | undefined = insertedData[0]?.id;
     if (!insertedId) {
-      // Attempt to fetch the inserted record to get its ID if insert didn't return it
-      console.log('Insert did not return ID, attempting to fetch by name...');
-      const fetchedByName = await fetchData<{ id: string | number }>( 'destinations', { column: 'name', value: 'Test Destination' });
+      console.log('Insert did not return ID, attempting to fetch by username...');
+      const fetchedByName = await fetchData<{ id: string }>( 'users', { column: 'username', value: 'testuser_crud' });
       if (fetchedByName && fetchedByName.length > 0) {
         insertedId = fetchedByName[0].id;
         console.log('Fetched ID:', insertedId);
       } else {
-         throw new Error('Failed to get inserted record ID after insertion and fetch');
+         throw new Error('Failed to get inserted user record ID after insertion and fetch');
       }
     }
      if (!insertedId) {
-        throw new Error('Inserted ID is undefined after all attempts');
+        throw new Error('Inserted user ID is undefined after all attempts');
     }
 
-    // Test fetching data
-    console.log('\n2. Testing SELECT...');
-    const allDestinations = await fetchData('destinations');
-    console.log('All destinations:', allDestinations);
+    // Test fetching all users
+    console.log('\n2. Testing SELECT all users...');
+    const allUsers = await fetchData('users');
+    console.log('All users:', allUsers);
 
-    // Test fetching with filter
-    console.log('\n3. Testing SELECT with filter...');
-    // Using column name from the provided schema image (assuming 'country')
-    const filteredDestinations = await fetchData('destinations', {
-      column: 'country',
-      value: 'Philippines'
+    // Test fetching user with filter
+    console.log('\n3. Testing SELECT user with filter (by email)...');
+    const filteredUsers = await fetchData('users', {
+      column: 'email',
+      value: 'test_crud@example.com'
     });
-    console.log('Filtered destinations:', filteredDestinations);
+    console.log('Filtered users:', filteredUsers);
 
-    // Test updating data
-    console.log('\n4. Testing UPDATE...');
-    // Using column names from the provided schema image
+    // Test updating user data
+    console.log('\n4. Testing UPDATE user...');
     const updatePayload = {
-      name: 'Updated Test Destination',
-      rating: 4.8
+      full_name: 'Updated Test User CRUD',
+      is_active: false
     };
-    // Assuming 'id' is the column used for updating by ID
-    const updatedData = await updateData('destinations', insertedId, updatePayload);
-    console.log('Updated data:', updatedData);
+    const updatedData = await updateData('users', insertedId as string, updatePayload);
+    console.log('Updated user data:', updatedData);
 
-    // Test deleting data
-    console.log('\n5. Testing DELETE...');
-    // Assuming 'id' is the column used for deleting by ID
-    const deleted = await deleteData('destinations', insertedId);
-    console.log('Delete successful:', deleted);
+    // Test deleting user data
+    console.log('\n5. Testing DELETE user...');
+    const deleted = await deleteData('users', insertedId as string);
+    console.log('User delete successful:', deleted);
 
     // Verify deletion
-    console.log('\n6. Verifying deletion...');
-    const remainingDestinations = await fetchData('destinations');
-    console.log('Remaining destinations:', remainingDestinations);
+    console.log('\n6. Verifying user deletion...');
+    const remainingUsers = await fetchData('users');
+    console.log('Remaining users:', remainingUsers);
 
   } catch (error) {
-    console.error('Error in test:', error);
+    console.error('Error in user test:', error);
   }
 }
 

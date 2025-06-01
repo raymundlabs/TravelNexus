@@ -1,651 +1,257 @@
-import { 
-  users, type User, type InsertUser,
-  destinations, type Destination, type InsertDestination,
-  hotels, type Hotel, type InsertHotel,
-  tours, type Tour, type InsertTour,
-  packages, type Package, type InsertPackage,
-  specialOffers, type SpecialOffer, type InsertSpecialOffer,
-  testimonials, type Testimonial, type InsertTestimonial,
-  bookings, type Booking, type InsertBooking
-} from "@shared/schema";
-import { db } from "./db";
-import { eq, like, and, or } from "drizzle-orm";
-import { pool } from "./db";
-import session from "express-session";
-import connectPg from "connect-pg-simple";
-import createMemoryStore from "memorystore";
+import { InsertAgentProfile, InsertPackage, InsertDestination, InsertSpecialOffer, InsertTestimonial, InsertHotel, InsertTour, InsertRole, AgentProfile, Package, Destination, SpecialOffer, Testimonial, Hotel, Tour, Role, InsertComment, Comment, InsertReply, Reply, InsertBooking, Booking, InsertPayment, Payment, InsertHotelOwnerProfile, HotelOwnerProfile, InsertHotelOwnership, HotelOwnership, InsertAgentRewardPoint, AgentRewardPoint, InsertAgentPointTransaction, AgentPointTransaction, InsertAgentRewardRedemption, AgentRewardRedemption } from "@shared/schema";
+import { v4 as uuidv4 } from 'uuid';
 
-const PostgresSessionStore = connectPg(session);
-const MemoryStore = createMemoryStore(session);
+// Helper to generate UUIDs
+function generateUuid(): string {
+  return uuidv4();
+}
 
-export interface IStorage {
-  // User operations
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+export interface Storage {
+  // User operations (now primarily handled by Supabase Auth)
+  // getUser(id: string): Promise<User | undefined>; // Supabase Auth handles this
+  // createUser(user: InsertUser): Promise<User>; // Supabase Auth handles this
+  // getUserByUsername(username: string): Promise<User | undefined>; // Supabase Auth handles this with email
+  // getUserByEmail(email: string): Promise<User | undefined>; // Supabase Auth handles this
+  // updateUser(id: string, updates: Partial<InsertUser>): Promise<User | undefined>; // Supabase Auth handles this
+  // deleteUser(id: string): Promise<boolean>; // Supabase Auth handles this
 
-  // Destination operations
-  getDestinations(): Promise<Destination[]>;
-  getDestination(id: number): Promise<Destination | undefined>;
-  getFeaturedDestinations(limit: number): Promise<Destination[]>;
-  searchDestinations(query: string): Promise<Destination[]>;
+  // Role operations
+  getRoles(): Promise<Role[]>;
+  getRole(id: string): Promise<Role | undefined>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(id: string, updates: Partial<InsertRole>): Promise<Role | undefined>;
+  deleteRole(id: string): Promise<boolean>;
 
-  // Hotel operations
-  getHotels(): Promise<Hotel[]>;
-  getHotel(id: number): Promise<Hotel | undefined>;
-  getHotelsByDestination(destinationId: number): Promise<Hotel[]>;
-  getFeaturedHotels(limit: number): Promise<Hotel[]>;
-  searchHotels(query: string): Promise<Hotel[]>;
-
-  // Tour operations
-  getTours(): Promise<Tour[]>;
-  getTour(id: number): Promise<Tour | undefined>;
-  getToursByDestination(destinationId: number): Promise<Tour[]>;
-  getFeaturedTours(limit: number): Promise<Tour[]>;
-  searchTours(query: string): Promise<Tour[]>;
+  // Agent Profile operations
+  getAgentProfiles(): Promise<AgentProfile[]>;
+  getAgentProfile(id: string): Promise<AgentProfile | undefined>;
+  createAgentProfile(agentProfile: InsertAgentProfile): Promise<AgentProfile>;
+  updateAgentProfile(id: string, updates: Partial<InsertAgentProfile>): Promise<AgentProfile | undefined>;
+  deleteAgentProfile(id: string): Promise<boolean>;
 
   // Package operations
   getPackages(): Promise<Package[]>;
-  getPackage(id: number): Promise<Package | undefined>;
-  getPackagesByDestination(destinationId: number): Promise<Package[]>;
-  getFeaturedPackages(limit: number): Promise<Package[]>;
-  searchPackages(query: string): Promise<Package[]>;
-  createPackage(packageData: InsertPackage): Promise<Package>;
-  updatePackage(id: number, packageData: InsertPackage): Promise<Package | undefined>;
-  deletePackage(id: number): Promise<boolean>;
-
-  // Special offers operations
-  getSpecialOffers(limit: number): Promise<SpecialOffer[]>;
-
-  // Testimonial operations
-  getTestimonials(limit: number): Promise<Testimonial[]>;
-
-  // Booking operations
-  createBooking(booking: InsertBooking): Promise<Booking>;
-  getUserBookings(userId: number): Promise<Booking[]>;
-  updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
-  
-  // Session store for authentication
-  sessionStore: session.Store;
-}
-
-export class DatabaseStorage implements IStorage {
-  // Session store for authentication
-  sessionStore: session.Store;
-  
-  constructor() {
-    this.sessionStore = new PostgresSessionStore({
-      pool,
-      createTableIfMissing: true
-    });
-  }
-
-  // User operations
-  async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
-  }
-
-  async createUser(user: InsertUser): Promise<User> {
-    const [createdUser] = await db.insert(users).values(user).returning();
-    return createdUser;
-  }
+  getPackage(id: string): Promise<Package | undefined>;
+  createPackage(pack: InsertPackage): Promise<Package>;
+  updatePackage(id: string, updates: Partial<InsertPackage>): Promise<Package | undefined>;
+  deletePackage(id: string): Promise<boolean>;
 
   // Destination operations
-  async getDestinations(): Promise<Destination[]> {
-    return db.select().from(destinations);
-  }
+  getDestinations(): Promise<Destination[]>;
+  getDestination(id: string): Promise<Destination | undefined>;
+  createDestination(destination: InsertDestination): Promise<Destination>;
+  updateDestination(id: string, updates: Partial<InsertDestination>): Promise<Destination | undefined>;
+  deleteDestination(id: string): Promise<boolean>;
 
-  async getDestination(id: number): Promise<Destination | undefined> {
-    const [destination] = await db.select().from(destinations).where(eq(destinations.id, id));
-    return destination;
-  }
-
-  async getFeaturedDestinations(limit: number): Promise<Destination[]> {
-    return db.select().from(destinations).limit(limit);
-  }
-
-  async searchDestinations(query: string): Promise<Destination[]> {
-    return db.select().from(destinations).where(
-      or(
-        like(destinations.name, `%${query}%`),
-        like(destinations.country, `%${query}%`)
-      )
-    );
-  }
-
-  // Hotel operations
-  async getHotels(): Promise<Hotel[]> {
-    return db.select().from(hotels);
-  }
-
-  async getHotel(id: number): Promise<Hotel | undefined> {
-    const [hotel] = await db.select().from(hotels).where(eq(hotels.id, id));
-    return hotel;
-  }
-
-  async getHotelsByDestination(destinationId: number): Promise<Hotel[]> {
-    return db.select().from(hotels).where(eq(hotels.destinationId, destinationId));
-  }
-
-  async getFeaturedHotels(limit: number): Promise<Hotel[]> {
-    return db.select().from(hotels).where(eq(hotels.featured, true)).limit(limit);
-  }
-
-  async searchHotels(query: string): Promise<Hotel[]> {
-    return db.select().from(hotels).where(
-      or(
-        like(hotels.name, `%${query}%`),
-        like(hotels.description, `%${query}%`)
-      )
-    );
-  }
-
-  // Tour operations
-  async getTours(): Promise<Tour[]> {
-    return db.select().from(tours);
-  }
-
-  async getTour(id: number): Promise<Tour | undefined> {
-    const [tour] = await db.select().from(tours).where(eq(tours.id, id));
-    return tour;
-  }
-
-  async getToursByDestination(destinationId: number): Promise<Tour[]> {
-    return db.select().from(tours).where(eq(tours.destinationId, destinationId));
-  }
-
-  async getFeaturedTours(limit: number): Promise<Tour[]> {
-    return db.select().from(tours).where(eq(tours.featured, true)).limit(limit);
-  }
-
-  async searchTours(query: string): Promise<Tour[]> {
-    return db.select().from(tours).where(
-      or(
-        like(tours.name, `%${query}%`),
-        like(tours.description, `%${query}%`)
-      )
-    );
-  }
-
-  // Package operations
-  async getPackages(): Promise<Package[]> {
-    return db.select().from(packages);
-  }
-
-  async getPackage(id: number): Promise<Package | undefined> {
-    const [pkg] = await db.select().from(packages).where(eq(packages.id, id));
-    return pkg;
-  }
-
-  async getPackagesByDestination(destinationId: number): Promise<Package[]> {
-    return db.select().from(packages).where(eq(packages.destinationId, destinationId));
-  }
-
-  async getFeaturedPackages(limit: number): Promise<Package[]> {
-    return db.select().from(packages).where(eq(packages.featured, true)).limit(limit);
-  }
-
-  async searchPackages(query: string): Promise<Package[]> {
-    return db.select().from(packages).where(
-      or(
-        like(packages.name, `%${query}%`),
-        like(packages.description, `%${query}%`)
-      )
-    );
-  }
-
-  // Special offers operations
-  async getSpecialOffers(limit: number): Promise<SpecialOffer[]> {
-    return db.select().from(specialOffers).limit(limit);
-  }
+  // Special Offer operations
+  getSpecialOffers(): Promise<SpecialOffer[]>;
+  getSpecialOffer(id: string): Promise<SpecialOffer | undefined>;
+  createSpecialOffer(specialOffer: InsertSpecialOffer): Promise<SpecialOffer>;
+  updateSpecialOffer(id: string, updates: Partial<InsertSpecialOffer>): Promise<SpecialOffer | undefined>;
+  deleteSpecialOffer(id: string): Promise<boolean>;
 
   // Testimonial operations
-  async getTestimonials(limit: number): Promise<Testimonial[]> {
-    return db.select().from(testimonials).limit(limit);
-  }
+  getTestimonials(): Promise<Testimonial[]>;
+  getTestimonial(id: string): Promise<Testimonial | undefined>;
+  createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
+  updateTestimonial(id: string, updates: Partial<InsertTestimonial>): Promise<Testimonial | undefined>;
+  deleteTestimonial(id: string): Promise<boolean>;
+
+  // Hotel operations
+  getHotels(): Promise<Hotel[]>;
+  getHotel(id: string): Promise<Hotel | undefined>;
+  createHotel(hotel: InsertHotel): Promise<Hotel>;
+  updateHotel(id: string, updates: Partial<InsertHotel>): Promise<Hotel | undefined>;
+  deleteHotel(id: string): Promise<boolean>;
+
+  // Tour operations
+  getTours(): Promise<Tour[]>;
+  getTour(id: string): Promise<Tour | undefined>;
+  createTour(tour: InsertTour): Promise<Tour>;
+  updateTour(id: string, updates: Partial<InsertTour>): Promise<Tour | undefined>;
+  deleteTour(id: string): Promise<boolean>;
+
+  // Comment operations
+  getComments(): Promise<Comment[]>;
+  getComment(id: string): Promise<Comment | undefined>;
+  createComment(comment: InsertComment): Promise<Comment>;
+  updateComment(id: string, updates: Partial<InsertComment>): Promise<Comment | undefined>;
+  deleteComment(id: string): Promise<boolean>;
+
+  // Reply operations
+  getReplies(): Promise<Reply[]>;
+  getReply(id: string): Promise<Reply | undefined>;
+  createReply(reply: InsertReply): Promise<Reply>;
+  updateReply(id: string, updates: Partial<InsertReply>): Promise<Reply | undefined>;
+  deleteReply(id: string): Promise<boolean>;
 
   // Booking operations
-  async createBooking(booking: InsertBooking): Promise<Booking> {
-    const [createdBooking] = await db.insert(bookings).values(booking).returning();
-    return createdBooking;
-  }
+  getBookings(): Promise<Booking[]>;
+  getBooking(id: string): Promise<Booking | undefined>;
+  createBooking(booking: InsertBooking): Promise<Booking>;
+  updateBooking(id: string, updates: Partial<InsertBooking>): Promise<Booking | undefined>;
+  deleteBooking(id: string): Promise<boolean>;
 
-  async getUserBookings(userId: number): Promise<Booking[]> {
-    return db.select().from(bookings).where(eq(bookings.userId, userId));
-  }
+  // Payment operations
+  getPayments(): Promise<Payment[]>;
+  getPayment(id: string): Promise<Payment | undefined>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePayment(id: string, updates: Partial<InsertPayment>): Promise<Payment | undefined>;
+  deletePayment(id: string): Promise<boolean>;
 
-  async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
-    const [updatedBooking] = await db
-      .update(bookings)
-      .set({ status })
-      .where(eq(bookings.id, id))
-      .returning();
-    return updatedBooking;
-  }
+  // Hotel Owner Profile operations
+  getHotelOwnerProfiles(): Promise<HotelOwnerProfile[]>;
+  getHotelOwnerProfile(id: string): Promise<HotelOwnerProfile | undefined>;
+  createHotelOwnerProfile(hotelOwnerProfile: InsertHotelOwnerProfile): Promise<HotelOwnerProfile>;
+  updateHotelOwnerProfile(id: string, updates: Partial<InsertHotelOwnerProfile>): Promise<HotelOwnerProfile | undefined>;
+  deleteHotelOwnerProfile(id: string): Promise<boolean>;
 
-  // Package operations
-  async createPackage(packageData: InsertPackage): Promise<Package> {
-    const [createdPackage] = await db.insert(packages).values(packageData).returning();
-    return createdPackage;
-  }
+  // Hotel Ownership operations
+  getHotelOwnerships(): Promise<HotelOwnership[]>;
+  getHotelOwnership(id: string): Promise<HotelOwnership | undefined>;
+  createHotelOwnership(hotelOwnership: InsertHotelOwnership): Promise<HotelOwnership>;
+  updateHotelOwnership(id: string, updates: Partial<InsertHotelOwnership>): Promise<HotelOwnership | undefined>;
+  deleteHotelOwnership(id: string): Promise<boolean>;
 
-  async updatePackage(id: number, packageData: InsertPackage): Promise<Package | undefined> {
-    const [updatedPackage] = await db
-      .update(packages)
-      .set(packageData)
-      .where(eq(packages.id, id))
-      .returning();
-    return updatedPackage;
-  }
+  // Agent Reward Point operations
+  getAgentRewardPoints(): Promise<AgentRewardPoint[]>;
+  getAgentRewardPoint(id: string): Promise<AgentRewardPoint | undefined>;
+  createAgentRewardPoint(agentRewardPoint: InsertAgentRewardPoint): Promise<AgentRewardPoint>;
+  updateAgentRewardPoint(id: string, updates: Partial<InsertAgentRewardPoint>): Promise<AgentRewardPoint | undefined>;
+  deleteAgentRewardPoint(id: string): Promise<boolean>;
 
-  async deletePackage(id: number): Promise<boolean> {
-    const [deletedPackage] = await db
-      .delete(packages)
-      .where(eq(packages.id, id))
-      .returning();
-    return !!deletedPackage;
-  }
+  // Agent Point Transaction operations
+  getAgentPointTransactions(): Promise<AgentPointTransaction[]>;
+  getAgentPointTransaction(id: string): Promise<AgentPointTransaction | undefined>;
+  createAgentPointTransaction(agentPointTransaction: InsertAgentPointTransaction): Promise<AgentPointTransaction>;
+  updateAgentPointTransaction(id: string, updates: Partial<InsertAgentPointTransaction>): Promise<AgentPointTransaction | undefined>;
+  deleteAgentPointTransaction(id: string): Promise<boolean>;
+
+  // Agent Reward Redemption operations
+  getAgentRewardRedemptions(): Promise<AgentRewardRedemption[]>;
+  getAgentRewardRedemption(id: string): Promise<AgentRewardRedemption | undefined>;
+  createAgentRewardRedemption(agentRewardRedemption: InsertAgentRewardRedemption): Promise<AgentRewardRedemption>;
+  updateAgentRewardRedemption(id: string, updates: Partial<InsertAgentRewardRedemption>): Promise<AgentRewardRedemption | undefined>;
+  deleteAgentRewardRedemption(id: string): Promise<boolean>;
 }
 
-// For development, use in-memory storage
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private destinations: Map<number, Destination>;
-  private hotels: Map<number, Hotel>;
-  private tours: Map<number, Tour>;
-  private packages: Map<number, Package>;
-  private specialOffers: Map<number, SpecialOffer>;
-  private testimonials: Map<number, Testimonial>;
-  private bookings: Map<number, Booking>;
-  
-  // Session store for authentication
-  sessionStore: session.Store;
-  
-  private currentUserId = 1;
-  private currentDestinationId = 1;
-  private currentHotelId = 1;
-  private currentTourId = 1;
-  private currentPackageId = 1;
-  private currentSpecialOfferId = 1;
-  private currentTestimonialId = 1;
-  private currentBookingId = 1;
+export class MemStorage implements Storage {
+  private roles: Map<string, Role>;
+  private agentProfiles: Map<string, AgentProfile>;
+  private packages: Map<string, Package>;
+  private destinations: Map<string, Destination>;
+  private specialOffers: Map<string, SpecialOffer>;
+  private testimonials: Map<string, Testimonial>;
+  private hotels: Map<string, Hotel>;
+  private tours: Map<string, Tour>;
+  private comments: Map<string, Comment>;
+  private replies: Map<string, Reply>;
+  private bookings: Map<string, Booking>;
+  private payments: Map<string, Payment>;
+  private hotelOwnerProfiles: Map<string, HotelOwnerProfile>;
+  private hotelOwnership: Map<string, HotelOwnership>;
+  private agentRewardPoints: Map<string, AgentRewardPoint>;
+  private agentPointTransactions: Map<string, AgentPointTransaction>;
+  private agentRewardRedemptions: Map<string, AgentRewardRedemption>;
 
   constructor() {
-    this.users = new Map();
-    this.destinations = new Map();
-    this.hotels = new Map();
-    this.tours = new Map();
+    this.roles = new Map();
+    this.agentProfiles = new Map();
     this.packages = new Map();
+    this.destinations = new Map();
     this.specialOffers = new Map();
     this.testimonials = new Map();
+    this.hotels = new Map();
+    this.tours = new Map();
+    this.comments = new Map();
+    this.replies = new Map();
     this.bookings = new Map();
-    
-    // Create an in-memory session store
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    });
-    
-    // Add sample data
-    this.initializeSampleData();
+    this.payments = new Map();
+    this.hotelOwnerProfiles = new Map();
+    this.hotelOwnership = new Map();
+    this.agentRewardPoints = new Map();
+    this.agentPointTransactions = new Map();
+    this.agentRewardRedemptions = new Map();
   }
 
-  private initializeSampleData() {
-    // Add sample destinations
-    const sampleDestinations: Omit<Destination, 'id'>[] = [
-      {
-        name: 'Bali',
-        country: 'Indonesia',
-        description: 'Tropical paradise with beautiful beaches and rich culture',
-        imageUrl: 'https://images.unsplash.com/photo-1530841377377-3ff06c0ca713',
-        rating: 4.8,
-        reviewCount: 2456
-      },
-      {
-        name: 'Santorini',
-        country: 'Greece',
-        description: 'Stunning island with white buildings and blue domes',
-        imageUrl: 'https://images.unsplash.com/photo-1523531294919-4bcd7c65e216',
-        rating: 4.9,
-        reviewCount: 3210
-      },
-      {
-        name: 'Kyoto',
-        country: 'Japan',
-        description: 'Ancient city with beautiful temples and traditional gardens',
-        imageUrl: 'https://images.unsplash.com/photo-1543249037-d517e66dab50',
-        rating: 4.7,
-        reviewCount: 1876
-      }
-    ];
-
-    sampleDestinations.forEach(dest => {
-      const id = this.currentDestinationId++;
-      this.destinations.set(id, { ...dest, id });
-    });
-
-    // Add sample hotels
-    const sampleHotels: Omit<Hotel, 'id'>[] = [
-      {
-        name: 'The Grand Riviera',
-        destinationId: 1,
-        description: 'Luxury hotel with stunning ocean views',
-        address: '123 Beach Road, Monaco',
-        price: 420,
-        imageUrl: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa',
-        rating: 5.0,
-        reviewCount: 523,
-        amenities: ['Pool', 'Spa', 'WiFi', 'Restaurant'],
-        featured: true
-      },
-      {
-        name: 'Tropical Paradise Resort',
-        destinationId: 1,
-        description: 'Beautiful resort surrounded by tropical gardens',
-        address: 'Paradise Beach, Maldives',
-        price: 380,
-        imageUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4',
-        rating: 4.5,
-        reviewCount: 412,
-        amenities: ['Pool', 'Private Beach', 'WiFi', 'Bar'],
-        featured: true
-      },
-      {
-        name: 'Mountain View Lodge',
-        destinationId: 3,
-        description: 'Cozy lodge with breathtaking mountain views',
-        address: 'Alpine Road, Swiss Alps',
-        price: 290,
-        imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
-        rating: 4.0,
-        reviewCount: 287,
-        amenities: ['Fireplace', 'Sauna', 'Restaurant'],
-        featured: true
-      },
-      {
-        name: 'Urban Boutique Hotel',
-        destinationId: 2,
-        description: 'Stylish hotel in the heart of the city',
-        address: '42 Central Park, New York',
-        price: 350,
-        imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945',
-        rating: 4.0,
-        reviewCount: 345,
-        amenities: ['WiFi', 'Gym', 'Restaurant', 'Bar'],
-        featured: true
-      }
-    ];
-
-    sampleHotels.forEach(hotel => {
-      const id = this.currentHotelId++;
-      this.hotels.set(id, { ...hotel, id });
-    });
-
-    // Add sample tours
-    const sampleTours: Omit<Tour, 'id'>[] = [
-      {
-        name: 'Ancient Temples Guided Tour',
-        destinationId: 3,
-        description: 'Explore the ancient temples with an expert archaeologist guide. Includes transportation and lunch.',
-        duration: '8 hours',
-        price: 89,
-        imageUrl: 'https://images.unsplash.com/photo-1549221987-25a490f65d34',
-        rating: 4.5,
-        reviewCount: 124,
-        inclusions: ['Expert Guide', 'Transportation', 'Lunch', 'Entrance Fees'],
-        groupSize: 'Small group',
-        featured: true
-      },
-      {
-        name: 'Sunset Sailing Adventure',
-        destinationId: 1,
-        description: 'Enjoy a beautiful sunset aboard a luxury catamaran with drinks, snacks, and swimming stops.',
-        duration: '3 hours',
-        price: 65,
-        imageUrl: 'https://images.unsplash.com/photo-1605908584126-8a581aed37b3',
-        rating: 5.0,
-        reviewCount: 98,
-        inclusions: ['Drinks', 'Snacks', 'Swimming', 'Professional Crew'],
-        groupSize: 'Small group',
-        featured: true
-      },
-      {
-        name: 'Culinary Walking Tour',
-        destinationId: 2,
-        description: 'Sample local delicacies at hidden gems with a professional food guide. Includes all tastings.',
-        duration: '4 hours',
-        price: 75,
-        imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7',
-        rating: 4.0,
-        reviewCount: 56,
-        inclusions: ['Professional Guide', 'Food Tastings', 'Beverage Tastings'],
-        groupSize: 'Small group',
-        featured: true
-      }
-    ];
-
-    sampleTours.forEach(tour => {
-      const id = this.currentTourId++;
-      this.tours.set(id, { ...tour, id });
-    });
-
-    // Add sample packages
-    const samplePackages: Omit<Package, 'id'>[] = [
-      {
-        name: 'Tropical Paradise Escape',
-        description: '7 days of tropical bliss with beachfront accommodation, island hopping tours, sunset cruise, and all meals included.',
-        destinationId: 1,
-        duration: '7 days',
-        price: 2499,
-        discountedPrice: 1999,
-        imageUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4',
-        rating: 4.5,
-        reviewCount: 234,
-        highlights: ['5-star Resort', 'All-inclusive', '3 Tours'],
-        inclusions: ['Accommodation', 'All Meals', 'Tours', 'Airport Transfers'],
-        isBestseller: true,
-        discountPercentage: 20,
-        featured: true
-      },
-      {
-        name: 'European City Explorer',
-        description: '10-day journey through 3 iconic European cities with boutique hotels, guided tours, and train transportation between destinations.',
-        destinationId: 2,
-        duration: '10 days',
-        price: 3299,
-        discountedPrice: 2969,
-        imageUrl: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b',
-        rating: 4.0,
-        reviewCount: 187,
-        highlights: ['Boutique Hotels', 'Guided Tours', 'Rail Passes'],
-        inclusions: ['Accommodation', 'Breakfast', 'Tours', 'Train Tickets'],
-        isBestseller: false,
-        discountPercentage: 10,
-        featured: true
-      }
-    ];
-
-    samplePackages.forEach(pkg => {
-      const id = this.currentPackageId++;
-      this.packages.set(id, { ...pkg, id });
-    });
-
-    // Add sample special offers
-    const sampleSpecialOffers: Omit<SpecialOffer, 'id'>[] = [
-      {
-        title: '5-Night Luxury Beachfront Resort',
-        description: 'Enjoy a luxurious stay at our exclusive beachfront property with complimentary breakfast and spa access.',
-        imageUrl: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461',
-        originalPrice: 1200,
-        discountedPrice: 960,
-        discountPercentage: 20,
-        badge: '20% OFF',
-        priceUnit: 'person'
-      },
-      {
-        title: 'Urban Explorer City Break Package',
-        description: '3-day city exploration with guided tours, luxury accommodations, and exclusive restaurant reservations.',
-        imageUrl: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9',
-        originalPrice: 850,
-        discountedPrice: 680,
-        discountPercentage: 20,
-        badge: 'HOT DEAL',
-        priceUnit: 'person'
-      },
-      {
-        title: 'All-Inclusive Safari Adventure',
-        description: '7-day safari experience with expert guides, luxury tented camps, and all meals and activities included.',
-        imageUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5',
-        originalPrice: 3200,
-        discountedPrice: 2720,
-        discountPercentage: 15,
-        badge: '15% OFF',
-        priceUnit: 'person'
-      }
-    ];
-
-    sampleSpecialOffers.forEach(offer => {
-      const id = this.currentSpecialOfferId++;
-      this.specialOffers.set(id, { ...offer, id });
-    });
-
-    // Add sample testimonials
-    const sampleTestimonials: Omit<Testimonial, 'id'>[] = [
-      {
-        content: "The Bali package was absolutely amazing! Everything was well-organized, from the airport pickup to the tours. The hotel was beautiful and the staff was incredibly friendly. Would book again in a heartbeat!",
-        authorName: "Sarah J.",
-        authorImage: "https://randomuser.me/api/portraits/women/34.jpg",
-        rating: 5,
-        productName: "Bali Luxury Retreat"
-      },
-      {
-        content: "Our European tour exceeded all expectations. The boutique hotels were charming and perfectly located. The guided tours gave us insights we would have never discovered on our own. Wanderlust made our dream trip a reality!",
-        authorName: "David & Maria L.",
-        authorImage: "https://randomuser.me/api/portraits/men/46.jpg",
-        rating: 5,
-        productName: "European Adventure Package"
-      },
-      {
-        content: "The Wanderlust team went above and beyond when our flight was delayed. They rearranged our entire itinerary seamlessly. The culinary tour in Thailand was the highlight - authentic and delicious experiences I'll never forget!",
-        authorName: "Michelle T.",
-        authorImage: "https://randomuser.me/api/portraits/women/62.jpg",
-        rating: 4.5,
-        productName: "Thailand Food & Culture Tour"
-      }
-    ];
-
-    sampleTestimonials.forEach(testimonial => {
-      const id = this.currentTestimonialId++;
-      this.testimonials.set(id, { ...testimonial, id });
-    });
+  // User operations are now handled by Supabase Auth, so we don't need a `getUser` method here.
+  async getUser(id: string): Promise<any> {
+    // This method is primarily for compatibility if other parts of the code expect a Storage.getUser
+    // However, for Supabase Auth, you'd typically get the user via supabase.auth.getUser() on the server.
+    console.warn("MemStorage.getUser is deprecated. Use supabase.auth.getUser() instead.");
+    return undefined; // Or throw an error if you want to enforce direct Supabase Auth usage
   }
 
-  // User operations
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+  async getUserByUsername(username: string): Promise<any> {
+    console.warn("MemStorage.getUserByUsername is deprecated. Use supabase.auth.getUser() with email instead.");
+    return undefined;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.username === username);
+  async createUser(user: any): Promise<any> {
+    console.warn("MemStorage.createUser is deprecated. Use supabase.auth.signUp() instead.");
+    return undefined;
   }
 
-  async createUser(user: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const createdUser: User = { 
-      ...user, 
-      id, 
-      fullName: user.fullName ?? null,
-      createdAt: new Date(),
-      phone: null,
-      roleId: user.roleId ?? 1, // Default to regular user if not specified
-      isActive: true,
-      isEmailVerified: false,
-      isPhoneVerified: false,
-      lastLogin: null,
-      resetToken: null,
-      resetTokenExpiry: null,
-      verificationToken: null,
-      profileImage: null
-    };
-    this.users.set(id, createdUser);
-    return createdUser;
+  // Role operations
+  async getRoles(): Promise<Role[]> {
+    return Array.from(this.roles.values());
   }
 
-  // Destination operations
-  async getDestinations(): Promise<Destination[]> {
-    return Array.from(this.destinations.values());
+  async getRole(id: string): Promise<Role | undefined> {
+    return this.roles.get(id);
   }
 
-  async getDestination(id: number): Promise<Destination | undefined> {
-    return this.destinations.get(id);
+  async createRole(role: InsertRole): Promise<Role> {
+    const newRole = { ...role, id: generateUuid() };
+    this.roles = this.roles.set(newRole.id, newRole);
+    return newRole;
   }
 
-  async getFeaturedDestinations(limit: number): Promise<Destination[]> {
-    return Array.from(this.destinations.values()).slice(0, limit);
+  async updateRole(id: string, updates: Partial<InsertRole>): Promise<Role | undefined> {
+    let role = this.roles.get(id);
+    if (!role) {
+      return undefined;
+    }
+    role = { ...role, ...updates };
+    this.roles = this.roles.set(id, role);
+    return role;
   }
 
-  async searchDestinations(query: string): Promise<Destination[]> {
-    const lowercaseQuery = query.toLowerCase();
-    return Array.from(this.destinations.values()).filter(
-      dest => dest.name.toLowerCase().includes(lowercaseQuery) || dest.country.toLowerCase().includes(lowercaseQuery)
-    );
+  async deleteRole(id: string): Promise<boolean> {
+    const initialSize = this.roles.size;
+    this.roles = this.roles.delete(id);
+    return this.roles.size < initialSize;
   }
 
-  // Hotel operations
-  async getHotels(): Promise<Hotel[]> {
-    return Array.from(this.hotels.values());
+  // Agent Profile operations
+  async getAgentProfiles(): Promise<AgentProfile[]> {
+    return Array.from(this.agentProfiles.values());
   }
 
-  async getHotel(id: number): Promise<Hotel | undefined> {
-    return this.hotels.get(id);
+  async getAgentProfile(id: string): Promise<AgentProfile | undefined> {
+    return this.agentProfiles.get(id);
   }
 
-  async getHotelsByDestination(destinationId: number): Promise<Hotel[]> {
-    return Array.from(this.hotels.values()).filter(hotel => hotel.destinationId === destinationId);
+  async createAgentProfile(agentProfile: InsertAgentProfile): Promise<AgentProfile> {
+    const newAgentProfile = { ...agentProfile, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.agentProfiles = this.agentProfiles.set(newAgentProfile.id, newAgentProfile);
+    return newAgentProfile;
   }
 
-  async getFeaturedHotels(limit: number): Promise<Hotel[]> {
-    return Array.from(this.hotels.values())
-      .filter(hotel => hotel.featured)
-      .slice(0, limit);
+  async updateAgentProfile(id: string, updates: Partial<InsertAgentProfile>): Promise<AgentProfile | undefined> {
+    let agentProfile = this.agentProfiles.get(id);
+    if (!agentProfile) {
+      return undefined;
+    }
+    agentProfile = { ...agentProfile, ...updates, updated_at: new Date() };
+    this.agentProfiles = this.agentProfiles.set(id, agentProfile);
+    return agentProfile;
   }
 
-  async searchHotels(query: string): Promise<Hotel[]> {
-    const lowercaseQuery = query.toLowerCase();
-    return Array.from(this.hotels.values()).filter(
-      hotel => hotel.name.toLowerCase().includes(lowercaseQuery) || hotel.description.toLowerCase().includes(lowercaseQuery)
-    );
-  }
-
-  // Tour operations
-  async getTours(): Promise<Tour[]> {
-    return Array.from(this.tours.values());
-  }
-
-  async getTour(id: number): Promise<Tour | undefined> {
-    return this.tours.get(id);
-  }
-
-  async getToursByDestination(destinationId: number): Promise<Tour[]> {
-    return Array.from(this.tours.values()).filter(tour => tour.destinationId === destinationId);
-  }
-
-  async getFeaturedTours(limit: number): Promise<Tour[]> {
-    return Array.from(this.tours.values())
-      .filter(tour => tour.featured)
-      .slice(0, limit);
-  }
-
-  async searchTours(query: string): Promise<Tour[]> {
-    const lowercaseQuery = query.toLowerCase();
-    return Array.from(this.tours.values()).filter(
-      tour => tour.name.toLowerCase().includes(lowercaseQuery) || tour.description.toLowerCase().includes(lowercaseQuery)
-    );
+  async deleteAgentProfile(id: string): Promise<boolean> {
+    const initialSize = this.agentProfiles.size;
+    this.agentProfiles = this.agentProfiles.delete(id);
+    return this.agentProfiles.size < initialSize;
   }
 
   // Package operations
@@ -653,65 +259,465 @@ export class MemStorage implements IStorage {
     return Array.from(this.packages.values());
   }
 
-  async getPackage(id: number): Promise<Package | undefined> {
+  async getPackage(id: string): Promise<Package | undefined> {
     return this.packages.get(id);
   }
 
-  async getPackagesByDestination(destinationId: number): Promise<Package[]> {
-    return Array.from(this.packages.values()).filter(pkg => pkg.destinationId === destinationId);
+  async createPackage(pack: InsertPackage): Promise<Package> {
+    const newPackage: Package = { ...pack, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.packages = this.packages.set(newPackage.id, newPackage);
+    return newPackage;
   }
 
-  async getFeaturedPackages(limit: number): Promise<Package[]> {
-    return Array.from(this.packages.values())
-      .filter(pkg => pkg.featured)
-      .slice(0, limit);
+  async updatePackage(id: string, updates: Partial<InsertPackage>): Promise<Package | undefined> {
+    let pack = this.packages.get(id);
+    if (!pack) {
+      return undefined;
+    }
+    pack = { ...pack, ...updates, updated_at: new Date() };
+    this.packages = this.packages.set(id, pack);
+    return pack;
   }
 
-  async searchPackages(query: string): Promise<Package[]> {
-    const lowercaseQuery = query.toLowerCase();
-    return Array.from(this.packages.values()).filter(
-      pkg => pkg.name.toLowerCase().includes(lowercaseQuery) || pkg.description.toLowerCase().includes(lowercaseQuery)
-    );
+  async deletePackage(id: string): Promise<boolean> {
+    const initialSize = this.packages.size;
+    this.packages = this.packages.delete(id);
+    return this.packages.size < initialSize;
   }
 
-  // Special offers operations
-  async getSpecialOffers(limit: number): Promise<SpecialOffer[]> {
-    return Array.from(this.specialOffers.values()).slice(0, limit);
+  // Destination operations
+  async getDestinations(): Promise<Destination[]> {
+    return Array.from(this.destinations.values());
+  }
+
+  async getDestination(id: string): Promise<Destination | undefined> {
+    return this.destinations.get(id);
+  }
+
+  async createDestination(destination: InsertDestination): Promise<Destination> {
+    const newDestination: Destination = { ...destination, id: generateUuid(), created_at: new Date(), updated_at: new Date(), featured: destination.featured || false };
+    this.destinations = this.destinations.set(newDestination.id, newDestination);
+    return newDestination;
+  }
+
+  async updateDestination(id: string, updates: Partial<InsertDestination>): Promise<Destination | undefined> {
+    let destination = this.destinations.get(id);
+    if (!destination) {
+      return undefined;
+    }
+    destination = { ...destination, ...updates, updated_at: new Date() };
+    this.destinations = this.destinations.set(id, destination);
+    return destination;
+  }
+
+  async deleteDestination(id: string): Promise<boolean> {
+    const initialSize = this.destinations.size;
+    this.destinations = this.destinations.delete(id);
+    return this.destinations.size < initialSize;
+  }
+
+  // Special Offer operations
+  async getSpecialOffers(): Promise<SpecialOffer[]> {
+    return Array.from(this.specialOffers.values());
+  }
+
+  async getSpecialOffer(id: string): Promise<SpecialOffer | undefined> {
+    return this.specialOffers.get(id);
+  }
+
+  async createSpecialOffer(specialOffer: InsertSpecialOffer): Promise<SpecialOffer> {
+    const newSpecialOffer = { ...specialOffer, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.specialOffers = this.specialOffers.set(newSpecialOffer.id, newSpecialOffer);
+    return newSpecialOffer;
+  }
+
+  async updateSpecialOffer(id: string, updates: Partial<InsertSpecialOffer>): Promise<SpecialOffer | undefined> {
+    let specialOffer = this.specialOffers.get(id);
+    if (!specialOffer) {
+      return undefined;
+    }
+    specialOffer = { ...specialOffer, ...updates, updated_at: new Date() };
+    this.specialOffers = this.specialOffers.set(id, specialOffer);
+    return specialOffer;
+  }
+
+  async deleteSpecialOffer(id: string): Promise<boolean> {
+    const initialSize = this.specialOffers.size;
+    this.specialOffers = this.specialOffers.delete(id);
+    return this.specialOffers.size < initialSize;
   }
 
   // Testimonial operations
-  async getTestimonials(limit: number): Promise<Testimonial[]> {
-    return Array.from(this.testimonials.values()).slice(0, limit);
+  async getTestimonials(): Promise<Testimonial[]> {
+    return Array.from(this.testimonials.values());
+  }
+
+  async getTestimonial(id: string): Promise<Testimonial | undefined> {
+    return this.testimonials.get(id);
+  }
+
+  async createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial> {
+    const newTestimonial = { ...testimonial, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.testimonials = this.testimonials.set(newTestimonial.id, newTestimonial);
+    return newTestimonial;
+  }
+
+  async updateTestimonial(id: string, updates: Partial<InsertTestimonial>): Promise<Testimonial | undefined> {
+    let testimonial = this.testimonials.get(id);
+    if (!testimonial) {
+      return undefined;
+    }
+    testimonial = { ...testimonial, ...updates, updated_at: new Date() };
+    this.testimonials = this.testimonials.set(id, testimonial);
+    return testimonial;
+  }
+
+  async deleteTestimonial(id: string): Promise<boolean> {
+    const initialSize = this.testimonials.size;
+    this.testimonials = this.testimonials.delete(id);
+    return this.testimonials.size < initialSize;
+  }
+
+  // Hotel operations
+  async getHotels(): Promise<Hotel[]> {
+    return Array.from(this.hotels.values());
+  }
+
+  async getHotel(id: string): Promise<Hotel | undefined> {
+    return this.hotels.get(id);
+  }
+
+  async createHotel(hotel: InsertHotel): Promise<Hotel> {
+    const newHotel: Hotel = { ...hotel, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.hotels = this.hotels.set(newHotel.id, newHotel);
+    return newHotel;
+  }
+
+  async updateHotel(id: string, updates: Partial<InsertHotel>): Promise<Hotel | undefined> {
+    let hotel = this.hotels.get(id);
+    if (!hotel) {
+      return undefined;
+    }
+    hotel = { ...hotel, ...updates, updated_at: new Date() };
+    this.hotels = this.hotels.set(id, hotel);
+    return hotel;
+  }
+
+  async deleteHotel(id: string): Promise<boolean> {
+    const initialSize = this.hotels.size;
+    this.hotels = this.hotels.delete(id);
+    return this.hotels.size < initialSize;
+  }
+
+  // Tour operations
+  async getTours(): Promise<Tour[]> {
+    return Array.from(this.tours.values());
+  }
+
+  async getTour(id: string): Promise<Tour | undefined> {
+    return this.tours.get(id);
+  }
+
+  async createTour(tour: InsertTour): Promise<Tour> {
+    const newTour: Tour = { ...tour, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.tours = this.tours.set(newTour.id, newTour);
+    return newTour;
+  }
+
+  async updateTour(id: string, updates: Partial<InsertTour>): Promise<Tour | undefined> {
+    let tour = this.tours.get(id);
+    if (!tour) {
+      return undefined;
+    }
+    tour = { ...tour, ...updates, updated_at: new Date() };
+    this.tours = this.tours.set(id, tour);
+    return tour;
+  }
+
+  async deleteTour(id: string): Promise<boolean> {
+    const initialSize = this.tours.size;
+    this.tours = this.tours.delete(id);
+    return this.tours.size < initialSize;
+  }
+
+  // Comment operations
+  async getComments(): Promise<Comment[]> {
+    return Array.from(this.comments.values());
+  }
+
+  async getComment(id: string): Promise<Comment | undefined> {
+    return this.comments.get(id);
+  }
+
+  async createComment(comment: InsertComment): Promise<Comment> {
+    const newComment = { ...comment, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.comments = this.comments.set(newComment.id, newComment);
+    return newComment;
+  }
+
+  async updateComment(id: string, updates: Partial<InsertComment>): Promise<Comment | undefined> {
+    let comment = this.comments.get(id);
+    if (!comment) {
+      return undefined;
+    }
+    comment = { ...comment, ...updates, updated_at: new Date() };
+    this.comments = this.comments.set(id, comment);
+    return comment;
+  }
+
+  async deleteComment(id: string): Promise<boolean> {
+    const initialSize = this.comments.size;
+    this.comments = this.comments.delete(id);
+    return this.comments.size < initialSize;
+  }
+
+  // Reply operations
+  async getReplies(): Promise<Reply[]> {
+    return Array.from(this.replies.values());
+  }
+
+  async getReply(id: string): Promise<Reply | undefined> {
+    return this.replies.get(id);
+  }
+
+  async createReply(reply: InsertReply): Promise<Reply> {
+    const newReply = { ...reply, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.replies = this.replies.set(newReply.id, newReply);
+    return newReply;
+  }
+
+  async updateReply(id: string, updates: Partial<InsertReply>): Promise<Reply | undefined> {
+    let reply = this.replies.get(id);
+    if (!reply) {
+      return undefined;
+    }
+    reply = { ...reply, ...updates, updated_at: new Date() };
+    this.replies = this.replies.set(id, reply);
+    return reply;
+  }
+
+  async deleteReply(id: string): Promise<boolean> {
+    const initialSize = this.replies.size;
+    this.replies = this.replies.delete(id);
+    return this.replies.size < initialSize;
   }
 
   // Booking operations
+  async getBookings(): Promise<Booking[]> {
+    return Array.from(this.bookings.values());
+  }
+
+  async getBooking(id: string): Promise<Booking | undefined> {
+    return this.bookings.get(id);
+  }
+
   async createBooking(booking: InsertBooking): Promise<Booking> {
-    const id = this.currentBookingId++;
-    const createdBooking: Booking = { 
-      ...booking, 
-      id, 
-      status: booking.status ?? null,
-      guests: booking.guests ?? 1,
-      createdAt: new Date() 
-    };
-    this.bookings.set(id, createdBooking);
-    return createdBooking;
+    const newBooking = { ...booking, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.bookings = this.bookings.set(newBooking.id, newBooking);
+    return newBooking;
   }
 
-  async getUserBookings(userId: number): Promise<Booking[]> {
-    return Array.from(this.bookings.values()).filter(booking => booking.userId === userId);
+  async updateBooking(id: string, updates: Partial<InsertBooking>): Promise<Booking | undefined> {
+    let booking = this.bookings.get(id);
+    if (!booking) {
+      return undefined;
+    }
+    booking = { ...booking, ...updates, updated_at: new Date() };
+    this.bookings = this.bookings.set(id, booking);
+    return booking;
   }
 
-  async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
-    const booking = this.bookings.get(id);
-    if (!booking) return undefined;
-    
-    const updatedBooking = { ...booking, status };
-    this.bookings.set(id, updatedBooking);
-    return updatedBooking;
+  async deleteBooking(id: string): Promise<boolean> {
+    const initialSize = this.bookings.size;
+    this.bookings = this.bookings.delete(id);
+    return this.bookings.size < initialSize;
+  }
+
+  // Payment operations
+  async getPayments(): Promise<Payment[]> {
+    return Array.from(this.payments.values());
+  }
+
+  async getPayment(id: string): Promise<Payment | undefined> {
+    return this.payments.get(id);
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const newPayment = { ...payment, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.payments = this.payments.set(newPayment.id, newPayment);
+    return newPayment;
+  }
+
+  async updatePayment(id: string, updates: Partial<InsertPayment>): Promise<Payment | undefined> {
+    let payment = this.payments.get(id);
+    if (!payment) {
+      return undefined;
+    }
+    payment = { ...payment, ...updates, updated_at: new Date() };
+    this.payments = this.payments.set(id, payment);
+    return payment;
+  }
+
+  async deletePayment(id: string): Promise<boolean> {
+    const initialSize = this.payments.size;
+    this.payments = this.payments.delete(id);
+    return this.payments.size < initialSize;
+  }
+
+  // Hotel Owner Profile operations
+  async getHotelOwnerProfiles(): Promise<HotelOwnerProfile[]> {
+    return Array.from(this.hotelOwnerProfiles.values());
+  }
+
+  async getHotelOwnerProfile(id: string): Promise<HotelOwnerProfile | undefined> {
+    return this.hotelOwnerProfiles.get(id);
+  }
+
+  async createHotelOwnerProfile(hotelOwnerProfile: InsertHotelOwnerProfile): Promise<HotelOwnerProfile> {
+    const newHotelOwnerProfile = { ...hotelOwnerProfile, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.hotelOwnerProfiles = this.hotelOwnerProfiles.set(newHotelOwnerProfile.id, newHotelOwnerProfile);
+    return newHotelOwnerProfile;
+  }
+
+  async updateHotelOwnerProfile(id: string, updates: Partial<InsertHotelOwnerProfile>): Promise<HotelOwnerProfile | undefined> {
+    let hotelOwnerProfile = this.hotelOwnerProfiles.get(id);
+    if (!hotelOwnerProfile) {
+      return undefined;
+    }
+    hotelOwnerProfile = { ...hotelOwnerProfile, ...updates, updated_at: new Date() };
+    this.hotelOwnerProfiles = this.hotelOwnerProfiles.set(id, hotelOwnerProfile);
+    return hotelOwnerProfile;
+  }
+
+  async deleteHotelOwnerProfile(id: string): Promise<boolean> {
+    const initialSize = this.hotelOwnerProfiles.size;
+    this.hotelOwnerProfiles = this.hotelOwnerProfiles.delete(id);
+    return this.hotelOwnerProfiles.size < initialSize;
+  }
+
+  // Hotel Ownership operations
+  async getHotelOwnerships(): Promise<HotelOwnership[]> {
+    return Array.from(this.hotelOwnership.values());
+  }
+
+  async getHotelOwnership(id: string): Promise<HotelOwnership | undefined> {
+    return this.hotelOwnership.get(id);
+  }
+
+  async createHotelOwnership(hotelOwnership: InsertHotelOwnership): Promise<HotelOwnership> {
+    const newHotelOwnership = { ...hotelOwnership, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.hotelOwnership = this.hotelOwnership.set(newHotelOwnership.id, newHotelOwnership);
+    return newHotelOwnership;
+  }
+
+  async updateHotelOwnership(id: string, updates: Partial<InsertHotelOwnership>): Promise<HotelOwnership | undefined> {
+    let hotelOwnership = this.hotelOwnership.get(id);
+    if (!hotelOwnership) {
+      return undefined;
+    }
+    hotelOwnership = { ...hotelOwnership, ...updates, updated_at: new Date() };
+    this.hotelOwnership = this.hotelOwnership.set(id, hotelOwnership);
+    return hotelOwnership;
+  }
+
+  async deleteHotelOwnership(id: string): Promise<boolean> {
+    const initialSize = this.hotelOwnership.size;
+    this.hotelOwnership = this.hotelOwnership.delete(id);
+    return this.hotelOwnership.size < initialSize;
+  }
+
+  // Agent Reward Point operations
+  async getAgentRewardPoints(): Promise<AgentRewardPoint[]> {
+    return Array.from(this.agentRewardPoints.values());
+  }
+
+  async getAgentRewardPoint(id: string): Promise<AgentRewardPoint | undefined> {
+    return this.agentRewardPoints.get(id);
+  }
+
+  async createAgentRewardPoint(agentRewardPoint: InsertAgentRewardPoint): Promise<AgentRewardPoint> {
+    const newAgentRewardPoint = { ...agentRewardPoint, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.agentRewardPoints = this.agentRewardPoints.set(newAgentRewardPoint.id, newAgentRewardPoint);
+    return newAgentRewardPoint;
+  }
+
+  async updateAgentRewardPoint(id: string, updates: Partial<InsertAgentRewardPoint>): Promise<AgentRewardPoint | undefined> {
+    let agentRewardPoint = this.agentRewardPoints.get(id);
+    if (!agentRewardPoint) {
+      return undefined;
+    }
+    agentRewardPoint = { ...agentRewardPoint, ...updates, updated_at: new Date() };
+    this.agentRewardPoints = this.agentRewardPoints.set(id, agentRewardPoint);
+    return agentRewardPoint;
+  }
+
+  async deleteAgentRewardPoint(id: string): Promise<boolean> {
+    const initialSize = this.agentRewardPoints.size;
+    this.agentRewardPoints = this.agentRewardPoints.delete(id);
+    return this.agentRewardPoints.size < initialSize;
+  }
+
+  // Agent Point Transaction operations
+  async getAgentPointTransactions(): Promise<AgentPointTransaction[]> {
+    return Array.from(this.agentPointTransactions.values());
+  }
+
+  async getAgentPointTransaction(id: string): Promise<AgentPointTransaction | undefined> {
+    return this.agentPointTransactions.get(id);
+  }
+
+  async createAgentPointTransaction(agentPointTransaction: InsertAgentPointTransaction): Promise<AgentPointTransaction> {
+    const newAgentPointTransaction = { ...agentPointTransaction, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.agentPointTransactions = this.agentPointTransactions.set(newAgentPointTransaction.id, newAgentPointTransaction);
+    return newAgentPointTransaction;
+  }
+
+  async updateAgentPointTransaction(id: string, updates: Partial<InsertAgentPointTransaction>): Promise<AgentPointTransaction | undefined> {
+    let agentPointTransaction = this.agentPointTransactions.get(id);
+    if (!agentPointTransaction) {
+      return undefined;
+    }
+    agentPointTransaction = { ...agentPointTransaction, ...updates, updated_at: new Date() };
+    this.agentPointTransactions = this.agentPointTransactions.set(id, agentPointTransaction);
+    return agentPointTransaction;
+  }
+
+  async deleteAgentPointTransaction(id: string): Promise<boolean> {
+    const initialSize = this.agentPointTransactions.size;
+    this.agentPointTransactions = this.agentPointTransactions.delete(id);
+    return this.agentPointTransactions.size < initialSize;
+  }
+
+  // Agent Reward Redemption operations
+  async getAgentRewardRedemptions(): Promise<AgentRewardRedemption[]> {
+    return Array.from(this.agentRewardRedemptions.values());
+  }
+
+  async getAgentRewardRedemption(id: string): Promise<AgentRewardRedemption | undefined> {
+    return this.agentRewardRedemptions.get(id);
+  }
+
+  async createAgentRewardRedemption(agentRewardRedemption: InsertAgentRewardRedemption): Promise<AgentRewardRedemption> {
+    const newAgentRewardRedemption = { ...agentRewardRedemption, id: generateUuid(), created_at: new Date(), updated_at: new Date() };
+    this.agentRewardRedemptions = this.agentRewardRedemptions.set(newAgentRewardRedemption.id, newAgentRewardRedemption);
+    return newAgentRewardRedemption;
+  }
+
+  async updateAgentRewardRedemption(id: string, updates: Partial<InsertAgentRewardRedemption>): Promise<AgentRewardRedemption | undefined> {
+    let agentRewardRedemption = this.agentRewardRedemptions.get(id);
+    if (!agentRewardRedemption) {
+      return undefined;
+    }
+    agentRewardRedemption = { ...agentRewardRedemption, ...updates, updated_at: new Date() };
+    this.agentRewardRedemptions = this.agentRewardRedemptions.set(id, agentRewardRedemption);
+    return agentRewardRedemption;
+  }
+
+  async deleteAgentRewardRedemption(id: string): Promise<boolean> {
+    const initialSize = this.agentRewardRedemptions.size;
+    this.agentRewardRedemptions = this.agentRewardRedemptions.delete(id);
+    return this.agentRewardRedemptions.size < initialSize;
   }
 }
 
-// Use the appropriate storage based on the environment
-// export const storage = new MemStorage(); // Use for in-memory development
-export const storage = new DatabaseStorage(); // Use for database interaction
+export const storage = new MemStorage(); 

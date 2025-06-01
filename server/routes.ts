@@ -21,7 +21,7 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
 
 // Admin role middleware
 const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.isAuthenticated() || req.user.roleId !== 1) { // Assuming roleId 1 is admin
+  if (!req.isAuthenticated() || req.user.roleId !== 4) { // Assuming roleId 4 is admin based on seed.ts
     return res.status(403).json({ error: "Admin access required" });
   }
   next();
@@ -384,6 +384,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(204).send();
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
+  // Define Zod schema for updating package price
+  const UpdatePackagePriceSchema = z.object({
+    price: z.number().positive("Price must be a positive number"),
+  });
+
+  // Route to update package price (Admin only)
+  app.put("/api/packages/:id/price", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { price } = UpdatePackagePriceSchema.parse(req.body);
+
+      const updatedPackage = await storage.updatePackage(id, { price });
+
+      if (!updatedPackage) {
+        return res.status(404).json({ error: "Package not found" });
+      }
+
+      res.json(updatedPackage);
     } catch (err) {
       handleError(err, res);
     }

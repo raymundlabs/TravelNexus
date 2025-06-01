@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client with environment variables, preferring the service role key for backend operations
 const supabaseUrl = process.env.SUPABASE_URL || "https://mjrasxyesgodetsthwqo.supabase.co";
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qcmFzeHllc2dvZGV0c3Rod3FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMDY1NTUsImV4cCI6MjA2MDg4MjU1NX0.xsrnVchHualZ85sAIkhEinyVOUyIy2wf3r_JAJz_11A";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qcmFzeHllc2dvZGV0c3Rod3FvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTMwNjU1NSwiZXhwIjoyMDYwODgyNTU1fQ.pW-b4rnszqtadFxbjvb-nc5lPddEltfD6zRcGRiyaxI" || process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qcmFzeHllc2dvZGV0c3Rod3FvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzMDY1NTUsImV4cCI6MjA2MDg4MjU1NX0.xsrnVchHualZ85sAIkhEinyVOUyIy2wf3r_JAJz_11A";
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 

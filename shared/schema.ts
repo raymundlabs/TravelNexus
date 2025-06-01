@@ -12,7 +12,8 @@ import {
   foreignKey,
   date,
   varchar,
-  doublePrecision
+  doublePrecision,
+  uuid
 } from "drizzle-orm/pg-core";
 
 import { InferSelectModel, InferInsertModel } from "drizzle-orm"; // Import type inference utilities
@@ -21,7 +22,7 @@ import { createInsertSchema } from 'drizzle-zod'; // Import createInsertSchema
 
 // Roles
 export const roles = pgTable("roles", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull().unique(),
   description: text("description"),
 });
@@ -31,23 +32,16 @@ export type InsertRole = InferInsertModel<typeof roles>; // Export inferred inse
 
 // Users
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: varchar("username", { length: 255 }).notNull().unique(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  username: varchar("username", { length: 50 }).notNull().unique(),
   password: text("password").notNull(),
-  email: varchar("email", { length: 255 }).unique(),
-  fullName: varchar("full_name", { length: 255 }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  phone: text("phone"),
-  roleId: integer("role_id").references(() => roles.id).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  fullName: varchar("full_name", { length: 100 }).notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  roleId: uuid("role_id").references(() => roles.id),
   isActive: boolean("is_active").default(true),
   isEmailVerified: boolean("is_email_verified").default(false),
-  isPhoneVerified: boolean("is_phone_verified").default(false),
-  lastLogin: timestamp("last_login"),
-  resetToken: text("reset_token"),
-  resetTokenExpiry: timestamp("reset_token_expiry"),
-  verificationToken: text("verification_token"),
-  profileImage: text("profile_image"),
 });
 
 export type User = InferSelectModel<typeof users>; // Export inferred type
@@ -70,15 +64,13 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 
 // Destinations
 export const destinations = pgTable("destinations", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull().unique(),
   country: varchar("country", { length: 255 }),
   description: text("description"),
   imageUrl: text("image_url"),
   rating: doublePrecision("rating"),
   reviewCount: integer("review_count").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export type Destination = InferSelectModel<typeof destinations>; // Export inferred type
@@ -93,9 +85,9 @@ export const destinationsRelations = relations(destinations, ({ many }) => ({
 
 // Hotels
 export const hotels = pgTable("hotels", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
-  destinationId: integer("destination_id")
+  destinationId: uuid("destination_id")
     .notNull()
     .references(() => destinations.id, { onDelete: "cascade" }),
   description: text("description"),
@@ -106,8 +98,6 @@ export const hotels = pgTable("hotels", {
   reviewCount: integer("review_count").default(0),
   amenities: text("amenities").array(),
   featured: boolean("featured").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export type Hotel = InferSelectModel<typeof hotels>; // Export inferred type
@@ -124,9 +114,9 @@ export const hotelsRelations = relations(hotels, ({ one, many }) => ({
 
 // Tours
 export const tours = pgTable("tours", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
-  destinationId: integer("destination_id")
+  destinationId: uuid("destination_id")
     .notNull()
     .references(() => destinations.id, { onDelete: "cascade" }),
   description: text("description"),
@@ -136,8 +126,6 @@ export const tours = pgTable("tours", {
   rating: doublePrecision("rating"),
   reviewCount: integer("review_count").default(0),
   featured: boolean("featured").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export type Tour = InferSelectModel<typeof tours>; // Export inferred type
@@ -153,10 +141,10 @@ export const toursRelations = relations(tours, ({ one }) => ({
 
 // Packages
 export const packages = pgTable("packages", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  destinationId: integer("destination_id").references(() => destinations.id).notNull(),
+  destinationId: uuid("destination_id").references(() => destinations.id).notNull(),
   duration: integer("duration"),
   price: doublePrecision("price"),
   discountedPrice: doublePrecision("discounted_price"),
@@ -167,8 +155,6 @@ export const packages = pgTable("packages", {
   featured: boolean("featured").default(false),
   isBestseller: boolean("is_bestseller").default(false),
   highlights: text("highlights").array(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export type Package = InferSelectModel<typeof packages>; // Export inferred type
@@ -185,7 +171,7 @@ export const packagesRelations = relations(packages, ({ one, many }) => ({
 
 // Special Offers
 export const specialOffers = pgTable("special_offers", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   imageUrl: text("image_url"),
@@ -193,8 +179,6 @@ export const specialOffers = pgTable("special_offers", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export type SpecialOffer = InferSelectModel<typeof specialOffers>; // Export inferred type
@@ -202,14 +186,12 @@ export type InsertSpecialOffer = InferInsertModel<typeof specialOffers>; // Expo
 
 // Testimonials
 export const testimonials = pgTable("testimonials", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   rating: doublePrecision("rating"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   videoUrl: text("video_url"),
 });
 
@@ -226,21 +208,19 @@ export const testimonialsRelations = relations(testimonials, ({ one }) => ({
 
 // Bookings
 export const bookings = pgTable("bookings", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  packageId: integer("package_id").references(() => packages.id, { onDelete: "set null" }),
-  tourId: integer("tour_id").references(() => tours.id, { onDelete: "set null" }),
-  hotelId: integer("hotel_id").references(() => hotels.id, { onDelete: "set null" }),
+  packageId: uuid("package_id").references(() => packages.id, { onDelete: "set null" }),
+  tourId: uuid("tour_id").references(() => tours.id, { onDelete: "set null" }),
+  hotelId: uuid("hotel_id").references(() => hotels.id, { onDelete: "set null" }),
   bookingDate: timestamp("booking_date").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   status: varchar("status", { length: 50 }).default("pending").notNull(),
   totalAmount: real("total_amount").notNull(),
   paymentStatus: text("payment_status").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export type Booking = InferSelectModel<typeof bookings>; // Export inferred type
@@ -261,8 +241,8 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
 
 // Payments
 export const payments = pgTable("payments", {
-  id: serial("id").primaryKey(),
-  bookingId: integer("booking_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  bookingId: uuid("booking_id")
     .notNull()
     .references(() => bookings.id, { onDelete: "cascade" }),
   amount: real("amount").notNull(),
@@ -270,8 +250,6 @@ export const payments = pgTable("payments", {
   paymentMethod: text("payment_method").notNull(),
   transactionId: text("transaction_id"),
   status: text("status").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export type Payment = InferSelectModel<typeof payments>; // Export inferred type
@@ -279,17 +257,15 @@ export type InsertPayment = InferInsertModel<typeof payments>; // Export inferre
 
 // Agent Profiles
 export const agentProfiles = pgTable("agent_profiles", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   companyName: text("company_name"),
   businessAddress: text("business_address"),
-  phone: text("phone"),
-  website: text("website"),
   commissionRate: real("commission_rate").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export type AgentProfile = InferSelectModel<typeof agentProfiles>; // Export inferred type
@@ -305,16 +281,14 @@ export const agentProfilesRelations = relations(agentProfiles, ({ one }) => ({
 
 // Hotel Owner Profiles
 export const hotelOwnerProfiles = pgTable("hotel_owner_profiles", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   companyName: text("company_name"),
   businessAddress: text("business_address"),
-  phone: text("phone"),
-  website: text("website"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export type HotelOwnerProfile = InferSelectModel<typeof hotelOwnerProfiles>; // Export inferred type
@@ -330,17 +304,17 @@ export const hotelOwnerProfilesRelations = relations(hotelOwnerProfiles, ({ one 
 
 // Hotel Ownership
 export const hotelOwnership = pgTable("hotel_ownership", {
-  id: serial("id").primaryKey(),
-  hotelId: integer("hotel_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  hotelId: uuid("hotel_id")
     .notNull()
     .references(() => hotels.id, { onDelete: "cascade" }),
-  ownerId: integer("owner_id")
+  ownerId: uuid("owner_id")
     .notNull()
     .references(() => hotelOwnerProfiles.id, { onDelete: "cascade" }),
   ownershipPercentage: real("ownership_percentage").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date"),
-  assignedDate: timestamp("assigned_date").defaultNow().notNull(),
+  assigned_date: timestamp("assigned_date", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type HotelOwnership = InferSelectModel<typeof hotelOwnership>; // Export inferred type
@@ -348,12 +322,12 @@ export type InsertHotelOwnership = InferInsertModel<typeof hotelOwnership>; // E
 
 // Agent Reward Points
 export const agentRewardPoints = pgTable("agent_reward_points", {
-  id: serial("id").primaryKey(),
-  agentId: integer("agent_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  agentId: uuid("agent_id")
     .notNull()
     .references(() => agentProfiles.id, { onDelete: "cascade" }),
   totalPoints: integer("total_points").default(0).notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
 export type AgentRewardPoint = InferSelectModel<typeof agentRewardPoints>; // Export inferred type
@@ -361,15 +335,15 @@ export type InsertAgentRewardPoint = InferInsertModel<typeof agentRewardPoints>;
 
 // Agent Point Transactions
 export const agentPointTransactions = pgTable("agent_point_transactions", {
-  id: serial("id").primaryKey(),
-  agentId: integer("agent_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  agentId: uuid("agent_id")
     .notNull()
     .references(() => agentProfiles.id, { onDelete: "cascade" }),
   pointsEarned: integer("points_earned").default(0),
   pointsSpent: integer("points_spent").default(0),
   transactionType: text("transaction_type").notNull(),
   description: text("description"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export type AgentPointTransaction = InferSelectModel<typeof agentPointTransactions>; // Export inferred type
@@ -377,15 +351,15 @@ export type InsertAgentPointTransaction = InferInsertModel<typeof agentPointTran
 
 // Agent Reward Redemptions
 export const agentRewardRedemptions = pgTable("agent_reward_redemptions", {
-  id: serial("id").primaryKey(),
-  agentId: integer("agent_id")
+  id: uuid("id").primaryKey().defaultRandom(),
+  agentId: uuid("agent_id")
     .notNull()
     .references(() => agentProfiles.id, { onDelete: "cascade" }),
   reward: text("reward").notNull(),
   pointsRedeemed: integer("points_redeemed").notNull(),
-  redemptionDate: timestamp("redemption_date").defaultNow().notNull(),
+  redemption_date: timestamp("redemption_date", { withTimezone: true }).defaultNow().notNull(),
   status: text("status").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
 export type AgentRewardRedemption = InferSelectModel<typeof agentRewardRedemptions>; // Export inferred type
