@@ -1,4 +1,4 @@
-import { 
+import {
   users, type User, type InsertUser,
   destinations, type Destination, type InsertDestination,
   hotels, type Hotel, type InsertHotel,
@@ -8,7 +8,7 @@ import {
   testimonials, type Testimonial, type InsertTestimonial,
   bookings, type Booking, type InsertBooking
 } from "@shared/schema";
-import { db, pool } from "./supabase-db";
+import { db, pool } from "./supabase-db"; // Assuming db is Drizzle instance, pool is pg.Pool
 import { eq, like, and, or } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -19,9 +19,10 @@ const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
   // User operations
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: number): Promise<User | undefined>; // Corrected: Takes number
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByAuthId(authUserId: string): Promise<User | undefined>; // Added: For lookup by Supabase Auth ID
   createUser(user: InsertUser): Promise<User>;
 
   // Destination operations
@@ -61,7 +62,7 @@ export interface IStorage {
   createBooking(booking: InsertBooking): Promise<Booking>;
   getUserBookings(userId: number): Promise<Booking[]>;
   updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
-  
+
   // Session store for authentication
   sessionStore: session.Store;
 }
@@ -69,7 +70,7 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // Session store for authentication
   sessionStore: session.Store;
-  
+
   constructor() {
     this.sessionStore = new PostgresSessionStore({
       pool,
@@ -79,40 +80,62 @@ export class DatabaseStorage implements IStorage {
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    // Fetch user by primary key (numeric ID)
+    console.log(`[DatabaseStorage] Fetching user by ID: ${id}`);
+    const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
     return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    console.log(`[DatabaseStorage] Fetching user by username: ${username}`);
+    const [user] = await db.select().from(users).where(eq(users.username, username)).limit(1);
     return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    console.log(`[DatabaseStorage] Fetching user by email: ${email}`);
+    const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return user;
+  }
+
+  async getUserByAuthId(authUserId: string): Promise<User | undefined> {
+    // Added: Fetch user by Supabase Auth UUID
+    console.log(`[DatabaseStorage] Fetching user by Auth ID: ${authUserId}`);
+    const [user] = await db.select().from(users).where(eq(users.authUserId, authUserId)).limit(1);
     return user;
   }
 
   async createUser(user: InsertUser): Promise<User> {
+    console.log(`[DatabaseStorage] Creating user: ${user.email} (${user.username})`);
+    // Ensure returning() gets the created user object including the generated ID
     const [createdUser] = await db.insert(users).values(user).returning();
+     if (!createdUser) {
+        throw new Error("Failed to retrieve created user after insertion");
+     }
     return createdUser;
   }
 
   // Destination operations
   async getDestinations(): Promise<Destination[]> {
+     console.log('[DatabaseStorage] Fetching all destinations');
     return db.select().from(destinations);
   }
 
   async getDestination(id: number): Promise<Destination | undefined> {
-    const [destination] = await db.select().from(destinations).where(eq(destinations.id, id));
+    console.log(`[DatabaseStorage] Fetching destination by ID: ${id}`);
+    const [destination] = await db.select().from(destinations).where(eq(destinations.id, id)).limit(1);
     return destination;
   }
 
   async getFeaturedDestinations(limit: number): Promise<Destination[]> {
+    console.log(`[DatabaseStorage] Fetching ${limit} featured destinations`);
+     // Note: Your schema doesn't show a 'featured' column for destinations.
+     // This implementation just limits results. Adjust if you have a 'featured' flag.
     return db.select().from(destinations).limit(limit);
   }
 
   async searchDestinations(query: string): Promise<Destination[]> {
+    console.log(`[DatabaseStorage] Searching destinations: "${query}"`);
     return db.select().from(destinations).where(
       or(
         like(destinations.name, `%${query}%`),
@@ -123,23 +146,28 @@ export class DatabaseStorage implements IStorage {
 
   // Hotel operations
   async getHotels(): Promise<Hotel[]> {
+    console.log('[DatabaseStorage] Fetching all hotels');
     return db.select().from(hotels);
   }
 
   async getHotel(id: number): Promise<Hotel | undefined> {
-    const [hotel] = await db.select().from(hotels).where(eq(hotels.id, id));
+    console.log(`[DatabaseStorage] Fetching hotel by ID: ${id}`);
+    const [hotel] = await db.select().from(hotels).where(eq(hotels.id, id)).limit(1);
     return hotel;
   }
 
   async getHotelsByDestination(destinationId: number): Promise<Hotel[]> {
+    console.log(`[DatabaseStorage] Fetching hotels for destination ID: ${destinationId}`);
     return db.select().from(hotels).where(eq(hotels.destinationId, destinationId));
   }
 
   async getFeaturedHotels(limit: number): Promise<Hotel[]> {
+    console.log(`[DatabaseStorage] Fetching ${limit} featured hotels`);
     return db.select().from(hotels).where(eq(hotels.featured, true)).limit(limit);
   }
 
   async searchHotels(query: string): Promise<Hotel[]> {
+     console.log(`[DatabaseStorage] Searching hotels: "${query}"`);
     return db.select().from(hotels).where(
       or(
         like(hotels.name, `%${query}%`),
@@ -150,23 +178,28 @@ export class DatabaseStorage implements IStorage {
 
   // Tour operations
   async getTours(): Promise<Tour[]> {
+     console.log('[DatabaseStorage] Fetching all tours');
     return db.select().from(tours);
   }
 
   async getTour(id: number): Promise<Tour | undefined> {
-    const [tour] = await db.select().from(tours).where(eq(tours.id, id));
+    console.log(`[DatabaseStorage] Fetching tour by ID: ${id}`);
+    const [tour] = await db.select().from(tours).where(eq(tours.id, id)).limit(1);
     return tour;
   }
 
   async getToursByDestination(destinationId: number): Promise<Tour[]> {
+    console.log(`[DatabaseStorage] Fetching tours for destination ID: ${destinationId}`);
     return db.select().from(tours).where(eq(tours.destinationId, destinationId));
   }
 
   async getFeaturedTours(limit: number): Promise<Tour[]> {
+     console.log(`[DatabaseStorage] Fetching ${limit} featured tours`);
     return db.select().from(tours).where(eq(tours.featured, true)).limit(limit);
   }
 
   async searchTours(query: string): Promise<Tour[]> {
+     console.log(`[DatabaseStorage] Searching tours: "${query}"`);
     return db.select().from(tours).where(
       or(
         like(tours.name, `%${query}%`),
@@ -177,23 +210,28 @@ export class DatabaseStorage implements IStorage {
 
   // Package operations
   async getPackages(): Promise<Package[]> {
+    console.log('[DatabaseStorage] Fetching all packages');
     return db.select().from(packages);
   }
 
   async getPackage(id: number): Promise<Package | undefined> {
-    const [pkg] = await db.select().from(packages).where(eq(packages.id, id));
+    console.log(`[DatabaseStorage] Fetching package by ID: ${id}`);
+    const [pkg] = await db.select().from(packages).where(eq(packages.id, id)).limit(1);
     return pkg;
   }
 
   async getPackagesByDestination(destinationId: number): Promise<Package[]> {
+    console.log(`[DatabaseStorage] Fetching packages for destination ID: ${destinationId}`);
     return db.select().from(packages).where(eq(packages.destinationId, destinationId));
   }
 
   async getFeaturedPackages(limit: number): Promise<Package[]> {
+     console.log(`[DatabaseStorage] Fetching ${limit} featured packages`);
     return db.select().from(packages).where(eq(packages.featured, true)).limit(limit);
   }
 
   async searchPackages(query: string): Promise<Package[]> {
+     console.log(`[DatabaseStorage] Searching packages: "${query}"`);
     return db.select().from(packages).where(
       or(
         like(packages.name, `%${query}%`),
@@ -204,25 +242,33 @@ export class DatabaseStorage implements IStorage {
 
   // Special offers operations
   async getSpecialOffers(limit: number): Promise<SpecialOffer[]> {
+     console.log(`[DatabaseStorage] Fetching ${limit} special offers`);
     return db.select().from(specialOffers).limit(limit);
   }
 
   // Testimonial operations
   async getTestimonials(limit: number): Promise<Testimonial[]> {
+     console.log(`[DatabaseStorage] Fetching ${limit} testimonials`);
     return db.select().from(testimonials).limit(limit);
   }
 
   // Booking operations
   async createBooking(booking: InsertBooking): Promise<Booking> {
+     console.log(`[DatabaseStorage] Creating booking for user ${booking.userId}`);
     const [createdBooking] = await db.insert(bookings).values(booking).returning();
+     if (!createdBooking) {
+         throw new Error("Failed to retrieve created booking after insertion");
+     }
     return createdBooking;
   }
 
   async getUserBookings(userId: number): Promise<Booking[]> {
+     console.log(`[DatabaseStorage] Fetching bookings for user ID: ${userId}`);
     return db.select().from(bookings).where(eq(bookings.userId, userId));
   }
 
   async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
+     console.log(`[DatabaseStorage] Updating booking ${id} status to "${status}"`);
     const [updatedBooking] = await db
       .update(bookings)
       .set({ status })
@@ -242,10 +288,10 @@ export class MemStorage implements IStorage {
   private specialOffers: Map<number, SpecialOffer>;
   private testimonials: Map<number, Testimonial>;
   private bookings: Map<number, Booking>;
-  
+
   // Session store for authentication
   sessionStore: session.Store;
-  
+
   private currentUserId = 1;
   private currentDestinationId = 1;
   private currentHotelId = 1;
@@ -264,19 +310,19 @@ export class MemStorage implements IStorage {
     this.specialOffers = new Map();
     this.testimonials = new Map();
     this.bookings = new Map();
-    
+
     // Create an in-memory session store
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // prune expired entries every 24h
     });
-    
+
     // Add sample data
     this.initializeSampleData();
   }
 
   private initializeSampleData() {
     // Add sample destinations
-    const sampleDestinations: Omit<Destination, 'id'>[] = [
+    const sampleDestinations: Omit<Destination, 'id' | 'createdAt' | 'updatedAt'>[] = [
       {
         name: 'Bali',
         country: 'Indonesia',
@@ -305,11 +351,11 @@ export class MemStorage implements IStorage {
 
     sampleDestinations.forEach(dest => {
       const id = this.currentDestinationId++;
-      this.destinations.set(id, { ...dest, id });
+      this.destinations.set(id, { ...dest, id, createdAt: new Date(), updatedAt: new Date() });
     });
 
     // Add sample hotels
-    const sampleHotels: Omit<Hotel, 'id'>[] = [
+    const sampleHotels: Omit<Hotel, 'id' | 'createdAt' | 'updatedAt'>[] = [
       {
         name: 'The Grand Riviera',
         destinationId: 1,
@@ -362,11 +408,11 @@ export class MemStorage implements IStorage {
 
     sampleHotels.forEach(hotel => {
       const id = this.currentHotelId++;
-      this.hotels.set(id, { ...hotel, id });
+      this.hotels.set(id, { ...hotel, id, createdAt: new Date(), updatedAt: new Date() });
     });
 
     // Add sample tours
-    const sampleTours: Omit<Tour, 'id'>[] = [
+    const sampleTours: Omit<Tour, 'id' | 'createdAt' | 'updatedAt'>[] = [
       {
         name: 'Ancient Temples Guided Tour',
         destinationId: 3,
@@ -410,11 +456,11 @@ export class MemStorage implements IStorage {
 
     sampleTours.forEach(tour => {
       const id = this.currentTourId++;
-      this.tours.set(id, { ...tour, id });
+      this.tours.set(id, { ...tour, id, createdAt: new Date(), updatedAt: new Date() });
     });
 
     // Add sample packages
-    const samplePackages: Omit<Package, 'id'>[] = [
+    const samplePackages: Omit<Package, 'id' | 'createdAt' | 'updatedAt'>[] = [
       {
         name: 'Tropical Paradise Escape',
         description: '7 days of tropical bliss with beachfront accommodation, island hopping tours, sunset cruise, and all meals included.',
@@ -451,11 +497,11 @@ export class MemStorage implements IStorage {
 
     samplePackages.forEach(pkg => {
       const id = this.currentPackageId++;
-      this.packages.set(id, { ...pkg, id });
+      this.packages.set(id, { ...pkg, id, createdAt: new Date(), updatedAt: new Date() });
     });
 
     // Add sample special offers
-    const sampleSpecialOffers: Omit<SpecialOffer, 'id'>[] = [
+    const sampleSpecialOffers: Omit<SpecialOffer, 'id' | 'createdAt' | 'updatedAt'>[] = [
       {
         title: '5-Night Luxury Beachfront Resort',
         description: 'Enjoy a luxurious stay at our exclusive beachfront property with complimentary breakfast and spa access.',
@@ -490,11 +536,11 @@ export class MemStorage implements IStorage {
 
     sampleSpecialOffers.forEach(offer => {
       const id = this.currentSpecialOfferId++;
-      this.specialOffers.set(id, { ...offer, id });
+      this.specialOffers.set(id, { ...offer, id, createdAt: new Date(), updatedAt: new Date() });
     });
 
     // Add sample testimonials
-    const sampleTestimonials: Omit<Testimonial, 'id'>[] = [
+    const sampleTestimonials: Omit<Testimonial, 'id' | 'createdAt' | 'updatedAt'>[] = [
       {
         content: "The Bali package was absolutely amazing! Everything was well-organized, from the airport pickup to the tours. The hotel was beautiful and the staff was incredibly friendly. Would book again in a heartbeat!",
         authorName: "Sarah J.",
@@ -520,182 +566,267 @@ export class MemStorage implements IStorage {
 
     sampleTestimonials.forEach(testimonial => {
       const id = this.currentTestimonialId++;
-      this.testimonials.set(id, { ...testimonial, id });
+      this.testimonials.set(id, { ...testimonial, id, createdAt: new Date(), updatedAt: new Date() });
     });
+
+     // Add a sample user for MemStorage testing
+     const sampleUser: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin' | 'resetToken' | 'resetTokenExpiry' | 'verificationToken' | 'profileImage'> = {
+        email: 'testuser@example.com',
+        password: 'hashedpassword', // In memory, could be anything or omit if not used
+        username: 'testuser',
+        fullName: 'Test User',
+        roleId: 4, // user role
+        isActive: true,
+        isEmailVerified: true,
+        isPhoneVerified: false,
+        authUserId: 'some-supabase-auth-uuid-1' // Link to a dummy auth ID
+     };
+     const userId = this.currentUserId++;
+     this.users.set(userId, {
+         ...sampleUser,
+         id: userId,
+         createdAt: new Date(),
+         updatedAt: new Date(),
+         lastLogin: null,
+         resetToken: null,
+         resetTokenExpiry: null,
+         verificationToken: null,
+         profileImage: null
+     });
+     console.log('[MemStorage] Added sample user:', this.users.get(userId));
   }
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
+    console.log(`[MemStorage] Fetching user by ID: ${id}`);
     return this.users.get(id);
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    console.log(`[MemStorage] Fetching user by username: ${username}`);
     return Array.from(this.users.values()).find(user => user.username === username);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
+    console.log(`[MemStorage] Fetching user by email: ${email}`);
     const user = Array.from(this.users.values()).find(user => user.email === email);
-    console.log('getUserByEmail lookup:', { email, found: !!user, userCount: this.users.size });
+    console.log('[MemStorage] getUserByEmail lookup result:', { email, found: !!user, userCount: this.users.size });
     return user;
   }
 
+  async getUserByAuthId(authUserId: string): Promise<User | undefined> {
+     // Added: Fetch user by Supabase Auth UUID
+     console.log(`[MemStorage] Fetching user by Auth ID: ${authUserId}`);
+     return Array.from(this.users.values()).find(user => user.authUserId === authUserId);
+  }
+
+
   async createUser(user: InsertUser): Promise<User> {
+    console.log(`[MemStorage] Creating user: ${user.email} (${user.username})`);
     const id = this.currentUserId++;
-    const createdUser: User = { 
-      ...user, 
-      id, 
+    const createdUser: User = {
+      id,
+      email: user.email,
+      password: user.password, // Assuming InsertUser includes password
+      username: user.username,
       fullName: user.fullName ?? null,
-      createdAt: new Date(),
-      phone: null,
-      roleId: user.roleId ?? 1, // Default to regular user if not specified
+      roleId: user.roleId ?? 4, // Default to regular user
       isActive: true,
-      isEmailVerified: false,
-      isPhoneVerified: false,
+      isEmailVerified: user.isEmailVerified ?? false, // Use provided status, default false
+      isPhoneVerified: user.isPhoneVerified ?? false,
+      authUserId: user.authUserId, // Assuming InsertUser includes authUserId
+      createdAt: new Date(),
+      updatedAt: new Date(),
       lastLogin: null,
       resetToken: null,
       resetTokenExpiry: null,
       verificationToken: null,
       profileImage: null
     };
+     // Ensure InsertUser has all non-nullable fields or provide defaults
+     // Based on your schema import, check if InsertUser matches User completely or if defaults are needed.
+     // For password, if you rely solely on Supabase Auth, you might not store it here. Adjust InsertUser/User types accordingly.
     this.users.set(id, createdUser);
+    console.log('[MemStorage] Created user:', createdUser);
     return createdUser;
   }
 
-  // Destination operations
+  // Destination operations (Implementations remain the same, just add console logs)
   async getDestinations(): Promise<Destination[]> {
+    console.log('[MemStorage] Fetching all destinations');
     return Array.from(this.destinations.values());
   }
 
   async getDestination(id: number): Promise<Destination | undefined> {
+    console.log(`[MemStorage] Fetching destination by ID: ${id}`);
     return this.destinations.get(id);
   }
 
   async getFeaturedDestinations(limit: number): Promise<Destination[]> {
+     console.log(`[MemStorage] Fetching ${limit} featured destinations`);
     return Array.from(this.destinations.values()).slice(0, limit);
   }
 
   async searchDestinations(query: string): Promise<Destination[]> {
+    console.log(`[MemStorage] Searching destinations: "${query}"`);
     const lowercaseQuery = query.toLowerCase();
     return Array.from(this.destinations.values()).filter(
       dest => dest.name.toLowerCase().includes(lowercaseQuery) || dest.country.toLowerCase().includes(lowercaseQuery)
     );
   }
 
-  // Hotel operations
+  // Hotel operations (Implementations remain the same, just add console logs)
   async getHotels(): Promise<Hotel[]> {
+     console.log('[MemStorage] Fetching all hotels');
     return Array.from(this.hotels.values());
   }
 
   async getHotel(id: number): Promise<Hotel | undefined> {
+    console.log(`[MemStorage] Fetching hotel by ID: ${id}`);
     return this.hotels.get(id);
   }
 
   async getHotelsByDestination(destinationId: number): Promise<Hotel[]> {
+     console.log(`[MemStorage] Fetching hotels for destination ID: ${destinationId}`);
     return Array.from(this.hotels.values()).filter(hotel => hotel.destinationId === destinationId);
   }
 
   async getFeaturedHotels(limit: number): Promise<Hotel[]> {
+    console.log(`[MemStorage] Fetching ${limit} featured hotels`);
     return Array.from(this.hotels.values())
       .filter(hotel => hotel.featured)
       .slice(0, limit);
   }
 
   async searchHotels(query: string): Promise<Hotel[]> {
+     console.log(`[MemStorage] Searching hotels: "${query}"`);
     const lowercaseQuery = query.toLowerCase();
     return Array.from(this.hotels.values()).filter(
       hotel => hotel.name.toLowerCase().includes(lowercaseQuery) || hotel.description.toLowerCase().includes(lowercaseQuery)
     );
   }
 
-  // Tour operations
+  // Tour operations (Implementations remain the same, just add console logs)
   async getTours(): Promise<Tour[]> {
+     console.log('[MemStorage] Fetching all tours');
     return Array.from(this.tours.values());
   }
 
   async getTour(id: number): Promise<Tour | undefined> {
+    console.log(`[MemStorage] Fetching tour by ID: ${id}`);
     return this.tours.get(id);
   }
 
   async getToursByDestination(destinationId: number): Promise<Tour[]> {
+     console.log(`[MemStorage] Fetching tours for destination ID: ${destinationId}`);
     return Array.from(this.tours.values()).filter(tour => tour.destinationId === destinationId);
   }
 
   async getFeaturedTours(limit: number): Promise<Tour[]> {
+     console.log(`[MemStorage] Fetching ${limit} featured tours`);
     return Array.from(this.tours.values())
       .filter(tour => tour.featured)
       .slice(0, limit);
   }
 
   async searchTours(query: string): Promise<Tour[]> {
+     console.log(`[MemStorage] Searching tours: "${query}"`);
     const lowercaseQuery = query.toLowerCase();
     return Array.from(this.tours.values()).filter(
       tour => tour.name.toLowerCase().includes(lowercaseQuery) || tour.description.toLowerCase().includes(lowercaseQuery)
     );
   }
 
-  // Package operations
+  // Package operations (Implementations remain the same, just add console logs)
   async getPackages(): Promise<Package[]> {
+     console.log('[MemStorage] Fetching all packages');
     return Array.from(this.packages.values());
   }
 
   async getPackage(id: number): Promise<Package | undefined> {
+    console.log(`[MemStorage] Fetching package by ID: ${id}`);
     return this.packages.get(id);
   }
 
   async getPackagesByDestination(destinationId: number): Promise<Package[]> {
+     console.log(`[MemStorage] Fetching packages for destination ID: ${destinationId}`);
     return Array.from(this.packages.values()).filter(pkg => pkg.destinationId === destinationId);
   }
 
   async getFeaturedPackages(limit: number): Promise<Package[]> {
+     console.log(`[MemStorage] Fetching ${limit} featured packages`);
     return Array.from(this.packages.values())
       .filter(pkg => pkg.featured)
       .slice(0, limit);
   }
 
   async searchPackages(query: string): Promise<Package[]> {
+     console.log(`[MemStorage] Searching packages: "${query}"`);
     const lowercaseQuery = query.toLowerCase();
     return Array.from(this.packages.values()).filter(
       pkg => pkg.name.toLowerCase().includes(lowercaseQuery) || pkg.description.toLowerCase().includes(lowercaseQuery)
     );
   }
 
-  // Special offers operations
+  // Special offers operations (Implementations remain the same, just add console logs)
   async getSpecialOffers(limit: number): Promise<SpecialOffer[]> {
+    console.log(`[MemStorage] Fetching ${limit} special offers`);
     return Array.from(this.specialOffers.values()).slice(0, limit);
   }
 
-  // Testimonial operations
+  // Testimonial operations (Implementations remain the same, just add console logs)
   async getTestimonials(limit: number): Promise<Testimonial[]> {
+    console.log(`[MemStorage] Fetching ${limit} testimonials`);
     return Array.from(this.testimonials.values()).slice(0, limit);
   }
 
-  // Booking operations
+  // Booking operations (Implementations remain the same, just add console logs)
   async createBooking(booking: InsertBooking): Promise<Booking> {
+    console.log(`[MemStorage] Creating booking for user ${booking.userId}`);
     const id = this.currentBookingId++;
-    const createdBooking: Booking = { 
-      ...booking, 
-      id, 
-      status: booking.status ?? null,
+    const createdBooking: Booking = {
+      id,
+      userId: booking.userId,
+      packageId: booking.packageId ?? null, // Assume packageId is optional if not always used
+      tourId: booking.tourId ?? null, // Assume tourId is optional
+      hotelId: booking.hotelId ?? null, // Assume hotelId is optional
+      destinationId: booking.destinationId ?? null, // Assume destinationId is optional
+      bookingDate: booking.bookingDate,
+      startDate: booking.startDate,
+      endDate: booking.endDate,
       guests: booking.guests ?? 1,
-      createdAt: new Date() 
+      totalPrice: booking.totalPrice,
+      status: booking.status ?? 'pending', // Default status
+      createdAt: new Date(),
+      updatedAt: new Date() // Assuming updatedAt is part of your schema
     };
+     // Add console.log for verification
+     console.log('[MemStorage] Created booking:', createdBooking);
     this.bookings.set(id, createdBooking);
     return createdBooking;
   }
 
   async getUserBookings(userId: number): Promise<Booking[]> {
+     console.log(`[MemStorage] Fetching bookings for user ID: ${userId}`);
     return Array.from(this.bookings.values()).filter(booking => booking.userId === userId);
   }
 
   async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
+     console.log(`[MemStorage] Updating booking ${id} status to "${status}"`);
     const booking = this.bookings.get(id);
-    if (!booking) return undefined;
-    
-    const updatedBooking = { ...booking, status };
+    if (!booking) {
+       console.log(`[MemStorage] Booking ${id} not found for status update.`);
+       return undefined;
+    }
+
+    const updatedBooking = { ...booking, status, updatedAt: new Date() }; // Update timestamp
     this.bookings.set(id, updatedBooking);
+    console.log('[MemStorage] Updated booking:', updatedBooking);
     return updatedBooking;
   }
 }
 
-// Use MemStorage for reliable operation without external dependencies
+// Use MemStorage for reliable operation without external dependencies during development
+// Change to new DatabaseStorage() when connecting to a real database
 export const storage = new MemStorage();
+// export const storage = new DatabaseStorage(); // Use this when ready for DB
