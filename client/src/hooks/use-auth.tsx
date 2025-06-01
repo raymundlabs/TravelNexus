@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     isLoading,
   } = useQuery<User | null, Error>({
-    queryKey: ['/api/auth/user'],
+    queryKey: ['/api/user'],
     queryFn: getQueryFn({ on401: "returnNull" }),
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation<User, Error, LoginData>({
     mutationFn: async (credentials) => {
       try {
-        const response = await apiRequest('POST', '/api/auth/login', credentials);
+        const response = await apiRequest('POST', '/api/login', credentials);
         return await response.json();
       } catch (error) {
         throw error instanceof Error ? error : new Error('Login failed');
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (data) => {
       // Refetch user data after successful login
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       toast({
         title: 'Welcome back!',
         description: 'You have successfully logged in.',
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Redirect to appropriate dashboard based on role
       setTimeout(() => {
-        const role = data.role || 'user';
+        const role = data.roleName || 'user';
         let redirectPath = '/dashboard/user';
         
         if (role === 'admin' || role === 'superadmin') {
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation<User, Error, RegisterData>({
     mutationFn: async (userData) => {
       try {
-        const response = await apiRequest('POST', '/api/auth/register', userData);
+        const response = await apiRequest('POST', '/api/register', userData);
         return await response.json();
       } catch (error) {
         throw error instanceof Error ? error : new Error('Registration failed');
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       // Refetch user data after successful registration
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       toast({
         title: 'Registration successful!',
         description: 'Your account has been created and you are now logged in.',
