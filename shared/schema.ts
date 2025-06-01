@@ -46,6 +46,7 @@ export const users = pgTable("users", {
   resetTokenExpiry: timestamp("reset_token_expiry"),
   verificationToken: text("verification_token"),
   profileImage: text("profile_image"),
+  authUserId: text("auth_user_id").unique(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -55,6 +56,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   fullName: true,
   phone: true,
   roleId: true,
+  authUserId: true,
 });
 
 // Destinations

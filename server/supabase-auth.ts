@@ -117,15 +117,16 @@ export function setupSupabaseAuth(app: Express) {
         }
       };
 
-      // Create user in our database
+      // Create user in our database with auth_user_id reference
       const userData = {
         email,
         password: hashedPassword,
         username,
         fullName,
-        roleId: getRoleId(role),
+        roleId: role === 'admin' ? 1 : role === 'hotel' ? 2 : role === 'agent' ? 3 : 4,
         isActive: true,
-        isEmailVerified: true
+        isEmailVerified: true,
+        authUserId: authData.user.id
       };
 
       const user = await storage.createUser(userData);
@@ -163,7 +164,7 @@ export function setupSupabaseAuth(app: Express) {
       // Determine if username is email or actual username
       const isEmail = username.includes('@');
       let email = username;
-      
+
       // If it's not an email, find the user by username to get their email
       if (!isEmail) {
         const user = await storage.getUserByUsername(username);
@@ -192,7 +193,7 @@ export function setupSupabaseAuth(app: Express) {
 
       // Find user in our database
       let user = isEmail ? await storage.getUserByEmail(email) : await storage.getUserByUsername(username);
-      
+
       if (!user) {
         return res.status(400).json({ error: 'User not found in database' });
       }
