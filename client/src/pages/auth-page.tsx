@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION } from '@/lib/constants';
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
+  username: z.string().min(3, 'Username must be at least 3 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -45,7 +45,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      username: '',
       password: '',
     },
   });
@@ -57,7 +57,7 @@ export default function AuthPage() {
       email: '',
       password: '',
       fullName: '',
-      roleId: '1', // Default to regular user
+      roleId: '4', // Default to regular user
     },
   });
 
@@ -83,7 +83,7 @@ export default function AuthPage() {
       roleId: parseInt(data.roleId)
     };
     
-    registerMutation.mutate(formattedData as any, {
+    registerMutation.mutate(formattedData, {
       onError: (error) => {
         toast({
           title: 'Registration failed',
@@ -200,16 +200,16 @@ export default function AuthPage() {
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="username">Username</Label>
                       <Input
-                        id="email"
-                        type="email"
-                        placeholder="Your email address"
-                        {...loginForm.register('email')}
+                        id="username"
+                        type="text"
+                        placeholder="Your username"
+                        {...loginForm.register('username')}
                       />
-                      {loginForm.formState.errors.email && (
+                      {loginForm.formState.errors.username && (
                         <p className="text-sm text-red-500">
-                          {loginForm.formState.errors.email.message}
+                          {loginForm.formState.errors.username.message}
                         </p>
                       )}
                     </div>
@@ -322,10 +322,10 @@ export default function AuthPage() {
                           <SelectValue placeholder="Select account type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">Regular User</SelectItem>
+                          <SelectItem value="4">Regular User</SelectItem>
                           <SelectItem value="2">Hotel Owner/Manager</SelectItem>
                           <SelectItem value="3">Travel Agent</SelectItem>
-                          <SelectItem value="4">Administrator</SelectItem>
+                          <SelectItem value="1">Administrator</SelectItem>
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
