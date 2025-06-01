@@ -4,13 +4,16 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { setupAuth } from "./auth";
+import { setupSupabaseAuth } from "./supabase-auth";
 import { 
   insertUserSchema, 
   insertBookingSchema 
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // sets up /api/register, /api/login, /api/logout, /api/user with Supabase auth
+  setupSupabaseAuth(app);
+
   // Error handler middleware
   const handleError = (err: unknown, res: Response) => {
     if (err instanceof ZodError) {
@@ -330,8 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Set up authentication
-  setupAuth(app);
+
 
   const httpServer = createServer(app);
   return httpServer;
