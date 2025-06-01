@@ -127,14 +127,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation<void, Error>({
     mutationFn: async () => {
       try {
-        await apiRequest('POST', '/api/auth/logout');
+        await apiRequest('POST', '/api/logout');
       } catch (error) {
         throw error instanceof Error ? error : new Error('Logout failed');
       }
     },
     onSuccess: () => {
       // Clear user data after successful logout
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
       toast({
         title: 'Logged out',
         description: 'You have been successfully logged out.',
