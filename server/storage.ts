@@ -8,7 +8,7 @@ import {
   testimonials, type Testimonial, type InsertTestimonial,
   bookings, type Booking, type InsertBooking
 } from "@shared/schema";
-import { db, pool } from "./supabase-db"; // Updated to use Supabase connection
+import { db, pool } from "./supabase-db";
 import { eq, like, and, or } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -695,6 +695,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use DatabaseStorage for production database
-// Use in-memory storage for now while we troubleshoot database connection
-export const storage = process.env.NODE_ENV === 'production' ? new DatabaseStorage() : new MemStorage();
+// Use DatabaseStorage to ensure users are synced with database
+export const storage = new DatabaseStorage();

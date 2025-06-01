@@ -104,13 +104,26 @@ export function setupSupabaseAuth(app: Express) {
       // Hash password for our database
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      // Map role names to role IDs
+      const getRoleId = (roleName: string): number => {
+        switch (roleName) {
+          case 'admin': return 1;
+          case 'hotel_owner': 
+          case 'hotel': return 2;
+          case 'travel_agent':
+          case 'agent': return 3;
+          case 'user':
+          default: return 4;
+        }
+      };
+
       // Create user in our database
       const userData = {
         email,
         password: hashedPassword,
         username,
         fullName,
-        roleId: role === 'admin' ? 1 : role === 'hotel' ? 2 : role === 'agent' ? 3 : 4,
+        roleId: getRoleId(role),
         isActive: true,
         isEmailVerified: true
       };
@@ -185,7 +198,7 @@ export function setupSupabaseAuth(app: Express) {
       }
 
       // Determine role based on roleId
-      const roleMap = { 1: 'admin', 2: 'hotel', 3: 'agent', 4: 'user' };
+      const roleMap = { 1: 'admin', 2: 'hotel_owner', 3: 'travel_agent', 4: 'user' };
       const userRole = roleMap[user.roleId as keyof typeof roleMap] || 'user';
 
       // Store session

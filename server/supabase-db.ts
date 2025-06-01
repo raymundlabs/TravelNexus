@@ -1,56 +1,40 @@
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
 import { setupEnvironment } from './setup-env';
 import * as schema from "@shared/schema";
+import { Pool } from 'pg';
 
 // Ensure environment variables are set
 setupEnvironment();
 
 // Check for required environment variables
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-  throw new Error("SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables");
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY || !process.env.DATABASE_URL) {
+  throw new Error("SUPABASE_URL, SUPABASE_ANON_KEY, and DATABASE_URL must be set in environment variables");
 }
 
 console.log('Creating Supabase client...');
 console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 
-// Create Supabase client
+// Create Supabase client for auth operations
 export const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
 );
 
-// Create a simplified database interface that works with our storage implementation
-export const db = {
-  select: () => ({
-    from: (table) => ({
-      where: () => Promise.resolve([]),
-      limit: () => Promise.resolve([]),
-      orderBy: () => Promise.resolve([])
-    })
-  }),
-  insert: (table) => ({
-    values: (data) => ({
-      returning: () => Promise.resolve([data])
-    })
-  }),
-  delete: () => ({
-    where: () => ({
-      execute: () => Promise.resolve()
-    }),
-    execute: () => Promise.resolve()
-  })
-};
+// Create postgres connection for Drizzle ORM
+const client = postgres(process.env.DATABASE_URL, {
+  ssl: true, // Required for Supabase
+  max: 10, // Connection pool size
+});
 
-// Mock pool for session store
-export const pool = {
-  query: async (text, params) => {
-    console.log('Query executed:', text);
-    return [];
-  },
-  connect: async () => {
-    return {
-      query: async () => [],
-      release: () => {}
-    };
+// Initialize Drizzle ORM with our schema
+export const db = drizzle(client, { schema });
+
+// Create a pg Pool for session store
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Required for Supabase connections
   }
-};
+});
