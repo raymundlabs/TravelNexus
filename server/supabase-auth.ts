@@ -23,10 +23,10 @@ declare global {
   }
 }
 
-// Create Supabase client with service role for admin operations
+// Create Supabase client with anon key for operations
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.SUPABASE_ANON_KEY!,
   {
     auth: {
       autoRefreshToken: false,
@@ -52,41 +52,57 @@ export function setupSupabaseAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
 
-  // Register endpoint - creates user in Supabase auth.users
+  // Register endpoint - creates user in our database
   app.post("/api/register", async (req, res) => {
     try {
-      const { email, password, username, role = 'user' } = req.body;
+      const { email, password, username, fullName, role = 'user' } = req.body;
 
-      // Create user in Supabase auth
-      const { data, error } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        user_metadata: {
-          username,
-          role
-        }
-      });
-
-      if (error) {
-        return res.status(400).json({ error: error.message });
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
       }
+
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail ? await storage.getUserByEmail(email) : null;
+      if (existingEmail) {
+        return res.status(400).json({ error: "Email already exists" });
+      }
+
+      // Hash password (you'll need to implement password hashing)
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user in database
+      const userData = {
+        email,
+        password: hashedPassword,
+        username,
+        fullName,
+        roleId: role === 'admin' ? 1 : role === 'hotel' ? 2 : role === 'agent' ? 3 : 4, // Default to user role
+        isActive: true,
+        isEmailVerified: true
+      };
+
+      const user = await storage.createUser(userData);
 
       // Store session
       req.session.user = {
-        id: data.user.id,
-        email: data.user.email!,
-        role: data.user.user_metadata.role
+        id: user.id.toString(),
+        email: user.email,
+        role: role
       };
 
       res.status(201).json({
-        id: data.user.id,
-        email: data.user.email,
-        username: data.user.user_metadata.username,
-        role: data.user.user_metadata.role
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        fullName: user.fullName,
+        role: role
       });
     } catch (error) {
       console.error('Registration error:', error);
-      res.status(500).json({ error: 'Registration failed' });
+      res.status(400).json({ error: 'Database error creating new user' });
     }
   });
 
