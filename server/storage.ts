@@ -695,5 +695,5 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use DatabaseStorage to ensure users are synced with database
-export const storage = new DatabaseStorage();
+// Use MemStorage for reliable operation without external dependencies
+export const storage = new MemStorage();
