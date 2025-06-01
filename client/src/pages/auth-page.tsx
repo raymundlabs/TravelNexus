@@ -200,16 +200,16 @@ export default function AuthPage() {
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
+                      <Label htmlFor="email">Email</Label>
                       <Input
-                        id="username"
-                        type="text"
-                        placeholder="Your username"
-                        {...loginForm.register('username')}
+                        id="email"
+                        type="email"
+                        placeholder="Your email address"
+                        {...loginForm.register('email')}
                       />
-                      {loginForm.formState.errors.username && (
+                      {loginForm.formState.errors.email && (
                         <p className="text-sm text-red-500">
-                          {loginForm.formState.errors.username.message}
+                          {loginForm.formState.errors.email.message}
                         </p>
                       )}
                     </div>
