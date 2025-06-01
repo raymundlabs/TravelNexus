@@ -63,13 +63,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error instanceof Error ? error : new Error('Login failed');
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Refetch user data after successful login
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({
         title: 'Welcome back!',
         description: 'You have successfully logged in.',
       });
+      
+      // Redirect to appropriate dashboard based on role
+      setTimeout(() => {
+        const role = data.role || 'user';
+        let redirectPath = '/dashboard/user';
+        
+        if (role === 'admin' || role === 'superadmin') {
+          redirectPath = '/dashboard/admin';
+        } else if (role === 'hotel_owner' || role === 'hotel') {
+          redirectPath = '/dashboard/hotel';
+        } else if (role === 'travel_agent' || role === 'agent') {
+          redirectPath = '/dashboard/agent';
+        }
+        
+        window.location.href = redirectPath;
+      }, 1000);
     },
     onError: (error) => {
       toast({

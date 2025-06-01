@@ -3,19 +3,22 @@ import { Express } from "express";
 import session from "express-session";
 import { storage } from "./storage";
 
+declare module 'express-session' {
+  interface SessionData {
+    user?: {
+      id: string;
+      email: string;
+      role?: string;
+    }
+  }
+}
+
 declare global {
   namespace Express {
     interface User {
       id: string;
       email: string;
       role?: string;
-    }
-    interface Session {
-      user?: {
-        id: string;
-        email: string;
-        role?: string;
-      }
     }
   }
 }
