@@ -53,12 +53,14 @@ export function setupSupabaseAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
 
-  // Register endpoint - creates user in our database
+  // Register endpoint - creates user in Supabase Auth and our database
   app.post("/api/register", async (req, res) => {
     try {
       const { email, password, username, fullName, role = 'user' } = req.body;
 
-      // Check if user already exists
+      console.log('Registration attempt:', { email, username, role });
+
+      // Check if user already exists in our database
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
         return res.status(400).json({ error: "Username already exists" });
@@ -75,21 +77,47 @@ export function setupSupabaseAuth(app: Express) {
         return res.status(400).json({ error: "Email already exists" });
       }
 
-      // Hash password
+      // Create user in Supabase Auth first
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            full_name: fullName,
+            role
+          }
+        }
+      });
+
+      if (authError) {
+        console.error('Supabase auth error:', authError);
+        return res.status(400).json({ error: authError.message });
+      }
+
+      if (!authData.user) {
+        return res.status(400).json({ error: "Failed to create user in authentication system" });
+      }
+
+      console.log('User created in Supabase Auth:', authData.user.id);
+
+      // Hash password for our database
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create user in database
+      // Create user in our database
       const userData = {
         email,
         password: hashedPassword,
         username,
         fullName,
-        roleId: role === 'admin' ? 1 : role === 'hotel' ? 2 : role === 'agent' ? 3 : 4, // Default to user role
+        roleId: role === 'admin' ? 1 : role === 'hotel' ? 2 : role === 'agent' ? 3 : 4,
         isActive: true,
         isEmailVerified: true
       };
 
       const user = await storage.createUser(userData);
+
+      console.log('User created in database:', user.id);
 
       // Store session
       req.session.user = {
@@ -108,30 +136,52 @@ export function setupSupabaseAuth(app: Express) {
     } catch (error) {
       console.error('Registration error details:', error);
       console.error('Request body:', req.body);
-      res.status(400).json({ error: 'Database error creating new user' });
+      res.status(400).json({ error: 'Registration failed: ' + (error instanceof Error ? error.message : 'Unknown error') });
     }
   });
 
-  // Login endpoint - signs in with database user
+  // Login endpoint - signs in with Supabase Auth and our database
   app.post("/api/login", async (req, res) => {
     try {
       const { username, password } = req.body;
 
-      // Find user by username (support email as username too)
-      let user = await storage.getUserByUsername(username);
-      if (!user && username.includes('@')) {
-        user = await storage.getUserByEmail(username);
-      }
+      console.log('Login attempt:', { username });
 
-      if (!user) {
-        return res.status(400).json({ error: 'Invalid username or password' });
-      }
-
-      // Verify password
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      // Determine if username is email or actual username
+      const isEmail = username.includes('@');
+      let email = username;
       
-      if (!isValidPassword) {
+      // If it's not an email, find the user by username to get their email
+      if (!isEmail) {
+        const user = await storage.getUserByUsername(username);
+        if (!user) {
+          return res.status(400).json({ error: 'Invalid username or password' });
+        }
+        email = user.email;
+      }
+
+      // Authenticate with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (authError) {
+        console.error('Supabase auth error:', authError);
         return res.status(400).json({ error: 'Invalid username or password' });
+      }
+
+      if (!authData.user) {
+        return res.status(400).json({ error: 'Authentication failed' });
+      }
+
+      console.log('User authenticated with Supabase:', authData.user.id);
+
+      // Find user in our database
+      let user = isEmail ? await storage.getUserByEmail(email) : await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(400).json({ error: 'User not found in database' });
       }
 
       // Determine role based on roleId
@@ -154,7 +204,7 @@ export function setupSupabaseAuth(app: Express) {
       });
     } catch (error) {
       console.error('Login error:', error);
-      res.status(500).json({ error: 'Login failed' });
+      res.status(500).json({ error: 'Login failed: ' + (error instanceof Error ? error.message : 'Unknown error') });
     }
   });
 

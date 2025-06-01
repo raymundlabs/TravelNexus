@@ -697,4 +697,4 @@ export class MemStorage implements IStorage {
 
 // Use DatabaseStorage for production database
 // Use in-memory storage for now while we troubleshoot database connection
-export const storage = new MemStorage();
+export const storage = process.env.NODE_ENV === 'production' ? new DatabaseStorage() : new MemStorage();
