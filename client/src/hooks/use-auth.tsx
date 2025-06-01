@@ -53,24 +53,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: true,
   });
 
-  // Login mutation using our direct login endpoint
+  // Login mutation
   const loginMutation = useMutation<User, Error, LoginData>({
     mutationFn: async (credentials) => {
       try {
-        // Use the direct login endpoint which doesn't require password hashing
-        const response = await apiRequest('POST', '/api/direct-login', credentials);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Login failed');
-        }
+        const response = await apiRequest('POST', '/api/auth/login', credentials);
         return await response.json();
       } catch (error) {
         throw error instanceof Error ? error : new Error('Login failed');
       }
     },
-    onSuccess: (userData) => {
-      // Update the user data in cache
-      queryClient.setQueryData(['/api/auth/user'], userData);
+    onSuccess: () => {
+      // Refetch user data after successful login
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       toast({
         title: 'Welcome back!',
         description: 'You have successfully logged in.',
