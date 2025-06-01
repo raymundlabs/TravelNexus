@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Express } from "express";
 import session from "express-session";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 
 declare module 'express-session' {
@@ -63,14 +64,18 @@ export function setupSupabaseAuth(app: Express) {
         return res.status(400).json({ error: "Username already exists" });
       }
 
-      // Check if email already exists
-      const existingEmail = await storage.getUserByEmail ? await storage.getUserByEmail(email) : null;
+      // Check if email already exists (only if method exists)
+      let existingEmail = null;
+      try {
+        existingEmail = await storage.getUserByEmail(email);
+      } catch (err) {
+        console.log("getUserByEmail not implemented, skipping email check");
+      }
       if (existingEmail) {
         return res.status(400).json({ error: "Email already exists" });
       }
 
-      // Hash password (you'll need to implement password hashing)
-      const bcrypt = require('bcryptjs');
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Create user in database
@@ -101,7 +106,8 @@ export function setupSupabaseAuth(app: Express) {
         role: role
       });
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Registration error details:', error);
+      console.error('Request body:', req.body);
       res.status(400).json({ error: 'Database error creating new user' });
     }
   });
@@ -122,7 +128,6 @@ export function setupSupabaseAuth(app: Express) {
       }
 
       // Verify password
-      const bcrypt = require('bcryptjs');
       const isValidPassword = await bcrypt.compare(password, user.password);
       
       if (!isValidPassword) {
