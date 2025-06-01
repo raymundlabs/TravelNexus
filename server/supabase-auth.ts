@@ -117,13 +117,26 @@ export function setupSupabaseAuth(app: Express) {
         }
       };
 
+      // Map role names to role IDs properly
+      const getRoleId = (roleName: string): number => {
+        switch (roleName.toLowerCase()) {
+          case 'admin': return 1;
+          case 'hotel_owner': 
+          case 'hotel': return 2;
+          case 'travel_agent':
+          case 'agent': return 3;
+          case 'user':
+          default: return 4;
+        }
+      };
+
       // Create user in our database with auth_user_id reference
       const userData = {
         email,
         password: hashedPassword,
         username,
         fullName,
-        roleId: role === 'admin' ? 1 : role === 'hotel' ? 2 : role === 'agent' ? 3 : 4,
+        roleId: getRoleId(role),
         isActive: true,
         isEmailVerified: true,
         authUserId: authData.user.id
@@ -131,7 +144,13 @@ export function setupSupabaseAuth(app: Express) {
 
       const user = await storage.createUser(userData);
 
-      console.log('User created in database:', user.id);
+      console.log('User created in database:', { 
+        id: user.id, 
+        email: user.email, 
+        username: user.username, 
+        roleId: user.roleId,
+        authUserId: user.authUserId 
+      });
 
       // Store session
       req.session.user = {
@@ -191,10 +210,21 @@ export function setupSupabaseAuth(app: Express) {
 
       console.log('User authenticated with Supabase:', authData.user.id);
 
-      // Find user in our database
-      let user = isEmail ? await storage.getUserByEmail(email) : await storage.getUserByUsername(username);
+      // Find user in our database - try both methods to be safe
+      let user;
+      if (isEmail) {
+        user = await storage.getUserByEmail(email);
+      } else {
+        user = await storage.getUserByUsername(username);
+        if (!user) {
+          // If username lookup failed, the user might have registered with email
+          // Try to find by email using the authenticated email from Supabase
+          user = await storage.getUserByEmail(email);
+        }
+      }
 
       if (!user) {
+        console.log('User not found in database. Email:', email, 'Username:', username);
         return res.status(400).json({ error: 'User not found in database' });
       }
 
