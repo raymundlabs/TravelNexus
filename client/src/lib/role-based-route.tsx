@@ -15,10 +15,12 @@ export function RoleBasedRoute({
   allowedRoles: UserRole[];
   component: () => React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
-  console.log(`🔐 RoleBasedRoute - Path: ${path}, Checking user permissions`);
+  console.log(`\n🔐 RoleBasedRoute - Path: ${path}`);
   console.log(`🔐 RoleBasedRoute - Allowed roles:`, allowedRoles);
+  console.log(`🔐 RoleBasedRoute - isAuthenticated:`, isAuthenticated);
+  console.log(`🔐 RoleBasedRoute - isLoading:`, isLoading);
   console.log(`🔐 RoleBasedRoute - User:`, user);
 
   // Show loading spinner while auth status is being determined
@@ -46,8 +48,8 @@ export function RoleBasedRoute({
   // Get the role name using roleId - mapped to match server implementation
   const roleMap = {
     1: 'admin',
-    2: 'hotel_owner',
-    3: 'travel_agent',
+    2: 'travel_agent',
+    3: 'hotel_owner',
     4: 'customer'
   };
   const roleId = Number(user.roleId);
@@ -82,11 +84,44 @@ export function RoleBasedRoute({
 
 // Dashboard route handler that redirects to the appropriate dashboard based on user role
 export function DashboardRouter() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
   
   // Enhanced logging with visual markers for easier debugging
-  console.log('🔍 DashboardRouter - USER OBJECT:', user);
-  console.log('🔍 DashboardRouter - IS LOADING:', isLoading);
+  console.log('\n🔍 DashboardRouter - ROUTER MOUNTED');
+  console.log('🔍 DashboardRouter - isAuthenticated:', isAuthenticated);
+  console.log('🔍 DashboardRouter - isLoading:', isLoading);
+  console.log('🔍 DashboardRouter - Current User:', user);
+  
+  // Show loading spinner while auth status is being determined
+  if (isLoading) {
+    console.log('⏳ DashboardRouter - Auth is still loading, showing spinner');
+    return (
+      <Route path="/dashboard">
+        <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#f9fafb' }}>
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      </Route>
+    );
+  }
+  
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    console.log('🔒 DashboardRouter - Not authenticated, redirecting to /auth');
+    return (
+      <Route path="/dashboard">
+        <Redirect to="/auth" />
+      </Route>
+    );
+  }
+  
+  if (!user) {
+    console.log('❌ DashboardRouter - No user data available');
+    return (
+      <Route path="/dashboard">
+        <div>No user data available</div>
+      </Route>
+    );
+  }
 
   // Show loading spinner while auth status is being determined
   if (isLoading) {
@@ -121,8 +156,8 @@ export function DashboardRouter() {
   // Role mapping - this should match the database roles
   const roleMap = {
     1: { name: 'admin', path: '/dashboard/admin' },
-    2: { name: 'hotel_owner', path: '/dashboard/hotel' },
-    3: { name: 'travel_agent', path: '/dashboard/agent' },
+    2: { name: 'travel_agent', path: '/dashboard/agent' },
+    3: { name: 'hotel_owner', path: '/dashboard/hotel' },
     4: { name: 'customer', path: '/dashboard/user' }
   };
 

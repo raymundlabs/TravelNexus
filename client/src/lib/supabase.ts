@@ -3,8 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 import { UserRole } from '@/context/AuthContext';
 
 // Create a single supabase client for interacting with your database
-let supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-let supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+let supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+let supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+console.log('VITE_SUPABASE_URL:', supabaseUrl);
+console.log('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey);
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Please check your configuration.');

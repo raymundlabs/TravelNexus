@@ -20,6 +20,8 @@ import Header from "./components/layout/header";
 import Footer from "./components/layout/footer";
 import { AuthProvider } from "./hooks/use-auth";
 import { RoleBasedRoute, DashboardRouter } from "./lib/role-based-route";
+import ProfilePage from "@/pages/profile";
+import AdminPackagesPage from "@/pages/admin-packages";
 
 // Main router component
 function Router() {
@@ -60,15 +62,14 @@ function Router() {
         <Route path="/tours/:id" component={TourDetail} />
         <Route path="/packages" component={Packages} />
         <Route path="/packages/:id" component={PackageDetail} />
+        <Route path="/profile" component={ProfilePage} />
+        <Route path="/admin-packages" component={AdminPackagesPage} />
         
-        {/* Dashboard Router - redirects to appropriate dashboard based on role */}
-        <DashboardRouter />
-        
-        {/* Role-protected Dashboard Routes */}
+        {/* Dashboard Routes - Order is important! More specific paths first */}
         <RoleBasedRoute 
-          path="/dashboard/user" 
-          allowedRoles={['customer', 'hotel_owner', 'travel_agent', 'admin']} 
-          component={UserDashboard} 
+          path="/dashboard/admin" 
+          allowedRoles={['admin']} 
+          component={AdminDashboard} 
         />
         <RoleBasedRoute 
           path="/dashboard/hotel" 
@@ -81,10 +82,13 @@ function Router() {
           component={AgentDashboard} 
         />
         <RoleBasedRoute 
-          path="/dashboard/admin" 
-          allowedRoles={['admin']} 
-          component={AdminDashboard} 
+          path="/dashboard/user" 
+          allowedRoles={['customer', 'hotel_owner', 'travel_agent', 'admin']} 
+          component={UserDashboard} 
         />
+        
+        {/* Catch-all dashboard route - redirects to appropriate dashboard based on role */}
+        {/* <DashboardRouter /> */}
 
         {/* Fallback route */}
         <Route component={NotFound} />
