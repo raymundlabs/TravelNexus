@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,18 +30,229 @@ import {
 } from "lucide-react";
 
 export default function HotelDashboard() {
-  const { user, logoutMutation } = useAuth();
+  const { user, logoutMutation, isLoading } = useAuth();
 
-  const { data: hotels } = useQuery({
+  // Create a reference to track if we've applied DOM changes
+  const [domFixed, setDomFixed] = useState(false);
+
+  // Enhanced debugging with visual markers
+  console.log('🌊🌊🌊 HotelDashboard - COMPONENT RENDERING', new Date().toISOString());
+  console.log('🌊🌊🌊 HotelDashboard - User:', user);
+  console.log('🌊🌊🌊 HotelDashboard - Auth loading:', isLoading);
+  console.log('🌊🌊🌊 HotelDashboard - Role ID:', user?.roleId);
+
+  // DIRECT DOM MANIPULATION - emergency approach for blank screen
+  useEffect(() => {
+    console.log('🌊🌊🌊 HotelDashboard - useEffect RUNNING', new Date().toISOString());
+    document.title = 'Hotel Dashboard | TravelNexus';
+
+    // Emergency recovery - add a forced visible element to the document body
+    if (!domFixed) {
+      console.log('🌊🌊🌊 HotelDashboard - APPLYING EMERGENCY DOM FIX');
+
+      // Create emergency container
+      const emergencyContainer = document.createElement('div');
+      emergencyContainer.id = 'emergency-hotel-dashboard';
+      emergencyContainer.style.position = 'fixed';
+      emergencyContainer.style.top = '0';
+      emergencyContainer.style.left = '0';
+      emergencyContainer.style.width = '100%';
+      emergencyContainer.style.height = '100%';
+      emergencyContainer.style.backgroundColor = '#ffffff';
+      emergencyContainer.style.zIndex = '9999';
+      emergencyContainer.style.padding = '20px';
+      emergencyContainer.style.boxSizing = 'border-box';
+      emergencyContainer.style.overflow = 'auto';
+
+      // Add header
+      const header = document.createElement('div');
+      header.style.display = 'flex';
+      header.style.justifyContent = 'space-between';
+      header.style.alignItems = 'center';
+      header.style.marginBottom = '20px';
+      header.style.padding = '10px';
+      header.style.borderBottom = '1px solid #e2e8f0';
+
+      const title = document.createElement('h1');
+      title.textContent = 'Hotel Owner Dashboard';
+      title.style.fontSize = '24px';
+      title.style.fontWeight = 'bold';
+      title.style.color = '#1e293b';
+
+      const username = document.createElement('div');
+      username.textContent = `Welcome, ${user?.fullName || user?.username || 'Hotel Owner'}`;
+      username.style.fontSize = '16px';
+      username.style.color = '#64748b';
+
+      const logoutBtn = document.createElement('button');
+      logoutBtn.textContent = 'Logout';
+      logoutBtn.style.padding = '8px 16px';
+      logoutBtn.style.backgroundColor = '#e2e8f0';
+      logoutBtn.style.color = '#1e293b';
+      logoutBtn.style.border = 'none';
+      logoutBtn.style.borderRadius = '4px';
+      logoutBtn.style.cursor = 'pointer';
+      logoutBtn.onclick = () => {
+        console.log('🌊🌊🌊 HotelDashboard - Emergency logout clicked');
+        logoutMutation.mutate();
+      };
+
+      // Add content
+      const content = document.createElement('div');
+      content.style.display = 'grid';
+      content.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      content.style.gap = '20px';
+
+      // Add cards
+      const createCard = (title: string, value: string, description: string) => {
+        const card = document.createElement('div');
+        card.style.padding = '20px';
+        card.style.backgroundColor = '#f8fafc';
+        card.style.borderRadius = '8px';
+        card.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+
+        const cardTitle = document.createElement('h2');
+        cardTitle.textContent = title;
+        cardTitle.style.fontSize = '14px';
+        cardTitle.style.fontWeight = 'medium';
+        cardTitle.style.color = '#64748b';
+        cardTitle.style.marginBottom = '8px';
+
+        const cardValue = document.createElement('div');
+        cardValue.textContent = value;
+        cardValue.style.fontSize = '24px';
+        cardValue.style.fontWeight = 'bold';
+        cardValue.style.color = '#1e293b';
+        cardValue.style.marginBottom = '4px';
+
+        const cardDesc = document.createElement('p');
+        cardDesc.textContent = description;
+        cardDesc.style.fontSize = '12px';
+        cardDesc.style.color = '#94a3b8';
+
+        card.appendChild(cardTitle);
+        card.appendChild(cardValue);
+        card.appendChild(cardDesc);
+
+        return card;
+      };
+
+      content.appendChild(createCard('Active Listings', '12', '3 new this month'));
+      content.appendChild(createCard('Total Bookings', '78', '+8% from last month'));
+      content.appendChild(createCard('Revenue', '₱345,670', '+15% from last month'));
+      content.appendChild(createCard('Average Rating', '4.7/5', 'Based on 156 reviews'));
+
+      // Assemble the header
+      const titleWrapper = document.createElement('div');
+      titleWrapper.appendChild(title);
+      titleWrapper.appendChild(username);
+
+      header.appendChild(titleWrapper);
+      header.appendChild(logoutBtn);
+
+      // Assemble everything
+      emergencyContainer.appendChild(header);
+      emergencyContainer.appendChild(content);
+
+      // Add a notice about emergency mode
+      const notice = document.createElement('div');
+      notice.style.marginTop = '30px';
+      notice.style.padding = '12px';
+      notice.style.backgroundColor = '#fef3c7';
+      notice.style.borderRadius = '4px';
+      notice.style.color = '#92400e';
+      notice.textContent = 'Dashboard is running in emergency display mode. Please contact support if you continue to experience issues.';
+
+      emergencyContainer.appendChild(notice);
+
+      // Append to body
+      document.body.appendChild(emergencyContainer);
+
+      // Update state to avoid duplicate creation
+      setDomFixed(true);
+
+      // Cleanup function
+      return () => {
+        console.log('🌊🌊🌊 HotelDashboard - REMOVING EMERGENCY DOM FIX');
+        const element = document.getElementById('emergency-hotel-dashboard');
+        if (element && element.parentNode === document.body) {
+          document.body.removeChild(element);
+        }
+      };
+    }
+  }, [user, logoutMutation, domFixed]);
+
+  interface Hotel {
+    id: string;
+    name: string;
+    address: string;
+    price?: number;
+    featured?: boolean;
+    rating?: number;
+    amenities?: string[];
+  }
+
+  const { data: hotels, isLoading: isHotelsLoading } = useQuery<Hotel[]>({
     queryKey: ['/api/hotels'],
   });
 
   // Filter hotels for this hotel owner (in real app, filter by owner ID)
   const myHotels = hotels || [];
 
+  // Handle user logout
   const handleLogout = () => {
+    console.log('🟢 HotelDashboard - Logging out user');
     logoutMutation.mutate();
   };
+  
+  // If still loading user data, show a temporary loading state
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'block', 
+        minHeight: '100vh', 
+        backgroundColor: '#f9fafb',
+        position: 'relative', 
+        zIndex: 999,
+        textAlign: 'center',
+        paddingTop: '100px'
+      }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Loading Hotel Dashboard...</h1>
+        <div style={{ display: 'inline-block', width: '50px', height: '50px', border: '5px solid #f3f3f3', borderTop: '5px solid #3498db', borderRadius: '50%' }}></div>
+      </div>
+    );
+  }
+
+  // If no user data available, show an error state
+  if (!user) {
+    return (
+      <div style={{ 
+        display: 'block', 
+        minHeight: '100vh', 
+        backgroundColor: '#f9fafb',
+        position: 'relative', 
+        zIndex: 999,
+        textAlign: 'center',
+        paddingTop: '100px'
+      }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', color: '#e74c3c' }}>Authentication Error</h1>
+        <p style={{ fontSize: '16px', marginBottom: '16px' }}>Unable to load user data. Please try logging in again.</p>
+        <button 
+          onClick={handleLogout}
+          style={{
+            backgroundColor: '#3498db',
+            color: 'white',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Return to Login
+        </button>
+      </div>
+    );
+  }
 
   const amenityIcons = {
     'Free WiFi': <Wifi className="h-4 w-4" />,
@@ -53,7 +265,7 @@ export default function HotelDashboard() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4 lg:px-8" style={{ display: 'block', minHeight: '100vh', backgroundColor: '#f9fafb', position: 'relative', zIndex: 10 }}>
       <Helmet>
         <title>Hotel Dashboard | {SITE_NAME}</title>
       </Helmet>

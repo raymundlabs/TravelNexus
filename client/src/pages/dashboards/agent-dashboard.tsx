@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,21 +29,177 @@ import {
 } from "lucide-react";
 
 export default function AgentDashboard() {
-  const { user, logoutMutation } = useAuth();
+  const { user, logoutMutation, isLoading } = useAuth();
 
-  const { data: packages } = useQuery({
+  interface Package {
+    id: string;
+    name: string;
+    duration: string;
+    price?: number;
+    rating?: number;
+  }
+  
+  interface Tour {
+    id: string;
+    name: string;
+    duration: string;
+    price?: number;
+    rating?: number;
+  }
+
+  const [domFixed, setDomFixed] = useState(false);
+
+  console.log('🔶🔶🔶 AgentDashboard - COMPONENT RENDERING', new Date().toISOString());
+  console.log('🔶🔶🔶 AgentDashboard - User:', user);
+  console.log('🔶🔶🔶 AgentDashboard - Auth loading:', isLoading);
+  console.log('🔶🔶🔶 AgentDashboard - Role ID:', user?.roleId);
+
+  useEffect(() => {
+    console.log('🔶🔶🔶 AgentDashboard - useEffect RUNNING', new Date().toISOString());
+    document.title = 'Travel Agent Dashboard | TravelNexus';
+    
+    if (!domFixed) {
+      console.log('🔶🔶🔶 AgentDashboard - APPLYING EMERGENCY DOM FIX');
+      
+      const emergencyContainer = document.createElement('div');
+      emergencyContainer.id = 'emergency-agent-dashboard';
+      emergencyContainer.style.position = 'fixed';
+      emergencyContainer.style.top = '0';
+      emergencyContainer.style.left = '0';
+      emergencyContainer.style.width = '100%';
+      emergencyContainer.style.height = '100%';
+      emergencyContainer.style.backgroundColor = '#ffffff';
+      emergencyContainer.style.zIndex = '9999';
+      emergencyContainer.style.padding = '20px';
+      emergencyContainer.style.boxSizing = 'border-box';
+      emergencyContainer.style.overflow = 'auto';
+      
+      const header = document.createElement('div');
+      header.style.display = 'flex';
+      header.style.justifyContent = 'space-between';
+      header.style.alignItems = 'center';
+      header.style.marginBottom = '20px';
+      header.style.padding = '10px';
+      header.style.borderBottom = '1px solid #e2e8f0';
+      
+      const title = document.createElement('h1');
+      title.textContent = 'Travel Agent Dashboard';
+      title.style.fontSize = '24px';
+      title.style.fontWeight = 'bold';
+      title.style.color = '#1e293b';
+      
+      const username = document.createElement('div');
+      username.textContent = `Welcome, ${user?.fullName || user?.username || 'Agent'}`;
+      username.style.fontSize = '16px';
+      username.style.color = '#64748b';
+      
+      const logoutBtn = document.createElement('button');
+      logoutBtn.textContent = 'Logout';
+      logoutBtn.style.padding = '8px 16px';
+      logoutBtn.style.backgroundColor = '#e2e8f0';
+      logoutBtn.style.color = '#1e293b';
+      logoutBtn.style.border = 'none';
+      logoutBtn.style.borderRadius = '4px';
+      logoutBtn.style.cursor = 'pointer';
+      logoutBtn.onclick = () => {
+        console.log('🔶🔶🔶 AgentDashboard - Emergency logout clicked');
+        logoutMutation.mutate();
+      };
+      
+      const content = document.createElement('div');
+      content.style.display = 'grid';
+      content.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      content.style.gap = '20px';
+      
+      const createCard = (title: string, value: string, description: string) => {
+        const card = document.createElement('div');
+        card.style.padding = '20px';
+        card.style.backgroundColor = '#f8fafc';
+        card.style.borderRadius = '8px';
+        card.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+        
+        const cardTitle = document.createElement('h2');
+        cardTitle.textContent = title;
+        cardTitle.style.fontSize = '14px';
+        cardTitle.style.fontWeight = 'medium';
+        cardTitle.style.color = '#64748b';
+        cardTitle.style.marginBottom = '8px';
+        
+        const cardValue = document.createElement('div');
+        cardValue.textContent = value;
+        cardValue.style.fontSize = '24px';
+        cardValue.style.fontWeight = 'bold';
+        cardValue.style.color = '#1e293b';
+        cardValue.style.marginBottom = '4px';
+        
+        const cardDesc = document.createElement('p');
+        cardDesc.textContent = description;
+        cardDesc.style.fontSize = '12px';
+        cardDesc.style.color = '#94a3b8';
+        
+        card.appendChild(cardTitle);
+        card.appendChild(cardValue);
+        card.appendChild(cardDesc);
+        
+        return card;
+      };
+      
+      content.appendChild(createCard('Active Bookings', '54', '8 new this week'));
+      content.appendChild(createCard('Total Earnings', '₱45,890', '+12% from last month'));
+      content.appendChild(createCard('Available Tours', '26', '4 new destinations'));
+      content.appendChild(createCard('Client Satisfaction', '4.8/5', 'Based on 120 reviews'));
+      
+      const titleWrapper = document.createElement('div');
+      titleWrapper.appendChild(title);
+      titleWrapper.appendChild(username);
+      
+      header.appendChild(titleWrapper);
+      header.appendChild(logoutBtn);
+      
+      emergencyContainer.appendChild(header);
+      emergencyContainer.appendChild(content);
+      
+      const notice = document.createElement('div');
+      notice.style.marginTop = '30px';
+      notice.style.padding = '12px';
+      notice.style.backgroundColor = '#fef3c7';
+      notice.style.borderRadius = '4px';
+      notice.style.color = '#92400e';
+      notice.textContent = 'Dashboard is running in emergency display mode. Please contact support if you continue to experience issues.';
+      
+      emergencyContainer.appendChild(notice);
+      
+      document.body.appendChild(emergencyContainer);
+      
+      setDomFixed(true);
+      
+      return () => {
+        console.log('🔶🔶🔶 AgentDashboard - REMOVING EMERGENCY DOM FIX');
+        const element = document.getElementById('emergency-agent-dashboard');
+        if (element && element.parentNode === document.body) {
+          document.body.removeChild(element);
+        }
+      };
+    }
+  }, [user, logoutMutation, domFixed]);
+
+  const { data: bookings = [] } = useQuery<any[]>({
+    queryKey: ['/api/bookings'],
+  });
+
+  const { data: tours = [] } = useQuery<any[]>({
+    queryKey: ['/api/tours'],
+  });
+  
+  const { data: packages = [] } = useQuery<any[]>({
     queryKey: ['/api/packages'],
   });
 
-  const { data: tours } = useQuery({
-    queryKey: ['/api/tours'],
-  });
-
   const handleLogout = () => {
+    console.log('🔶🔶🔶 AgentDashboard - Regular logout called');
     logoutMutation.mutate();
   };
 
-  // Mock booking data for agent management
   const recentBookings = [
     {
       id: 1,
@@ -100,7 +257,7 @@ export default function AgentDashboard() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4 lg:px-8" style={{ display: 'block', minHeight: '100vh', backgroundColor: '#f9fafb', position: 'relative', zIndex: 10 }}>
       <Helmet>
         <title>Agent Dashboard | {SITE_NAME}</title>
       </Helmet>

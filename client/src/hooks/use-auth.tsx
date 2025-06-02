@@ -125,6 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const loginData = await response.json();
+      console.log('Login response data:', loginData);
+      console.log('Role ID from login:', loginData.roleId, typeof loginData.roleId);
       return {
         email: loginData.email,
         password: loginData.password,

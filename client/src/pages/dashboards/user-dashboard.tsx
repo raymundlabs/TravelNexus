@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,19 +28,122 @@ import {
 } from "lucide-react";
 
 export default function UserDashboard() {
-  const { user, logoutMutation } = useAuth();
+  const { user, logoutMutation, isLoading } = useAuth();
+  
+  // Create a reference to track if we've applied DOM changes
+  const [domFixed, setDomFixed] = useState(false);
 
-  const { data: packages } = useQuery({
+  // Enhanced debugging with visual markers
+  console.log('🟥🟥🟥 UserDashboard - COMPONENT RENDERING', new Date().toISOString());
+  console.log('🟥🟥🟥 UserDashboard - User:', user);
+  console.log('🟥🟥🟥 UserDashboard - Auth loading:', isLoading);
+  console.log('🟥🟥🟥 UserDashboard - Role ID:', user?.roleId);
+  
+  // Apply visibility fixes and set document title
+  useEffect(() => {
+    console.log('🔵 UserDashboard - useEffect RUNNING', new Date().toISOString());
+    document.title = 'Customer Dashboard | TravelNexus';
+    
+    // Apply global CSS fixes to ensure visibility
+    const style = document.createElement('style');
+    style.innerHTML = `
+      body, html {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        overflow: auto !important;
+      }
+      
+      /* Dashboard specific fixes */
+      .dashboard-container {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: 100vh !important;
+        background-color: #f9fafb !important;
+        position: relative !important;
+        z-index: 10 !important;
+      }
+      
+      /* Force headers and footers to show */
+      header, footer, nav {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      // Cleanup style on unmount
+      if (style.parentNode) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
+
+  const { data: packages, isLoading: isPackagesLoading } = useQuery({
     queryKey: ['/api/packages'],
   });
 
-  const { data: hotels } = useQuery({
+  const { data: hotels, isLoading: isHotelsLoading } = useQuery({
     queryKey: ['/api/hotels'],
   });
 
+  // Handle user logout
   const handleLogout = () => {
+    console.log('🟫 UserDashboard - Logging out user');
     logoutMutation.mutate();
   };
+  
+  // If still loading user data, show a temporary loading state
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'block', 
+        minHeight: '100vh', 
+        backgroundColor: '#f9fafb',
+        position: 'relative', 
+        zIndex: 999,
+        textAlign: 'center',
+        paddingTop: '100px'
+      }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Loading User Dashboard...</h1>
+        <div style={{ display: 'inline-block', width: '50px', height: '50px', border: '5px solid #f3f3f3', borderTop: '5px solid #3498db', borderRadius: '50%' }}></div>
+      </div>
+    );
+  }
+
+  // If no user data available, show an error state
+  if (!user) {
+    return (
+      <div style={{ 
+        display: 'block', 
+        minHeight: '100vh', 
+        backgroundColor: '#f9fafb',
+        position: 'relative', 
+        zIndex: 999,
+        textAlign: 'center',
+        paddingTop: '100px'
+      }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', color: '#e74c3c' }}>Authentication Error</h1>
+        <p style={{ fontSize: '16px', marginBottom: '16px' }}>Unable to load user data. Please try logging in again.</p>
+        <button 
+          onClick={handleLogout}
+          style={{
+            backgroundColor: '#3498db',
+            color: 'white',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Return to Login
+        </button>
+      </div>
+    );
+  }
 
   // Mock user booking data
   const userBookings = [
@@ -96,7 +200,7 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4 lg:px-8" style={{ display: 'block', minHeight: '100vh', backgroundColor: '#f9fafb', position: 'relative', zIndex: 10 }}>
       <Helmet>
         <title>My Dashboard | {SITE_NAME}</title>
       </Helmet>

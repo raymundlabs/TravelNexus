@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -11,25 +12,96 @@ import {
   Settings, 
   ShieldCheck,
   UserPlus,
-  Sailboat
+  Sailboat,
+  Loader2
 } from "lucide-react";
 
 export default function AdminDashboard() {
-  const { user, logoutMutation } = useAuth();
-
+  const { user, logoutMutation, isLoading } = useAuth();
+  
+  // Create a reference to track if we've applied DOM changes
+  useEffect(() => {
+    console.log('🔵 AdminDashboard - useEffect RUNNING', new Date().toISOString());
+    document.title = 'Admin Dashboard | TravelNexus';
+    
+    // Apply global CSS fixes to ensure visibility
+    const style = document.createElement('style');
+    style.innerHTML = `
+      body, html {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        overflow: auto !important;
+      }
+      
+      /* Dashboard specific fixes */
+      .dashboard-container {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: 100vh !important;
+        background-color: #f9fafb !important;
+        position: relative !important;
+        z-index: 10 !important;
+      }
+      
+      /* Force headers and footers to show */
+      header, footer, nav {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      // Cleanup style on unmount
+      if (style.parentNode) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
+  
+  // Regular logout handler
   const handleLogout = () => {
+    console.log('🧨🧨🧨 AdminDashboard - Regular logout called');
     logoutMutation.mutate();
   };
 
+  // If we're still loading or no user, show appropriate UI
+  if (isLoading) {
+    return (
+      <div className="dashboard-container container mx-auto py-8 px-4 lg:px-8">
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <span className="ml-2 text-lg">Loading admin dashboard...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="dashboard-container container mx-auto py-8 px-4 lg:px-8">
+        <div className="flex flex-col items-center justify-center min-h-[70vh]">
+          <h1 className="text-3xl font-bold text-red-600 mb-4">Authentication Required</h1>
+          <p className="text-lg mb-6">You must be logged in as an admin to access this dashboard</p>
+          <Button onClick={() => window.location.href = '/auth'}>Go to Login</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-8">
+    <div className="dashboard-container container mx-auto py-8 px-4 lg:px-8">
       <Helmet>
-        <title>Admin Dashboard | {SITE_NAME}</title>
+        <title>Admin Dashboard | TravelNexus</title>
       </Helmet>
 
+      {/* Header section with welcome message and logout */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">System Administrator</h1>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {user?.fullName || user?.username}</p>
         </div>
         <Button variant="outline" onClick={handleLogout}>

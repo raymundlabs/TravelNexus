@@ -21,12 +21,34 @@ import Footer from "./components/layout/footer";
 import { AuthProvider } from "./hooks/use-auth";
 import { RoleBasedRoute, DashboardRouter } from "./lib/role-based-route";
 
+// Main router component
 function Router() {
   const [location] = useLocation();
-
+  const isDashboardPath = location.includes('/dashboard');
+  
+  // Enhanced logging for routing
+  console.log('🌐 App Router - Current location:', location);
+  console.log('🌐 App Router - Is dashboard path:', isDashboardPath);
+  
+  // Define dashboard paths for clarity
+  const dashboardPaths = [
+    '/dashboard',
+    '/dashboard/user',
+    '/dashboard/hotel',
+    '/dashboard/agent',
+    '/dashboard/admin'
+  ];
+  
+  // Check if current path is in our defined dashboard paths
+  const isKnownDashboardPath = dashboardPaths.some(path => location.startsWith(path));
+  console.log('🌐 App Router - Is known dashboard path:', isKnownDashboardPath);
+  
   return (
     <>
-      {location !== '/reviews' && <Header />}
+      {/* Only render Header on non-dashboard paths */}
+      {!isDashboardPath && <Header />}
+      
+      {/* Main route switch */}
       <Switch>
         {/* Public Routes */}
         <Route path="/" component={HomePage2} />
@@ -42,16 +64,34 @@ function Router() {
         {/* Dashboard Router - redirects to appropriate dashboard based on role */}
         <DashboardRouter />
         
-        {/* Public Dashboard Routes - accessible to all authenticated users */}
-        <Route path="/dashboard/user" component={UserDashboard} />
-        <Route path="/dashboard/hotel" component={HotelDashboard} />
-        <Route path="/dashboard/agent" component={AgentDashboard} />
-        <Route path="/dashboard/admin" component={AdminDashboard} />
-        <Route path="/admin/dashboard" component={AdminDashboard} />
-        
+        {/* Role-protected Dashboard Routes */}
+        <RoleBasedRoute 
+          path="/dashboard/user" 
+          allowedRoles={['customer', 'hotel_owner', 'travel_agent', 'admin']} 
+          component={UserDashboard} 
+        />
+        <RoleBasedRoute 
+          path="/dashboard/hotel" 
+          allowedRoles={['hotel_owner', 'admin']} 
+          component={HotelDashboard} 
+        />
+        <RoleBasedRoute 
+          path="/dashboard/agent" 
+          allowedRoles={['travel_agent', 'admin']} 
+          component={AgentDashboard} 
+        />
+        <RoleBasedRoute 
+          path="/dashboard/admin" 
+          allowedRoles={['admin']} 
+          component={AdminDashboard} 
+        />
+
+        {/* Fallback route */}
         <Route component={NotFound} />
       </Switch>
-      <Footer />
+      
+      {/* Only render Footer on non-dashboard paths */}
+      {!isDashboardPath && <Footer />}
     </>
   );
 }

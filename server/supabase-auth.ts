@@ -238,7 +238,7 @@ export function setupSupabaseAuth(app: Express) {
       // Store session *only* if Supabase also returned a session (means user was auto-signed-in)
       if (authData.session && authData.user) {
          // Determine role based on roleId from the database user object
-         const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel', 3: 'agent', 4: 'user' };
+         const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel_owner', 3: 'travel_agent', 4: 'customer' };
          const userRole = roleMap[userInDb.roleId] || 'user';
 
          // Store minimal user data in the session
@@ -401,7 +401,7 @@ export function setupSupabaseAuth(app: Express) {
         // You might also check userInDb.isEmailVerified if your app requires it for certain actions.
 
       // Determine role based on roleId from our database user object
-      const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel', 3: 'agent', 4: 'user' };
+      const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel_owner', 3: 'travel_agent', 4: 'customer' };
       const userRole = roleMap[userInDb.roleId] || 'user';
 
       // Store minimal user data from our database in the session
@@ -423,12 +423,22 @@ export function setupSupabaseAuth(app: Express) {
        // }
 
 
+      // Log the user data before sending the response
+      console.log('Sending user data to client:', {
+        id: userInDb.id,
+        email: userInDb.email,
+        username: userInDb.username,
+        roleId: userInDb.roleId,
+        role: userRole
+      });
+      
       // Respond with user data from our database
       res.status(200).json({
         id: userInDb.id,
         email: userInDb.email,
         username: userInDb.username, // Include username from our DB
         fullName: userInDb.fullName, // Include fullName from our DB
+        roleId: userInDb.roleId, // Add roleId for client-side routing
         role: userRole // Include determined role
         // Do not expose sensitive data like password hash, authUserId, etc.
       });
@@ -504,15 +514,25 @@ export function setupSupabaseAuth(app: Express) {
         if (dbUser) {
             console.log('Fetched full user data from DB for session user ID:', dbUser.id);
             // Determine role based on roleId from DB
-            const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel', 3: 'agent', 4: 'user' };
+            const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel_owner', 3: 'travel_agent', 4: 'customer' };
             const userRole = roleMap[dbUser.roleId] || 'user';
 
+            // Log the user data before sending the response
+            console.log('GET /api/user - Sending user data:', {
+                id: dbUser.id,
+                email: dbUser.email,
+                username: dbUser.username,
+                roleId: dbUser.roleId,
+                role: userRole
+            });
+            
             // Return relevant user data from the database
             res.json({
                  id: dbUser.id,
                  email: dbUser.email,
                  username: dbUser.username,
                  fullName: dbUser.fullName,
+                 roleId: dbUser.roleId, // Add roleId for client-side routing
                  role: userRole,
                  isActive: dbUser.isActive, // Include relevant fields from your DB schema
                  isEmailVerified: dbUser.isEmailVerified,
