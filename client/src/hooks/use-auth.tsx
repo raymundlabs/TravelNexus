@@ -7,7 +7,28 @@ import {
 import { z } from 'zod';
 import { apiRequest, queryClient, getQueryFn } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@shared/schema';
+interface User {
+  email: string;
+  password: string;
+  username: string;
+  fullName: string | null;
+  roleId: number;
+  id: number;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  phone: string | null;
+  isActive: boolean | null;
+  isEmailVerified: boolean | null;
+  isPhoneVerified: boolean | null;
+  authUserId: string | null;
+  profilePicture: string | null;
+  address: string | null;
+  lastLogin: Date | null;
+  resetToken: string | null;
+  resetTokenExpiry: Date | null;
+  verificationToken: string | null;
+  profileImage: string | null;
+}
 
 // Form schemas
 const loginSchema = z.object({
@@ -48,14 +69,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
   } = useQuery<User | null, Error>({
     queryKey: ['/api/user'],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async () => {
+      const response = await fetch('/api/user', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          return null;
+        }
+        throw new Error('Failed to fetch user');
+      }
+
+      const userData = await response.json();
+      return {
+        email: userData.email,
+        password: userData.password,
+        username: userData.username,
+        fullName: userData.fullName,
+        roleId: Number(userData.roleId),
+        id: Number(userData.id),
+        createdAt: userData.createdAt ? new Date(userData.createdAt) : null,
+        updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : null,
+        phone: userData.phone || null,
+        isActive: userData.isActive || false,
+        isEmailVerified: userData.isEmailVerified || false,
+        isPhoneVerified: userData.isPhoneVerified || false,
+        authUserId: userData.authUserId || null,
+        profilePicture: userData.profilePicture || null,
+        address: userData.address || null,
+        lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : null,
+        resetToken: userData.resetToken || null,
+        resetTokenExpiry: userData.resetTokenExpiry ? new Date(userData.resetTokenExpiry) : null,
+        verificationToken: userData.verificationToken || null,
+        profileImage: userData.profileImage || null
+      } as User;
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
   });
 
   // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: { username: string; password: string }) => {
+  const loginMutation = useMutation<User, Error, LoginData>({
+    mutationFn: async (credentials: LoginData) => {
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -68,16 +124,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.error || 'Login failed');
       }
 
-      return response.json();
+      const loginData = await response.json();
+      return {
+        email: loginData.email,
+        password: loginData.password,
+        username: loginData.username,
+        fullName: loginData.fullName,
+        roleId: Number(loginData.roleId),
+        id: Number(loginData.id),
+        createdAt: loginData.createdAt ? new Date(loginData.createdAt) : null,
+        updatedAt: loginData.updatedAt ? new Date(loginData.updatedAt) : null,
+        phone: loginData.phone || null,
+        isActive: loginData.isActive || false,
+        isEmailVerified: loginData.isEmailVerified || false,
+        isPhoneVerified: loginData.isPhoneVerified || false,
+        authUserId: loginData.authUserId || null,
+        profilePicture: loginData.profilePicture || null,
+        address: loginData.address || null
+      } as User;
     },
     onSuccess: (user) => {
       queryClient.setQueryData(['user'], user);
       queryClient.invalidateQueries({ queryKey: ['user'] });
 
       // Normalize role for redirect
-      let role = user.role;
-      if (role === 'hotel_owner') role = 'hotel';
-      if (role === 'travel_agent') role = 'agent';
+      const roleNames = ['admin', 'hotel', 'agent', 'user'];
+      const roleId = Number(user.roleId);
+      const role = roleId > 0 && roleId <= roleNames.length
+        ? roleNames[roleId - 1]
+        : 'user';
 
       const roleRoutes: { [key: string]: string } = {
         admin: '/dashboard/admin',
@@ -91,14 +166,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const registerMutation = useMutation({
-    mutationFn: async (userData: RegisterData) => {
+  const registerMutation = useMutation<User, Error, RegisterData>({
+    mutationFn: async (registerData: RegisterData) => {
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...userData,
-          role: userData.roleId === 1 ? 'admin' : userData.roleId === 2 ? 'hotel' : userData.roleId === 3 ? 'agent' : 'user'
+          ...registerData,
+          role: Number(registerData.roleId) === 1 ? 'admin' : Number(registerData.roleId) === 2 ? 'hotel' : Number(registerData.roleId) === 3 ? 'agent' : 'user'
         }),
         credentials: 'include',
       });
@@ -108,7 +183,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(error.error || 'Registration failed');
       }
 
-      return response.json();
+      const userData = await response.json();
+      return {
+        email: userData.email,
+        password: userData.password,
+        username: userData.username,
+        fullName: userData.fullName,
+        roleId: Number(userData.roleId),
+        id: Number(userData.id),
+        createdAt: userData.createdAt ? new Date(userData.createdAt) : null,
+        updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : null,
+        phone: userData.phone || null,
+        isActive: userData.isActive || false,
+        isEmailVerified: userData.isEmailVerified || false,
+        isPhoneVerified: userData.isPhoneVerified || false,
+        authUserId: userData.authUserId || null,
+        profilePicture: userData.profilePicture || null,
+        address: userData.address || null
+      } as User;
     },
     onSuccess: (user) => {
       queryClient.setQueryData(['user'], user);
@@ -133,7 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const userQuery = useQuery({
+  const userQuery = useQuery<User | null, Error>({
     queryKey: ['user'],
     queryFn: async () => {
       const response = await fetch('/api/user', {
@@ -147,7 +239,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Failed to fetch user');
       }
 
-      return response.json();
+      const userData = await response.json();
+      return {
+        email: userData.email,
+        password: userData.password,
+        username: userData.username,
+        fullName: userData.fullName,
+        roleId: Number(userData.roleId),
+        id: Number(userData.id),
+        createdAt: userData.createdAt ? new Date(userData.createdAt) : null,
+        updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : null,
+        phone: userData.phone || null,
+        isActive: userData.isActive || false,
+        isEmailVerified: userData.isEmailVerified || false,
+        isPhoneVerified: userData.isPhoneVerified || false,
+        authUserId: userData.authUserId || null,
+        profilePicture: userData.profilePicture || null,
+        address: userData.address || null,
+        lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : null,
+        resetToken: userData.resetToken || null,
+        resetTokenExpiry: userData.resetTokenExpiry ? new Date(userData.resetTokenExpiry) : null,
+        verificationToken: userData.verificationToken || null,
+        profileImage: userData.profileImage || null
+      } as User;
     },
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes

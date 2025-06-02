@@ -42,12 +42,12 @@ function Router() {
         {/* Dashboard Router - redirects to appropriate dashboard based on role */}
         <DashboardRouter />
         
-        {/* Role-specific Dashboards */}
-        <RoleBasedRoute path="/dashboard/user" allowedRoles={['user', 'hotel', 'agent', 'superadmin']} component={UserDashboard} />
-        <RoleBasedRoute path="/dashboard/hotel" allowedRoles={['hotel', 'superadmin']} component={HotelDashboard} />
-        <RoleBasedRoute path="/dashboard/agent" allowedRoles={['agent', 'superadmin']} component={AgentDashboard} />
-        <RoleBasedRoute path="/admin/dashboard" allowedRoles={['admin']} component={AdminDashboard} />
-        <RoleBasedRoute path="/dashboard/admin" allowedRoles={['admin']} component={AdminDashboard} />
+        {/* Public Dashboard Routes - accessible to all authenticated users */}
+        <Route path="/dashboard/user" component={UserDashboard} />
+        <Route path="/dashboard/hotel" component={HotelDashboard} />
+        <Route path="/dashboard/agent" component={AgentDashboard} />
+        <Route path="/dashboard/admin" component={AdminDashboard} />
+        <Route path="/admin/dashboard" component={AdminDashboard} />
         
         <Route component={NotFound} />
       </Switch>
