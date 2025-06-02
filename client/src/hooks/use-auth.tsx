@@ -147,22 +147,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(['user'], user);
       queryClient.invalidateQueries({ queryKey: ['user'] });
 
-      // Normalize role for redirect
-      const roleNames = ['admin', 'hotel', 'agent', 'user'];
-      const roleId = Number(user.roleId);
-      const role = roleId > 0 && roleId <= roleNames.length
-        ? roleNames[roleId - 1]
-        : 'user';
-
-      const roleRoutes: { [key: string]: string } = {
-        admin: '/dashboard/admin',
-        hotel: '/dashboard/hotel',
-        agent: '/dashboard/agent',
-        user: '/dashboard/user',
-      };
-
-      const redirectPath = roleRoutes[role] || '/dashboard/user';
-      window.location.href = redirectPath;
+      // Just update the query cache
+      // Let the DashboardRouter handle the routing
+      toast({
+        title: 'Login successful',
+        description: 'Redirecting to dashboard...',
+      });
     },
   });
 
@@ -202,9 +192,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         address: userData.address || null
       } as User;
     },
-    onSuccess: (user) => {
-      queryClient.setQueryData(['user'], user);
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+    onSuccess: () => {
+      toast({
+        title: 'Registration successful',
+        description: 'Please login with your new credentials',
+      });
+      // Redirect to login page
+      window.location.href = '/auth';
     },
   });
 

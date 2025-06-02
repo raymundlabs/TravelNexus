@@ -39,9 +39,11 @@ export function RoleBasedRoute({
 
   // Get the role name using roleId
   const roleNames = ['admin', 'hotel', 'agent', 'user'];
-  const roleName = user.roleId && user.roleId > 0 && user.roleId <= roleNames.length 
-    ? roleNames[user.roleId - 1] 
+  const roleId = Number(user.roleId);
+  const roleName = roleId > 0 && roleId <= roleNames.length 
+    ? roleNames[roleId - 1] 
     : 'user';
+  console.log('RoleBasedRoute - User role:', roleName, 'from roleId:', roleId);
 
   // Check if user's role is in the allowed roles
   const hasPermission = allowedRoles.includes(roleName as UserRole);
@@ -84,14 +86,15 @@ export function DashboardRouter() {
   }
 
   // Determine which dashboard to redirect to based on user role
-  const roleId = user.roleId || 4; // Default to regular user if roleId is not present
-  
+  const roleId = Number(user.roleId || 4); // Default to regular user if roleId is not present
+  console.log('Current user role ID:', roleId); // Add logging to help debug
+
   return (
     <Route path="/dashboard">
       {roleId === 1 && <Redirect to="/dashboard/admin" />}
       {roleId === 2 && <Redirect to="/dashboard/hotel" />}
       {roleId === 3 && <Redirect to="/dashboard/agent" />}
-      {roleId === 4 && <Redirect to="/dashboard/user" />}
+      {(roleId === 4 || roleId > 4 || roleId < 1) && <Redirect to="/dashboard/user" />}
     </Route>
   );
 }
