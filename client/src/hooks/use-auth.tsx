@@ -73,6 +73,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user) => {
       queryClient.setQueryData(['user'], user);
       queryClient.invalidateQueries({ queryKey: ['user'] });
+
+      // Normalize role for redirect
+      let role = user.role;
+      if (role === 'hotel_owner') role = 'hotel';
+      if (role === 'travel_agent') role = 'agent';
+
+      const roleRoutes: { [key: string]: string } = {
+        admin: '/dashboard/admin',
+        hotel: '/dashboard/hotel',
+        agent: '/dashboard/agent',
+        user: '/dashboard/user',
+      };
+
+      const redirectPath = roleRoutes[role] || '/dashboard/user';
+      window.location.href = redirectPath;
     },
   });
 

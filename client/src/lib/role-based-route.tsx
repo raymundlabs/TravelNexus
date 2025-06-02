@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
 
 // Define possible user roles
-export type UserRole = 'user' | 'hotel' | 'agent' | 'superadmin';
+export type UserRole = 'user' | 'hotel' | 'agent' | 'admin';
 
 // Role-based route component
 export function RoleBasedRoute({
@@ -38,7 +38,7 @@ export function RoleBasedRoute({
   }
 
   // Get the role name using roleId
-  const roleNames = ['user', 'hotel', 'agent', 'superadmin'];
+  const roleNames = ['admin', 'hotel', 'agent', 'user'];
   const roleName = user.roleId && user.roleId > 0 && user.roleId <= roleNames.length 
     ? roleNames[user.roleId - 1] 
     : 'user';
@@ -84,14 +84,14 @@ export function DashboardRouter() {
   }
 
   // Determine which dashboard to redirect to based on user role
-  const roleId = user.roleId || 1; // Default to regular user if roleId is not present
+  const roleId = user.roleId || 4; // Default to regular user if roleId is not present
   
   return (
     <Route path="/dashboard">
-      {roleId === 1 && <Redirect to="/dashboard/user" />}
+      {roleId === 1 && <Redirect to="/dashboard/admin" />}
       {roleId === 2 && <Redirect to="/dashboard/hotel" />}
       {roleId === 3 && <Redirect to="/dashboard/agent" />}
-      {roleId === 4 && <Redirect to="/dashboard/admin" />}
+      {roleId === 4 && <Redirect to="/dashboard/user" />}
     </Route>
   );
 }

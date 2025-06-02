@@ -63,8 +63,26 @@ export default function AuthPage() {
 
   const onLoginSubmit = (data: LoginFormValues) => {
     loginMutation.mutate(data, {
-      onSuccess: () => {
-        // Redirect will happen automatically due to auth state change
+      onSuccess: (response) => {
+        // Show success message
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully logged in.',
+        });
+
+        // Redirect based on role and dashboard route from response
+        if (response.dashboard) {
+          window.location.href = response.dashboard;
+        } else {
+          // Fallback routes based on role
+          const roleRoutes: { [key: string]: string } = {
+            admin: '/dashboard/admin',
+            hotel_owner: '/dashboard/hotel',
+            travel_agent: '/dashboard/agent',
+            user: '/dashboard'
+          };
+          window.location.href = roleRoutes[response.role] || '/dashboard';
+        }
       },
       onError: (error) => {
         toast({

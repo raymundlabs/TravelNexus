@@ -46,7 +46,8 @@ function Router() {
         <RoleBasedRoute path="/dashboard/user" allowedRoles={['user', 'hotel', 'agent', 'superadmin']} component={UserDashboard} />
         <RoleBasedRoute path="/dashboard/hotel" allowedRoles={['hotel', 'superadmin']} component={HotelDashboard} />
         <RoleBasedRoute path="/dashboard/agent" allowedRoles={['agent', 'superadmin']} component={AgentDashboard} />
-        <RoleBasedRoute path="/dashboard/admin" allowedRoles={['superadmin']} component={AdminDashboard} />
+        <RoleBasedRoute path="/admin/dashboard" allowedRoles={['admin']} component={AdminDashboard} />
+        <RoleBasedRoute path="/dashboard/admin" allowedRoles={['admin']} component={AdminDashboard} />
         
         <Route component={NotFound} />
       </Switch>

@@ -29,6 +29,7 @@ export default function Header() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { user, isLoading, logoutMutation, isAuthenticated } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   
@@ -40,6 +41,10 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen((prev) => !prev);
+  };
 
   return (
     <header className={`sticky top-0 z-50 transition-all duration-300 bg-white shadow-md`}>
@@ -94,13 +99,38 @@ export default function Header() {
                 <button className={`p-2 rounded-full hover:bg-gray-100 text-gray-700`}>
                   <Heart className="h-5 w-5" />
                 </button>
-                <div className="flex items-center">
-                  <button className={`flex items-center space-x-1 px-3 py-1.5 rounded-full hover:bg-gray-100 text-gray-700`}>
+                <div className="relative">
+                  <button
+                    className="flex items-center space-x-1 px-3 py-1.5 rounded-full hover:bg-gray-100 text-gray-700"
+                    onClick={toggleDropdown}
+                  >
                     <div className="h-7 w-7 rounded-full bg-[#00aa6c] text-white flex items-center justify-center">
                       <span className="text-sm">{(user?.fullName?.[0] || user?.username?.[0] || 'U').toUpperCase()}</span>
                     </div>
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className={`h-4 w-4 transform transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg">
+                      <Link href="/profile" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">Profile</Link>
+                      <button
+                        className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                        onClick={() => {
+                          logoutMutation.mutate(undefined, {
+                            onSuccess: () => {
+                              window.location.href = '/auth';
+                            },
+                            onError: (error) => {
+                              console.error('Logout failed:', error);
+                              alert('Failed to logout. Please try again.');
+                            },
+                          });
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -169,7 +199,15 @@ export default function Header() {
                         <Button 
                           className="w-full flex items-center justify-center rounded-md bg-[#00aa6c] hover:bg-[#00aa6c]/90 text-white" 
                           onClick={() => {
-                            logoutMutation.mutate();
+                            logoutMutation.mutate(undefined, {
+                              onSuccess: () => {
+                                window.location.href = '/auth';
+                              },
+                              onError: (error) => {
+                                console.error('Logout failed:', error);
+                                alert('Failed to logout. Please try again.');
+                              },
+                            });
                             setIsMenuOpen(false);
                           }}
                           disabled={logoutMutation.isPending}

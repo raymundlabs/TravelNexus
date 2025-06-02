@@ -146,7 +146,7 @@ export function setupSupabaseAuth(app: Express) {
       }
 
 
-      // Create user in Supabase Auth first
+      // Create user in Supabase Auth MemStorage.
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -238,7 +238,7 @@ export function setupSupabaseAuth(app: Express) {
       // Store session *only* if Supabase also returned a session (means user was auto-signed-in)
       if (authData.session && authData.user) {
          // Determine role based on roleId from the database user object
-         const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel_owner', 3: 'travel_agent', 4: 'user' };
+         const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel', 3: 'agent', 4: 'user' };
          const userRole = roleMap[userInDb.roleId] || 'user';
 
          // Store minimal user data in the session
@@ -325,7 +325,7 @@ export function setupSupabaseAuth(app: Express) {
           // If the input looks like an email
           emailToAuthenticate = username; // The input is already the email
           console.log(`Login identifier "${username}" is an email.`);
-           // Optional: Check if email exists in our DB first.
+           // Optional: Check if email exists in our DB MemStorage..
            // This can prevent authenticating a user in Supabase Auth who shouldn't exist in your app's DB.
             try {
                 // Try fetching by email first if the input *is* an email
@@ -401,7 +401,7 @@ export function setupSupabaseAuth(app: Express) {
         // You might also check userInDb.isEmailVerified if your app requires it for certain actions.
 
       // Determine role based on roleId from our database user object
-      const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel_owner', 3: 'travel_agent', 4: 'user' };
+      const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel', 3: 'agent', 4: 'user' };
       const userRole = roleMap[userInDb.roleId] || 'user';
 
       // Store minimal user data from our database in the session
@@ -504,7 +504,7 @@ export function setupSupabaseAuth(app: Express) {
         if (dbUser) {
             console.log('Fetched full user data from DB for session user ID:', dbUser.id);
             // Determine role based on roleId from DB
-            const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel_owner', 3: 'travel_agent', 4: 'user' };
+            const roleMap: { [key: number]: string } = { 1: 'admin', 2: 'hotel', 3: 'agent', 4: 'user' };
             const userRole = roleMap[dbUser.roleId] || 'user';
 
             // Return relevant user data from the database
