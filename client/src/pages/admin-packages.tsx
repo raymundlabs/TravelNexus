@@ -52,7 +52,8 @@ interface Package {
   duration: string;
   price: number;
   discounted_price?: number | null;
-  image_url: string;
+  image_urls: string[];
+  fetured_image?: string | null;
   rating?: number | null;
   review_count?: number | null;
   highlights?: string[] | null;
@@ -70,7 +71,8 @@ interface PackageFormState {
   duration: string;
   price: string;
   discounted_price: string;
-  image_url: string;
+  image_urls: string;
+  fetured_image: string;
   rating: string;
   review_count: string;
   highlights: string;
@@ -98,7 +100,8 @@ const initialFormState: PackageFormState = {
   duration: "",
   price: "",
   discounted_price: "",
-  image_url: "",
+  image_urls: "",
+  fetured_image: "",
   rating: "",
   review_count: "0",
   highlights: "",
@@ -116,11 +119,16 @@ interface PackageCardProps {
 }
 
 const PackageCard: React.FC<PackageCardProps> = ({ pkg, onEdit, onDelete, isLoading }) => {
+  const displayImageUrl = pkg.fetured_image 
+    ? pkg.fetured_image 
+    : (pkg.image_urls && pkg.image_urls.length > 0 
+        ? pkg.image_urls[0] 
+        : 'https://via.placeholder.com/400x200?text=No+Image');
   return (
     <Card key={pkg.id} className="flex flex-col w-full shadow-lg">
       <CardHeader className="p-0 relative">
         <img 
-          src={pkg.image_url || 'https://via.placeholder.com/400x200?text=No+Image'} 
+          src={displayImageUrl} 
           alt={pkg.name} 
           className="w-full h-48 object-cover rounded-t-lg"
         />
@@ -176,6 +184,7 @@ export default function AdminPackagesPage() {
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]); // Added missing state declaration
 
   useEffect(() => {
     fetchPackages();
@@ -226,6 +235,12 @@ export default function AdminPackagesPage() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSelectedImageFiles(Array.from(e.target.files));
+    }
+  };
+
   const handleSelectChange = (name: string, value: string) => {
     setForm(prevForm => ({ ...prevForm, [name]: value }));
   };
@@ -235,12 +250,62 @@ export default function AdminPackagesPage() {
     setEditingPackage(null);
     setIsModalOpen(false);
     setError(null);
+    setSelectedImageFiles([]); // Ensure selected files are reset
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    let finalImageUrls: string[] = [];
+
+    if (selectedImageFiles.length > 0) {
+      const uploadPromises = selectedImageFiles.map(async (file) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `public/${fileName}`; // Path within the bucket
+
+        const { error: uploadError } = await supabase.storage
+          .from('whitebeachuploads') // Corrected bucket name
+          .upload(filePath, file, { upsert: true });
+
+        if (uploadError) {
+          throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('whitebeachuploads') // Corrected bucket name
+          .getPublicUrl(filePath);
+        
+        if (!publicUrlData || !publicUrlData.publicUrl) {
+            throw new Error(`Failed to get public URL for ${file.name}`);
+        }
+        return publicUrlData.publicUrl;
+      });
+
+      try {
+        finalImageUrls = await Promise.all(uploadPromises);
+      } catch (uploadError: any) {
+        console.error("Image upload error:", uploadError);
+        setError(uploadError.message || "Failed to upload one or more images.");
+        setIsLoading(false);
+        return;
+      }
+    } else if (editingPackage && form.image_urls) {
+      // No new files selected during edit, retain existing URLs if any
+      finalImageUrls = form.image_urls.split(',').map(url => url.trim()).filter(url => url);
+    } else if (!editingPackage && form.image_urls) {
+      // This case might occur if form.image_urls had some default or residual value
+      // For a new package with no files selected, it should be an empty array.
+      finalImageUrls = form.image_urls.split(',').map(url => url.trim()).filter(url => url); 
+    }
+
+    const highlightsArray = form.highlights.split(',').map(s => s.trim()).filter(s => s);
+    const inclusionsArray = form.inclusions.split(',').map(s => s.trim()).filter(s => s);
+
+    // Determine the featured image URL - defaults to the first image if available
+    const feturedImageUrl: string | null = finalImageUrls.length > 0 ? finalImageUrls[0] : null;
 
     const processedPackageData = {
       name: form.name,
@@ -249,13 +314,14 @@ export default function AdminPackagesPage() {
       duration: form.duration,
       price: parseFloat(form.price),
       discounted_price: form.discounted_price ? parseFloat(form.discounted_price) : null,
-      image_url: form.image_url,
+      image_urls: finalImageUrls, 
+      fetured_image: feturedImageUrl, // Add fetured_image to data
       rating: form.rating ? parseFloat(form.rating) : null,
       review_count: form.review_count ? parseInt(form.review_count, 10) : 0,
-      highlights: form.highlights ? form.highlights.split(',').map(s => s.trim()).filter(s => s) : null,
-      inclusions: form.inclusions ? form.inclusions.split(',').map(s => s.trim()).filter(s => s) : null,
+      highlights: highlightsArray.length > 0 ? highlightsArray : null,
+      inclusions: inclusionsArray.length > 0 ? inclusionsArray : null,
       is_bestseller: form.is_bestseller,
-      discount_percentage: form.discount_percentage ? parseInt(form.discount_percentage, 10) : null,
+      discount_percentage: form.discount_percentage ? parseFloat(form.discount_percentage) : null,
       featured: form.featured,
     };
 
@@ -271,19 +337,20 @@ export default function AdminPackagesPage() {
           .from('packages')
           .update(processedPackageData)
           .eq('id', editingPackage.id)
-          .select();
+          .select(); // Add select to get the updated row back
         if (updateError) throw updateError;
         if (data && data.length > 0) {
+            // Update the package in the local state
             setPackages(pkgs => pkgs.map(p => p.id === editingPackage.id ? data[0] : p));
         }
       } else {
         const { data, error: insertError } = await supabase
           .from('packages')
           .insert(processedPackageData)
-          .select();
+          .select(); // Add select to get the new row back
         if (insertError) throw insertError;
         if (data && data.length > 0) {
-            setPackages(pkgs => [...pkgs, data[0]]);
+            setPackages(pkgs => [data[0], ...pkgs]); // Add new package to the beginning of the list
         }
       }
       resetFormAndModal();
@@ -303,7 +370,8 @@ export default function AdminPackagesPage() {
       duration: pkg.duration,
       price: String(pkg.price),
       discounted_price: pkg.discounted_price ? String(pkg.discounted_price) : "",
-      image_url: pkg.image_url,
+      image_urls: pkg.image_urls ? (Array.isArray(pkg.image_urls) ? pkg.image_urls.join(", ") : (typeof pkg.image_urls === 'string' ? (console.warn(`Package ID ${pkg.id} image_urls is a string: '${pkg.image_urls}' and will be used as is. Check data for this package.`), pkg.image_urls) : "")) : "",
+      fetured_image: pkg.fetured_image || "", // Populate fetured_image
       rating: pkg.rating ? String(pkg.rating) : "",
       review_count: pkg.review_count ? String(pkg.review_count) : "0",
       highlights: pkg.highlights ? pkg.highlights.join(', ') : "",
@@ -410,7 +478,7 @@ export default function AdminPackagesPage() {
                   <TableRow key={pkg.id}>
                     <TableCell>
                       <img 
-                          src={pkg.image_url || 'https://via.placeholder.com/100x60?text=No+Image'} 
+                          src={pkg.fetured_image ? pkg.fetured_image : (pkg.image_urls && pkg.image_urls.length > 0 ? pkg.image_urls[0] : 'https://via.placeholder.com/100x60?text=No+Image')} 
                           alt={pkg.name} 
                           className="w-20 h-12 object-cover rounded"
                       />
@@ -501,8 +569,30 @@ export default function AdminPackagesPage() {
                   <Input id="discount_percentage" name="discount_percentage" type="number" value={form.discount_percentage} onChange={handleChange} disabled={isLoading} />
                 </div>
                 <div>
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <Input id="image_url" name="image_url" type="url" value={form.image_url} onChange={handleChange} required disabled={isLoading} />
+                  <Label htmlFor="image_files">Upload Images</Label>
+                  <Input 
+                    id="image_files" 
+                    name="image_files" 
+                    type="file" 
+                    multiple 
+                    onChange={handleFileChange} 
+                    disabled={isLoading} 
+                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  {selectedImageFiles.length > 0 && (
+                    <div className="mt-2 text-xs text-gray-600">
+                      Selected files: {selectedImageFiles.map(f => f.name).join(', ')}
+                    </div>
+                  )}
+                  {editingPackage && form.image_urls && selectedImageFiles.length === 0 && (
+                     <div className="mt-2 text-xs text-gray-500">
+                        Current images (URLs): {form.image_urls}
+                        <p className="text-orange-500 text-xs">To replace these, select new image files above.</p>
+                     </div>
+                  )}
+                   {editingPackage && selectedImageFiles.length > 0 && (
+                    <p className="mt-1 text-xs text-orange-500">New files selected will replace all current images upon saving.</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="rating">Rating (Optional, e.g., 4.5)</Label>
