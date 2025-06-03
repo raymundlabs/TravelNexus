@@ -52,15 +52,15 @@ interface Package {
   duration: string;
   price: number;
   discounted_price?: number | null;
-  image_urls: string[];
+  discount_percentage?: number | null;
+  featured?: boolean | null;
   fetured_image?: string | null;
+  num_pax?: string;
   rating?: number | null;
   review_count?: number | null;
   highlights?: string[] | null;
   inclusions?: string[] | null;
   is_bestseller?: boolean | null;
-  discount_percentage?: number | null;
-  featured?: boolean | null;
 }
 
 // Interface for the form state
@@ -80,6 +80,7 @@ interface PackageFormState {
   is_bestseller: boolean;
   discount_percentage: string;
   featured: boolean;
+  num_pax: string;
 }
 
 // Interface for the Destination data
@@ -109,6 +110,7 @@ const initialFormState: PackageFormState = {
   is_bestseller: false,
   discount_percentage: "",
   featured: false,
+  num_pax: '2', // Default to 2 pax
 };
 
 interface PackageCardProps {
@@ -368,6 +370,7 @@ export default function AdminPackagesPage() {
       description: pkg.description,
       destination_id: String(pkg.destination_id),
       duration: pkg.duration,
+      num_pax: pkg.num_pax || '2',
       price: String(pkg.price),
       discounted_price: pkg.discounted_price ? String(pkg.discounted_price) : "",
       image_urls: pkg.image_urls ? (Array.isArray(pkg.image_urls) ? pkg.image_urls.join(", ") : (typeof pkg.image_urls === 'string' ? (console.warn(`Package ID ${pkg.id} image_urls is a string: '${pkg.image_urls}' and will be used as is. Check data for this package.`), pkg.image_urls) : "")) : "",
@@ -448,7 +451,7 @@ export default function AdminPackagesPage() {
           </p>
         )}
 
-        {filteredPackages.length > 0 && (
+        {filteredPackages.length > 0 ? (
           isMobile ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {filteredPackages.map((pkg) => (
@@ -468,7 +471,9 @@ export default function AdminPackagesPage() {
                   <TableHead className="w-[100px]">Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Destination Name</TableHead>
-                  <TableHead>Price</TableHead>
+                  <TableHead>Pax</TableHead>
+                  <TableHead>Price (per pax)</TableHead>
+                  <TableHead>Total Price</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -485,19 +490,9 @@ export default function AdminPackagesPage() {
                     </TableCell>
                     <TableCell className="font-medium">{pkg.name}</TableCell>
                     <TableCell>{destinationMap.get(pkg.destination_id) || pkg.destination_id}</TableCell>
-                    <TableCell>
-                      {pkg.discounted_price ? (
-                        <>
-                          <span className="text-red-600 font-bold">₱{pkg.discounted_price.toLocaleString()}</span>
-                          <span className="ml-2 text-xs text-gray-500 line-through">₱{pkg.price.toLocaleString()}</span>
-                          {pkg.discount_percentage && 
-                            <Badge variant="destructive" className="ml-2">{pkg.discount_percentage}% off</Badge>
-                          }
-                        </>
-                      ) : (
-                        <span>₱{pkg.price.toLocaleString()}</span>
-                      )}
-                    </TableCell>
+                    <TableCell>{pkg.num_pax || '2'} {pkg.num_pax === '1' ? 'Person' : 'People'}</TableCell>
+                    <TableCell>₱{pkg.price.toFixed(2)}</TableCell>
+                    <TableCell>₱{(pkg.price * parseInt(pkg.num_pax || '2')).toFixed(2)}</TableCell>
                     <TableCell>
                       <div className="flex flex-col space-y-1 md:flex-row md:space-y-0 md:space-x-1">
                           {pkg.featured && <Badge variant="default" className="bg-yellow-400 hover:bg-yellow-500 text-yellow-800">Featured</Badge>}
@@ -517,7 +512,7 @@ export default function AdminPackagesPage() {
               </TableBody>
             </Table>
           )
-        )}
+        ) : null}
 
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[600px]">
@@ -552,13 +547,47 @@ export default function AdminPackagesPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="duration">Duration (e.g., 7 Days)</Label>
-                  <Input id="duration" name="duration" value={form.duration} onChange={handleChange} required disabled={isLoading} />
-                </div>
-                <div>
-                  <Label htmlFor="price">Price</Label>
-                  <Input id="price" name="price" type="number" step="0.01" value={form.price} onChange={handleChange} required disabled={isLoading} />
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="duration">Duration</Label>
+                    <Input 
+                      id="duration" 
+                      name="duration" 
+                      value={form.duration} 
+                      onChange={handleChange} 
+                      placeholder="e.g., 3D2N" 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="num_pax">Number of Pax</Label>
+                    <select
+                      id="num_pax"
+                      value={form.num_pax}
+                      onChange={handleChange}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                        <option key={num} value={num.toString()}>
+                          {num} {num === 1 ? 'Person' : 'People'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="price">Price (per pax)</Label>
+                    <Input 
+                      id="price" 
+                      name="price" 
+                      type="number" 
+                      value={form.price} 
+                      onChange={handleChange} 
+                      placeholder="e.g., 199.99" 
+                      step="0.01" 
+                      required 
+                      disabled={isLoading} 
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="discounted_price">Discounted Price (Optional)</Label>

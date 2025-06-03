@@ -1,50 +1,61 @@
 import { Helmet } from 'react-helmet';
 import HeroSection from '@/components/sections/hero-section';
 import Testimonials from '@/components/sections/testimonials';
+import { useEffect, useState } from 'react';
 import PackageCard from '@/components/PackageCard'; // Import the new package card component
-import { SITE_NAME, SITE_DESCRIPTION } from '@/lib/constants';
+import { SITE_NAME } from '@/lib/constants'; // SITE_DESCRIPTION might not be needed here unless used in Helmet
+import { supabase } from '@/lib/supabase'; // Assuming supabase client is here
 
-// Sample data for packages (replace with actual data fetching later)
-const samplePackages = [
-  {
-    id: 1,
-    name: "VILLA MONICA HOTEL",
-    location: "Puerto Galera, Philippines",
-    imageUrl: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80", // Placeholder hotel image
-    duration: "3 Days / 2 Nights", // Assuming a default duration
-    price: "1,650.00",
-    content: "Near Beachfront - 2 min walk"
-  },
-  {
-    id: 2,
-    name: "WHITEBEACH LODGE & RESTAURANT",
-    location: "Puerto Galera, Philippines",
-    imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80", // Placeholder hotel image
-    duration: "3 Days / 2 Nights", // Assuming a default duration
-    price: "1,799.00",
-    content: "Almost beachfront - few steps away. *with free use of common kitchen bbq grilling area"
-  },
-  {
-    id: 3,
-    name: "MINDORINE ORIENTAL",
-    location: "Puerto Galera, Philippines",
-    imageUrl: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80", // Placeholder hotel image
-    duration: "3 Days / 2 Nights", // Assuming a default duration
-    price: "2,295.00",
-    content: "Beachfront Accommodation"
-  },
-  {
-    id: 4,
-    name: "THE MANGYAN GRAND HOTEL",
-    location: "Puerto Galera, Philippines",
-    imageUrl: "https://images.unsplash.com/photo-1596436889106-cca158849e22?ixlib=rb-4.0.3&auto=format&fit=crop&w=1080&q=80", // Placeholder hotel image
-    duration: "3 Days / 2 Nights", // Assuming a default duration
-    price: "2,595.00",
-    content: "Near Beachfront with Swimming Pool"
-  },
-];
+// Define the Package interface based on your Supabase table
+interface Package {
+  id: number;
+  name: string;
+  description: string;
+  destination_id: number;
+  duration: string;
+  price: number;
+  discounted_price?: number | null;
+  image_urls: string; // As per schema: text not null
+  fetured_image?: string | null; // As per schema: text null
+  rating?: number | null;
+  review_count?: number;
+  highlights?: string[] | null;
+  inclusions?: string[] | null;
+  is_bestseller?: boolean;
+  discount_percentage?: number | null;
+  featured?: boolean;
+  num_pax?: string | null;
+}
 
 export default function HomePage2() {
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFeaturedPackages = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error: supabaseError } = await supabase
+          .from('packages')
+          .select('*')
+          .eq('featured', true);
+
+        if (supabaseError) {
+          throw supabaseError;
+        }
+        setPackages(data || []);
+      } catch (err: any) {
+        console.error('Error fetching featured packages:', err);
+        setError(err.message || 'Failed to fetch packages.');
+      }
+      setLoading(false);
+    };
+
+    fetchFeaturedPackages();
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -66,8 +77,28 @@ export default function HomePage2() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {samplePackages.map((packageData, index) => (
-                <PackageCard key={packageData.id} packageData={packageData} index={index} />
+              {loading && <p className="col-span-full text-center">Loading packages...</p>}
+              {error && <p className="col-span-full text-center text-red-500">Error: {error}</p>}
+              {!loading && !error && packages.length === 0 && (
+                <p className="col-span-full text-center">No featured packages available at the moment.</p>
+              )}
+              {!loading && !error && packages.map((pkg, index) => (
+                <PackageCard
+                  key={pkg.id}
+                  packageData={{
+                    id: pkg.id,
+                    name: pkg.name,
+                    // For location, using package name as a placeholder. 
+                    // Consider joining with 'destinations' table for actual location name if needed.
+                    location: pkg.name, // Placeholder: consider fetching actual destination name
+                    imageUrl: pkg.fetured_image || pkg.image_urls, // Prioritize fetured_image
+                    duration: pkg.duration,
+                    price: pkg.price.toFixed(2), // Format price as string with 2 decimal places
+                    content: pkg.description,
+                    // Ensure other props expected by PackageCard are provided or are optional
+                  }}
+                  index={index}
+                />
               ))}
             </div>
           </div>
