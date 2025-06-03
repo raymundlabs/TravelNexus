@@ -89,7 +89,7 @@ interface Destination {
   name: string;
   country: string;
   description: string;
-  image_url: string;
+  ige_url: string;
   rating?: number | null;
   review_count?: number | null;
 };

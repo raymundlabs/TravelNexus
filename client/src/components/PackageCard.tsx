@@ -98,7 +98,7 @@ const PackageCard: React.FC<PackageCardProps> = ({ packageData }) => {
 
           {/* Book Now Button */} 
           <Link 
-            to={`/packages/${id}`} 
+            to={`/package/${id}`} 
             className="w-full block text-center bg-primary text-white font-semibold py-2.5 rounded-md hover:bg-primary-dark transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             View Details

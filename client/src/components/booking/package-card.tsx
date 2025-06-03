@@ -71,7 +71,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
             <span className="text-neutral-500 text-sm">/ person</span>
           </div>
           <Button asChild>
-            <a href={`/packages/${id}`}>View Package</a>
+            <a href={`/package/${id}`}>View Package</a>
           </Button>
         </div>
       </div>

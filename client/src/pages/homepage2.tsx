@@ -15,7 +15,7 @@ export interface Package {
   duration: string;
   price: number;
   discounted_price?: number | null;
-  image_urls: string; // As per schema: text not null
+  image_urls: string[]; // Changed to array of strings
   fetured_image?: string | null; // As per schema: text null
   rating?: number | null;
   review_count?: number;
@@ -89,7 +89,7 @@ export default function HomePage2() {
                     ...pkg, // Spread all properties from pkg (like rating, review_count, etc.)
                     // Override or provide specific props as required by PackageCard:
                     price: pkg.price.toFixed(2), // Ensure price is a string with 2 decimal places
-                    imageUrl: pkg.fetured_image || pkg.image_urls, // Determine the image URL to display
+                    imageUrl: pkg.fetured_image || (pkg.image_urls && pkg.image_urls.length > 0 ? pkg.image_urls[0] : '/images/placeholder-package.jpg'), // Use featured, then first from array, then fallback
                     location: pkg.name, // Using package name as a placeholder for location
                     content: pkg.description, // Use package description as content for the card
                   }}
