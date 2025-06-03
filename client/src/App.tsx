@@ -23,6 +23,7 @@ import { AuthProvider } from "./hooks/use-auth";
 import { RoleBasedRoute, DashboardRouter } from "./lib/role-based-route";
 import ProfilePage from "@/pages/profile";
 import AdminPackagesPage from "@/pages/admin-packages";
+import TermsAndConditions from "@/pages/TermsAndConditions";
 
 // Main router component
 function Router() {
@@ -64,6 +65,7 @@ function Router() {
         <Route path="/packages" component={Packages} />
         <Route path="/package/:id" component={PackageDetailPage} />
         <Route path="/booking/:packageId" component={BookingPage} />
+        <Route path="/terms-and-conditions" component={TermsAndConditions} />
         <Route path="/profile" component={ProfilePage} />
         <Route path="/admin-packages" component={AdminPackagesPage} />
         

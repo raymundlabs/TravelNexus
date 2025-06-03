@@ -21,7 +21,7 @@ export interface Guest {
   id: string;
   name: string;
   type: GuestType;
-  age?: number; // Relevant for 'kid' and 'toddler'
+
   dateOfBirth?: string;
   idFile?: File | null;
   idPreviewUrl?: string;
@@ -38,14 +38,44 @@ const guestTypeOptions: { value: GuestType; label: string }[] = [
 
 const BookingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  const calculateAge = (dobString?: string): number | undefined => {
+    if (!dobString) return undefined;
+    const parts = dobString.split('-'); // Expect YYYY-MM-DD
+    if (parts.length !== 3) return undefined;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+    const day = parseInt(parts[2], 10);
+
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return undefined;
+
+    const birthDate = new Date(year, month, day);
+    // Check if date components form a valid date (e.g. not 2023-02-30)
+    if (birthDate.getFullYear() !== year || birthDate.getMonth() !== month || birthDate.getDate() !== day) {
+        return undefined;
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   // Helper to determine discount percentage
-  const getDiscountPercentage = (guestType: GuestType, age?: number): number => {
+  const getDiscountPercentage = (guestType: GuestType, dateOfBirth?: string): number => {
+    const age = calculateAge(dateOfBirth);
+
     switch (guestType) {
-      case 'toddler': return 1.0; // 100%
+      case 'toddler':
+        // Toddlers are 0-2 years old
+        return (age !== undefined && age >= 0 && age <= 2) ? 1.0 : 0;
       case 'kid':
-        if (age !== undefined && age >= 3 && age <= 5) return 0.25; // 25%
-        return 0;
+        // Kids (3-12 years label in options), discount for 3-5 years old based on previous logic
+        return (age !== undefined && age >= 3 && age <= 5) ? 0.25 : 0;
       case 'pwd':
       case 'senior':
         return 0.20; // 20%
@@ -127,7 +157,7 @@ const BookingPage: React.FC = () => {
   }, [packageId]);
 
   const handleAddGuest = () => {
-    setGuests([...guests, { id: generateId(), name: '', type: 'adult', age: undefined }]);
+    setGuests([...guests, { id: generateId(), name: '', type: 'adult', dateOfBirth: undefined }]);
   };
 
   const handleRemoveGuest = (id: string) => {
@@ -174,38 +204,41 @@ const BookingPage: React.FC = () => {
     );
   };
 
-  const handleGuestChange = (id: string, field: keyof Omit<Guest, 'id' | 'idFile' | 'idPreviewUrl'>, value: string | number | GuestType | undefined) => {
+  const handleGuestChange = (id: string, field: keyof Omit<Guest, 'id' | 'idFile' | 'idPreviewUrl' | 'age'>, value: string | GuestType | undefined) => {
     setGuests(guests.map(guest => 
       guest.id === id 
         ? { 
             ...guest, 
-            [field]: value, 
-            // Reset age if type is changed to something not needing age
-            age: field === 'type' && (value !== 'kid' && value !== 'toddler') ? undefined : guest.age 
+            [field]: value
+            // Removed age reset logic as age field is removed
           } 
         : guest
     ));
   };
 
   const calculateGuestPrice = (guest: Guest, basePrice: number): number => {
+    const age = calculateAge(guest.dateOfBirth);
+
     switch (guest.type) {
       case 'toddler':
-        // Toddlers (0-2) are free
-        return 0;
+        // Toddlers (0-2) are free, as per getDiscountPercentage
+        if (age !== undefined && age >= 0 && age <= 2) return 0;
+        // If age is not in toddler range but type is toddler, could be an error or they pay full.
+        // For now, assuming if type is toddler, and age matches, it's free. Otherwise, they might not qualify for 'toddler' type.
+        // Let's rely on getDiscountPercentage for consistency or re-evaluate if toddlers outside 0-2 pay full or are invalid.
+        // Based on getDiscountPercentage, they would pay full if age is outside 0-2.
+        return basePrice * (1 - getDiscountPercentage(guest.type, guest.dateOfBirth)); 
       case 'kid':
-        // Kids (3-5) get 25% discount
-        if (guest.age !== undefined && guest.age >= 3 && guest.age <= 5) {
-          return basePrice * 0.75;
-        }
-        // Other kids pay full price
-        return basePrice;
+        // Kids (3-5) get 25% discount, other kids pay full price.
+        // This logic is now encapsulated in getDiscountPercentage.
+        return basePrice * (1 - getDiscountPercentage(guest.type, guest.dateOfBirth));
       case 'pwd':
       case 'senior':
-        return basePrice * 0.80; // 20% discount
+        return basePrice * (1 - getDiscountPercentage(guest.type, guest.dateOfBirth)); // 20% discount
       case 'adult':
       case 'student':
       default:
-        return basePrice;
+        return basePrice; // No discount from getDiscountPercentage by default
     }
   };
 
@@ -229,17 +262,42 @@ const BookingPage: React.FC = () => {
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    if (!acceptedTerms) {
+      alert('Please accept the terms and conditions to proceed with your booking.');
+      setIsSubmitting(false);
+      return;
+    }
+    
     if (!packageData || !mainGuestName.trim()) {
       alert('Please provide main guest name and ensure package data is loaded.');
+      setIsSubmitting(false);
       return;
     }
 
-    // Validate guest ages if type requires it (DOB and ID are now optional)
+    // Validate guest DOB if type requires age-based logic
     for (const guest of guests) {
-        if ((guest.type === 'kid' || guest.type === 'toddler') && guest.age === undefined) {
-            alert(`Please provide age for guest: ${guest.name || 'Unnamed Guest'} if type is Kid or Toddler.`);
+      if (guest.type === 'kid' || guest.type === 'toddler') {
+        if (!guest.dateOfBirth) {
+          alert(`Please provide Date of Birth for guest: ${guest.name || 'Unnamed Guest'} (type: ${guest.type}).`);
+          setIsSubmitting(false);
+          return;
+        }
+        const age = calculateAge(guest.dateOfBirth);
+        if (age === undefined) { // Should not happen if DOB is validated by input, but good check
+            alert(`Invalid Date of Birth for guest: ${guest.name || 'Unnamed Guest'}.`);
+            setIsSubmitting(false);
             return;
         }
+        if (guest.type === 'toddler' && (age < 0 || age > 2)) {
+            alert(`Guest ${guest.name || 'Unnamed Guest'} is selected as 'Toddler' but age (${age}) is not between 0-2 years.`);
+            setIsSubmitting(false);
+            return;
+        }
+        // For 'kid', the discount is for 3-5. The label says 'Kid (3-12 years)'. 
+        // We will allow any age if type is 'kid', but discount applies only if 3-5.
+        // No specific age range validation for 'kid' type beyond DOB presence for now, as per memory a3d09b5a-99f4-4ba9-bca5-66a7ac970342 (age only strictly *required* for kid/toddler for *pricing*)
+      }
     }
 
     // --- Start Supabase Save Logic ---
@@ -328,7 +386,7 @@ const BookingPage: React.FC = () => {
         is_main_guest: true,
         full_name: mainGuestName,
         date_of_birth: mainGuestDob || null,
-        age: null, // Main guest is adult, specific age not usually needed for pricing here
+        age: calculateAge(mainGuestDob),
         id_document_url: mainGuestIdUrl,
         price: packageData.price, // Base price for this guest
         discount_percentage: 0, // Assuming main adult has no standard discount
@@ -338,16 +396,17 @@ const BookingPage: React.FC = () => {
 
       const additionalGuestDetails = additionalGuestsWithIdUrls.map(guest => {
         const guestBasePrice = packageData.price;
-        const discountPercentage = getDiscountPercentage(guest.type, guest.age);
+        const calculatedGuestAge = calculateAge(guest.dateOfBirth);
+        const discountPercentage = getDiscountPercentage(guest.type, guest.dateOfBirth);
         const discountAmount = guestBasePrice * discountPercentage;
-        const finalPrice = calculateGuestPrice(guest, guestBasePrice); // Use existing calculation
+        const finalPrice = calculateGuestPrice(guest, guestBasePrice);
         return {
           booking_id: newBookingId,
           guest_type: guest.type,
           is_main_guest: false,
           full_name: guest.name,
           date_of_birth: guest.dateOfBirth || null,
-          age: guest.age || null,
+          age: calculatedGuestAge,
           id_document_url: guest.id_document_url,
           price: guestBasePrice,
           discount_percentage: discountPercentage,
@@ -553,31 +612,8 @@ const BookingPage: React.FC = () => {
                   </select>
                 </div>
                 
-                {(guest.type === 'kid' || guest.type === 'toddler') && (
-                  <div className="md:col-span-2">
-                    <label htmlFor={`guestAge-${guest.id}`} className="block text-xs font-medium text-gray-600">
-                      Age <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      id={`guestAge-${guest.id}`}
-                      value={guest.age === undefined ? '' : guest.age}
-                      onChange={(e) => {
-                        const value = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
-                        if (value !== undefined || e.target.value === '') {
-                          handleGuestChange(guest.id, 'age', value);
-                        }
-                      }}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-light focus:border-primary-light sm:text-sm"
-                      placeholder="Age"
-                      min="0"
-                      max="100"
-                      required={guest.type === 'kid' || guest.type === 'toddler'}
-                    />
-                  </div>
-                )}
                 {/* DOB for Additional Guest */}
-                <div className={`md:col-span-${(guest.type === 'kid' || guest.type === 'toddler') ? '3' : '3'}`}> {/* Adjust span as needed */} 
+                <div className="md:col-span-3"> 
                   <label htmlFor={`guestDob-${guest.id}`} className="block text-xs font-medium text-gray-600">
                     DOB
                   </label>
@@ -669,8 +705,43 @@ const BookingPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Terms and Conditions */}
+          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="terms"
+                  name="terms"
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  required
+                />
+              </div>
+              <div className="ml-3">
+                <label htmlFor="terms" className="text-sm text-gray-700">
+                  I agree to the{' '}
+                  <a 
+                    href="/terms-and-conditions" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary-dark font-medium underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Terms and Conditions
+                  </a>
+                  {' '}and understand my personal data will be processed in accordance with the Privacy Policy.
+                </label>
+              </div>
+            </div>
+            {!acceptedTerms && (
+              <p className="mt-1 text-sm text-red-600">You must accept the terms and conditions to proceed.</p>
+            )}
+          </div>
+
           {/* Submit Button */}
-          <div className="mt-10 text-center">
+          <div className="mt-6 text-center">
             <button 
               type="submit" 
               className="w-full md:w-auto px-12 py-3 bg-primary text-white font-bold text-lg rounded-lg shadow-md hover:bg-primary-dark transition duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
