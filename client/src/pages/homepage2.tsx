@@ -7,7 +7,7 @@ import { SITE_NAME } from '@/lib/constants'; // SITE_DESCRIPTION might not be ne
 import { supabase } from '@/lib/supabase'; // Assuming supabase client is here
 
 // Define the Package interface based on your Supabase table
-interface Package {
+export interface Package {
   id: number;
   name: string;
   description: string;
@@ -86,18 +86,14 @@ export default function HomePage2() {
                 <PackageCard
                   key={pkg.id}
                   packageData={{
-                    id: pkg.id,
-                    name: pkg.name,
-                    // For location, using package name as a placeholder. 
-                    // Consider joining with 'destinations' table for actual location name if needed.
-                    location: pkg.name, // Placeholder: consider fetching actual destination name
-                    imageUrl: pkg.fetured_image || pkg.image_urls, // Prioritize fetured_image
-                    duration: pkg.duration,
-                    price: pkg.price.toFixed(2), // Format price as string with 2 decimal places
-                    content: pkg.description,
-                    // Ensure other props expected by PackageCard are provided or are optional
+                    ...pkg, // Spread all properties from pkg (like rating, review_count, etc.)
+                    // Override or provide specific props as required by PackageCard:
+                    price: pkg.price.toFixed(2), // Ensure price is a string with 2 decimal places
+                    imageUrl: pkg.fetured_image || pkg.image_urls, // Determine the image URL to display
+                    location: pkg.name, // Using package name as a placeholder for location
+                    content: pkg.description, // Use package description as content for the card
                   }}
-                  index={index}
+                  // index prop is no longer used by the revamped PackageCard
                 />
               ))}
             </div>

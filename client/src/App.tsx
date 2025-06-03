@@ -10,7 +10,7 @@ import HotelDetail from "@/pages/hotel-detail";
 import Tours from "@/pages/tours";
 import TourDetail from "@/pages/tour-detail";
 import Packages from "@/pages/packages";
-import PackageDetail from "@/pages/package-detail";
+import PackageDetailPage from "@/pages/PackageDetailPage"; // Import the new detail page
 import AuthPage from "@/pages/auth-page";
 import UserDashboard from "@/pages/dashboards/user-dashboard";
 import HotelDashboard from "@/pages/dashboards/hotel-dashboard";
@@ -61,7 +61,7 @@ function Router() {
         <Route path="/tours" component={Tours} />
         <Route path="/tours/:id" component={TourDetail} />
         <Route path="/packages" component={Packages} />
-        <Route path="/packages/:id" component={PackageDetail} />
+        <Route path="/packages/:id" component={PackageDetailPage} />
         <Route path="/profile" component={ProfilePage} />
         <Route path="/admin-packages" component={AdminPackagesPage} />
         
