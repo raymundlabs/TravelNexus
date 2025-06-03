@@ -74,6 +74,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Packages
+  app.get("/api/packages", async (req, res) => {
+    try {
+      const packages = await storage.getPackages();
+      res.json(packages);
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
+
   // Hotels
   app.get("/api/hotels", async (req, res) => {
     try {
