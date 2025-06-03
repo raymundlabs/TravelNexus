@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from '@/lib/supabase';
 
 // Custom hook for media query
 function useMediaQuery(query: string): boolean {
@@ -77,9 +78,9 @@ interface PackageFormState {
   is_bestseller: boolean;
   discount_percentage: string;
   featured: boolean;
-};
+}
 
-// Interface for the Destination data, matching the Supabase table schema
+// Interface for the Destination data
 interface Destination {
   id: number;
   name: string;
@@ -88,24 +89,6 @@ interface Destination {
   image_url: string;
   rating?: number | null;
   review_count?: number | null;
-}
-
-// Interface for the destination form state
-interface DestinationFormState {
-  id?: number; // For editing
-  name: string;
-  country: string;
-  description: string;
-  imageFile?: File | null; // For handling file upload
-  image_url: string; // To store the URL after upload or for existing images
-}
-
-const initialDestinationFormState: DestinationFormState = {
-  name: "",
-  country: "",
-  description: "",
-  imageFile: null,
-  image_url: "",
 };
 
 const initialFormState: PackageFormState = {
@@ -190,20 +173,30 @@ export default function AdminPackagesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const isMobile = useMediaQuery('(max-width: 768px)');
-
-  // State for Destinations
   const [destinations, setDestinations] = useState<Destination[]>([]);
-  const [editingDestination, setEditingDestination] = useState<Destination | null>(null);
-  const [destinationForm, setDestinationForm] = useState<DestinationFormState>(initialDestinationFormState);
-  const [isDestinationModalOpen, setIsDestinationModalOpen] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false); // For image upload loading state
-  const [destinationError, setDestinationError] = useState<string | null>(null);
+  const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   useEffect(() => {
     fetchPackages();
     fetchDestinations();
   }, []);
+
+  const fetchDestinations = async () => {
+    setIsLoadingDestinations(true);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('destinations')
+        .select('*')
+        .order('name', { ascending: true });
+      if (fetchError) throw fetchError;
+      setDestinations(data || []);
+    } catch (err: any) {
+      console.error("Fetch destinations error:", err);
+      // setError(err.message || "Failed to fetch destinations"); // Optionally set a specific error for destinations
+    }
+    setIsLoadingDestinations(false);
+  };
 
   const fetchPackages = async () => {
     setIsLoading(true);
@@ -232,6 +225,16 @@ export default function AdminPackagesPage() {
       setForm(prevForm => ({ ...prevForm, [name]: value }));
     }
   };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setForm(prevForm => ({ ...prevForm, [name]: value }));
+  };
+
+  const resetFormAndModal = () => {
+    setForm(initialFormState);
+    setEditingPackage(null);
+    setIsModalOpen(false);
+    setError(null);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -342,6 +345,10 @@ export default function AdminPackagesPage() {
     );
   }, [packages, searchTerm]);
 
+  const destinationMap = useMemo(() => {
+    return new Map(destinations.map(dest => [dest.id, dest.name]));
+  }, [destinations]);
+
   return (
     <>
       <div className="container mx-auto p-4">
@@ -361,8 +368,9 @@ export default function AdminPackagesPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full sm:max-w-sm order-2 sm:order-1"
           />
-          <Button onClick={handleOpenAddModal} className="mb-4">Add New Package</Button>
-          <Button onClick={openAddDestinationModal} className="mb-4 ml-2" variant="outline">Manage Destinations</Button>
+          <Button onClick={handleOpenAddModal} disabled={isLoading} className="w-full sm:w-auto order-1 sm:order-2">
+            Add New Package
+          </Button>
         </div>
 
         {isLoading && packages.length === 0 && <p className="text-center">Loading packages...</p>}
@@ -391,7 +399,7 @@ export default function AdminPackagesPage() {
                 <TableRow>
                   <TableHead className="w-[100px]">Image</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Destination ID</TableHead>
+                  <TableHead>Destination Name</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -408,7 +416,7 @@ export default function AdminPackagesPage() {
                       />
                     </TableCell>
                     <TableCell className="font-medium">{pkg.name}</TableCell>
-                    <TableCell>{pkg.destination_id}</TableCell>
+                    <TableCell>{destinationMap.get(pkg.destination_id) || pkg.destination_id}</TableCell>
                     <TableCell>
                       {pkg.discounted_price ? (
                         <>
@@ -457,8 +465,24 @@ export default function AdminPackagesPage() {
                   <Input id="name" name="name" value={form.name} onChange={handleChange} required disabled={isLoading} />
                 </div>
                 <div>
-                  <Label htmlFor="destination_id">Destination ID</Label>
-                  <Input id="destination_id" name="destination_id" type="number" value={form.destination_id} onChange={handleChange} required disabled={isLoading} />
+                  <Label htmlFor="destination_id">Destination Name</Label>
+                  <Select 
+                    name="destination_id"
+                    value={form.destination_id}
+                    onValueChange={(value) => handleSelectChange('destination_id', value)}
+                    disabled={isLoading || isLoadingDestinations}
+                  >
+                    <SelectTrigger id="destination_id">
+                      <SelectValue placeholder={isLoadingDestinations ? "Loading destinations..." : "Select a destination"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {destinations.map((dest) => (
+                        <SelectItem key={dest.id} value={String(dest.id)}>
+                          {dest.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="duration">Duration (e.g., 7 Days)</Label>
@@ -525,60 +549,6 @@ export default function AdminPackagesPage() {
                 </Button>
               </DialogFooter>
             </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Destination Management Dialog */}
-        <Dialog open={isDestinationModalOpen} onOpenChange={setIsDestinationModalOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editingDestination ? "Edit Destination" : "Add New Destination"}</DialogTitle>
-              <DialogDescription>
-                {editingDestination ? "Update the details of this destination." : "Fill in the details for the new destination. Image upload will be handled upon submission."}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input id="name" name="name" value={destinationForm.name} onChange={handleDestinationChange} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="country" className="text-right">
-                  Country
-                </Label>
-                <Input id="country" name="country" value={destinationForm.country} onChange={handleDestinationChange} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
-                  Description
-                </Label>
-                <Textarea id="description" name="description" value={destinationForm.description} onChange={handleDestinationChange} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="imageFile" className="text-right">
-                  Image
-                </Label>
-                <Input id="imageFile" name="imageFile" type="file" onChange={handleImageFileChange} className="col-span-3" accept="image/*" />
-              </div>
-              {destinationForm.image_url && (
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <div className="col-start-2 col-span-3">
-                        <img src={destinationForm.image_url} alt="Preview" className="mt-2 max-h-40 w-auto object-contain rounded" />
-                    </div>
-                </div>
-              )}
-            </div>
-            {destinationError && <p className="text-sm text-red-500">{destinationError}</p>}
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline" onClick={closeDestinationModal}>Cancel</Button>
-              </DialogClose>
-              <Button type="submit" onClick={() => alert('Submit destination logic to be implemented')} disabled={isLoading || isUploadingImage}>
-                {isUploadingImage ? 'Uploading...' : (editingDestination ? "Save Changes" : "Add Destination")}
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
 
