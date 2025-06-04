@@ -173,7 +173,7 @@ const BookingPage: React.FC = () => {
       };
       reader.readAsDataURL(file);
     } else {
-      callback(''); // Cletestar preview if not an image or no file, or if file is PDF
+      callback(''); // Cletestawerwrwer preview if not an image or no file, or if file is PDF
     }
   };
 
